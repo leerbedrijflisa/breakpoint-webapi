@@ -17,80 +17,80 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{userName}")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported, string filter = "", string value = "")
+        public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported = null, string filter = "", string value = "")
         {
-            
             IList<Report> reports;
 
-            DateTime filterDay = DateTime.Today;
-
-            IList<string> monthNames = new string[12] { "januari", "februari", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
-            int date = 0;
-            if (Regex.Replace(reported, @"[^\d]|\s+", string.Empty) != "")
-            {
-                date = Int32.Parse(Regex.Replace(reported, @"[^\d]", string.Empty));
-            }
-
-            reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty).ToLower();
-
+            bool filterDate = false;
             bool monthYear = false;
 
-            if (monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
-            {
-                monthYear = true;
-                System.Diagnostics.Debug.WriteLine("check year");
-            }
-            else
-            {
-                reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty);
-            }
+            DateTime filterDay = DateTime.Today;
+            DateTime filterDayTwo = DateTime.Today.AddDays(1);
 
-            if (reported == "today")
+            IList<string> monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
+            int date = 0;
+            if (reported != null)
             {
-
-            }
-            else if (reported == "yesterday")
-            {
-                filterDay.AddDays(-1);
-                System.Diagnostics.Debug.WriteLine(filterDay);
-            }
-            else if (reported == "daysago")
-            {
-                filterDay.AddDays(-date);
-                System.Diagnostics.Debug.WriteLine(filterDay);
-            }
-            else if (reported == "lastdays")
-            {
-                //tussen morge en de dagen dat ingevuld is
-                System.Diagnostics.Debug.WriteLine(filterDay);
-            }
-            else if (monthYear)
-            {
-                System.Diagnostics.Debug.WriteLine(monthNames.IndexOf(reported) + 1);
-                System.Diagnostics.Debug.WriteLine(DateTime.Today.Month);
-
-                if ((monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
+                if (Regex.Replace(reported, @"[^\d]|\s+", string.Empty) != "")
                 {
-                    date = Int32.Parse((monthNames.IndexOf(reported) + 1).ToString("00"));
-                    var tempyear = DateTime.Today.Year;
-                    var meep = date.ToString("00") + ' ' + tempyear;
-                    var meep2 = Int32.Parse(meep);
-                    System.Diagnostics.Debug.WriteLine(date);
-                    System.Diagnostics.Debug.WriteLine(tempyear);
+                    date = Int32.Parse(Regex.Replace(reported, @"[^\d]", string.Empty));
+                }
+
+                reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty).ToLower();
+
+                if (monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
+                {
+                    monthYear = true;
                 }
                 else
                 {
-
+                    reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty);
                 }
-                System.Diagnostics.Debug.WriteLine(filterDay);
+
+                if (reported == "today")
+                {
+                    filterDate = true;
+                }
+                else if (reported == "yesterday")
+                {
+                    filterDay = filterDay.AddDays(-1);
+                    filterDayTwo = filterDayTwo.AddDays(-1);
+                    filterDate = true;
+                }
+                else if (reported == "daysago")
+                {
+                    filterDay = filterDay.AddDays(-date);
+                    filterDayTwo = filterDayTwo.AddDays(-date);
+                    filterDate = true;
+                }
+                else if (reported == "lastdays")
+                {
+                    filterDay = filterDay.AddDays(-date);
+                    filterDate = true;
+                }
+                else if (monthYear)
+                {
+                    filterDay = new DateTime(date, monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = new DateTime(date, monthNames.IndexOf(reported) + 2, 1);
+                    filterDate = true;
+                }
+                else if (monthNames.Contains(reported))
+                {
+                    if ((monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
+                    {
+                        filterDay = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 1, 1);
+                        filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
+                    }
+                    else
+                    {
+                        filterDay = new DateTime(filterDay.AddYears(-1).Year, monthNames.IndexOf(reported) + 1, 1);
+                        filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
+                    }
+                    filterDate = true;
+                }
             }
-            else if (monthNames.Contains(reported))
-            {
 
-            }
-
-
-            //die shit van bas
+            //die dingen van bas
             if (_db.GetProject(organizationSlug, projectSlug, userName) == null)
             {
                 return new HttpNotFoundResult();
@@ -100,18 +100,30 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new HttpNotFoundResult();
             }
-
             
-            if (filter != "")
+            if (filter != "" || filterDate )
             {
-                Filter f = new Filter(filter, value);
+                DateTime[] dateTimes = new DateTime[2];
 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, f);
+                Filter f = null;
+
+                if (filterDate)
+                {
+                    dateTimes[0] = filterDay;
+                    dateTimes[1] = filterDayTwo;
+                }
+
+                if (filter != "")
+                {
+                    f = new Filter(filter, value);
+                }
+
+                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, dateTimes, f);
             } else { 
                 reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
             }
 
-            // einde die shit van bas
+            // einde die dingen van bas
             if (reports == null)
             {
                 return new HttpNotFoundResult();
@@ -141,9 +153,9 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            if (report.Platform.Count == 0)
+            if (report.Platforms.Count == 0)
             {
-                report.Platform.Add("Not specified");
+                report.Platforms.Add("Not specified");
             }
 
             _db.PostReport(report);

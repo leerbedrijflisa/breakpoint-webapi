@@ -10681,7 +10681,7 @@
     "System.Diagnostics.Tracing.Telemetry/4.0.0-beta-23409": {
       "type": "package",
       "serviceable": true,
-      "sha512": "h4PaLgc6vGFYiufB6wYUgwnCgn97T414OiF1xJiumQh9rkahU1bOX6KrmRtRyfN/l0eg2CH9uMCz5FDrTo6NDQ==",
+      "sha512": "0O46DsJ9FmqJY61oR8wUW15nA8bYHKS8t5SRhXUN594EnbOP7bWVjfFcMJCz6A4v5sizqAHH1Jz8g0ZioI8+8g==",
       "files": [
         "lib/dotnet/System.Diagnostics.Tracing.Telemetry.dll",
         "lib/dotnet/System.Diagnostics.Tracing.Telemetry.xml",
@@ -10791,7 +10791,7 @@
     "System.Numerics.Vectors/4.1.1-beta-23409": {
       "type": "package",
       "serviceable": true,
-      "sha512": "1YUeSImMm7Fr488B+fY0fNZUtaTqLE0pFp+edyoS4gh2gt/agudWeBuNJWJFRipKV0xTp/QzPiU2zMXk3XTzTw==",
+      "sha512": "gAFNcuF1KRHT3oKUfwr28nBoCK83GR0EWThOcSXZoW4lBhUNrKsNWwMoHrAQ4eT5QpI033rGyhx7G5s/jkoI8g==",
       "files": [
         "lib/dotnet/System.Numerics.Vectors.dll",
         "lib/MonoAndroid10/_._",
@@ -11271,6 +11271,7 @@
       "Microsoft.AspNet.IISPlatformHandler >= 1.0.0-beta8",
       "Microsoft.AspNet.Mvc >= 6.0.0-beta8",
       "Microsoft.AspNet.Mvc.Core >= 6.0.0-beta8",
+      "Microsoft.AspNet.Mvc.ViewFeatures >= 6.0.0-beta8",
       "Microsoft.AspNet.Mvc.WebApiCompatShim >= 6.0.0-beta8",
       "Microsoft.AspNet.Server.Kestrel >= 1.0.0-beta8",
       "Microsoft.AspNet.WebApi.Client >= 5.2.3",
