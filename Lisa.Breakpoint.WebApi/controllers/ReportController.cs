@@ -79,15 +79,11 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPatch("{id}/{userName}")]
         public IActionResult Patch(int id, string userName, [FromBody] Report report)
         {
-
             if (!statusCheck.Contains(report.Status))
             {
                 return new BadRequestResult();
             }
-
-            Report checkReport = _db.GetReport(id);
-
-            Project checkProject = _db.GetProject(checkReport.Organization, checkReport.Project, userName);
+            Project checkProject = _db.GetProjectByReport(id, userName);
             
             //If the status is Won't fix (approved) than it will check if the user is a manager, if that is not the case then return badrequestresult.
             if (report.Status == statusCheck[3])

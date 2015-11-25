@@ -238,5 +238,17 @@ namespace Lisa.Breakpoint.WebApi.database
                 session.SaveChanges();
             }
         }
+
+        internal Project GetProjectByReport(int id, string username)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                var report = session.Load<Report>(id);
+
+                return session.Query<Project>()
+                    .Where(p => p.Organization == report.Organization && p.Slug == report.Project)
+                    .SingleOrDefault();
+            }
+        }
     }
 }
