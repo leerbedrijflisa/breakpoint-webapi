@@ -130,7 +130,7 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PatchProjectMembers(string organizationSlug, string projectSlug, Patch patch)
+        public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {

@@ -80,7 +80,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organization}/{projectSlug}/members")]
-        public IActionResult PatchMembers(string organization, string projectSlug, [FromBody] Patch patch)
+        public IActionResult PatchMembers(string organization, string projectSlug, [FromBody] TempMemberPatch patch)
         {
             if (organization == null || projectSlug == null || patch == null)
             {
