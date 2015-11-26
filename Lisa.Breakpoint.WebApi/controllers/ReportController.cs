@@ -2,6 +2,8 @@
 using Microsoft.AspNet.Mvc;
 using Lisa.Breakpoint.WebApi.Models;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -77,51 +79,75 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{id}/{userName}")]
-        public IActionResult Patch(int id, string userName, [FromBody] Report report)
+        public IActionResult Patch(int id, string userName, [FromBody] Patch[] patches)
         {
-            if (!statusCheck.Contains(report.Status))
+            if (patches == null)
             {
                 return new BadRequestResult();
             }
+
+            var patchList = patches.Distinct().ToList();
+            var patchFields = patchList.Select(p => p.Field);
+
+            Report report = _db.GetReport(id);
             Project checkProject = _db.GetProjectByReport(id, userName);
+
+            // Check if user is in project
+            if (!checkProject.Members.Select(m => m.UserName).Contains(userName))
+            {
+                return new HttpStatusCodeResult(401);
+            }
+
+            // If the status is attmpted to be patched, run permission checks
+            if (patchFields.Contains("status"))
+            {
+                var statusPatch = patchList.Single(p => p.Field == "status");
+
+                if (!statusCheck.Contains(statusPatch.Value))
+                {
+                    return new BadRequestResult();
+                }
+
+                // If the status is patching to Won't Fix (approved), require the user to be a project manager
+                if (statusPatch.Value.Equals(statusCheck[3]) && !checkProject.Members.Single(m => m.UserName.Equals(userName)).Role.Equals("manager"))
+                {
+                    // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+                    return new HttpStatusCodeResult(422);
+                }
+
+                // Is the status is patching to Closed, check if the user is either a manager, tester, or the developer who reported the problem.
+                // Effectively, you're only checking whether the user is a developer, and if that's the case, if the developer has created the report.
+                // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
+                if (statusPatch.Value.Equals(statusCheck[4]))
+                {
+                    var member = checkProject.Members.Single(m => m.UserName.Equals(userName));
+
+                    checkProject.Members
+                            .Single(m => m.UserName.Equals(userName))
+                            .Role.Equals("developer");
+
+                    if (!report.Reporter.Equals(member.UserName))
+                    {
+                        return new HttpStatusCodeResult(401);
+                    }
+                }
+            }
+
+            // Do not patch the date it was reported
+            if (patchFields.Contains("Reported"))
+            {
+                patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
+            }
             
-            //If the status is Won't fix (approved) than it will check if the user is a manager, if that is not the case then return badrequestresult.
-            if (report.Status == statusCheck[3])
+            try
             {
-                foreach (var members in checkProject.Members)
-                {
-                    if (members.UserName == userName && members.Role != "manager")
-                    {
-                        return new BadRequestResult();
-                    }
-                    if (members.UserName == userName && members.Role == "manager")
-                    {
-                        break;
-                    }
-                }
+                // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+                return _db.Patch<Report>(id, patches) ? new NoContentResult() : new HttpStatusCodeResult(422);
             }
-            if (report.Status == statusCheck[4])
+            catch(Exception)
             {
-                foreach (var members in checkProject.Members)
-                {
-                    if (members.UserName == userName && members.Role == "developer" && report.Reporter == userName)
-                    {
-                        break;
-                    }
-                    else if (members.UserName == userName && members.Role == "manager" || members.Role == "tester")
-                    {
-                        break;
-                    }
-                    else if (members.UserName != userName && members.Role == "developer")
-                    {
-                        return new BadRequestResult();
-                    }
-                }
+                return new HttpStatusCodeResult(500);
             }
-
-            Report patchedReport = _db.PatchReport(id, report);
-
-            return new HttpOkObjectResult(patchedReport);
         }
 
         [HttpDelete("{id}")]
