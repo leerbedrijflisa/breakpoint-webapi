@@ -99,14 +99,14 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpDelete("{organization}")]
-        public IActionResult Delete(string organization)
+        public IActionResult Delete(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteOrganization(organization);
+            _db.DeleteOrganization(organizationSlug);
 
             return new HttpStatusCodeResult(204);
         }
