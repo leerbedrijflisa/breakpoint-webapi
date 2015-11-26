@@ -17,20 +17,22 @@ namespace Lisa.Breakpoint.WebApi.database
             this.documentStore = documentStore;
         }
 
-        public void Patch<T>(int id, IEnumerable<Patch> patches)
+        public bool Patch<T>(int id, IEnumerable<Patch> patches)
         {
             var patchFields = patches.Select(p => p.Field);
 
-            // Fail if patch contains fields non in object
+            // Fail if patch contains fields not in object that's getting patched
             var properties = typeof(T).GetProperties();
             if (patchFields.Where(f => !properties.Select(p => p.Name).Contains(f)).Count() > 0)
             {
-                throw new ArgumentException();
+                return false;
             }
 
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
             documentStore.DatabaseCommands.Patch(ravenId, ToRavenPatch(patches));
+
+            return true;
         }
 
         public PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
