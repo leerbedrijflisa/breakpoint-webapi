@@ -142,7 +142,14 @@ namespace Lisa.Breakpoint.WebApi
             try
             {
                 // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
-                return _db.Patch<Report>(id, patches) ? new NoContentResult() : new HttpStatusCodeResult(422);
+                if (_db.Patch<Report>(id, patches))
+                {
+                    new HttpOkObjectResult(_db.GetReport(id));
+                }
+                else
+                {
+                    new HttpStatusCodeResult(422);
+                }
             }
             catch(Exception)
             {
