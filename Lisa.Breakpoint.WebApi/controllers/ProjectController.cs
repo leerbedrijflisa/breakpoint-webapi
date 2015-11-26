@@ -12,10 +12,10 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-        [HttpGet("{organization}/{username}")]
-        public IActionResult GetAll(string organization, string userName)
+        [HttpGet("{organizationSlug}/{userName}")]
+        public IActionResult GetAll(string organizationSlug, string userName)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -25,13 +25,13 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            var organizations = _db.GetAllProjects(organization, userName);
-            if (organizations == null)
+            var projects = _db.GetAllProjects(organizationSlug, userName);
+            if (projects == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            return new HttpOkObjectResult(organizations);
+            return new HttpOkObjectResult(projects);
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{userName}/{includeAllGroups?}", Name = "project")]
