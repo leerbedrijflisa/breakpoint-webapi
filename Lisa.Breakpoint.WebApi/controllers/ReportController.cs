@@ -2,6 +2,8 @@
 using Microsoft.AspNet.Mvc;
 using Lisa.Breakpoint.WebApi.Models;
 using System.Collections.Generic;
+using System;
+using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -13,9 +15,48 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{username}/{filter?}/{value?}")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string userName, string filter = "", string value = "")
+        [HttpGet("{organizationSlug}/{projectSlug}/{userName}")]
+        public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported, string filter = "", string value = "")
         {
+
+            IList<Report> reports;
+
+            string days = Regex.Replace(reported, @"[^\d]", string.Empty);
+
+            reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty).ToLower();
+
+            IList<string> monthNames = new string[12] { "januari", "februari", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
+            
+            if (reported == "today")
+            {
+                DateTime today = DateTime.Today;
+                System.Diagnostics.Debug.WriteLine(today);
+            }
+            else if (reported == "yesterday")
+            {
+                DateTime yesterday = DateTime.Today;
+                yesterday = yesterday.AddDays(-1);
+                System.Diagnostics.Debug.WriteLine(yesterday);
+            }
+            else if (reported == "daysago")
+            {
+                System.Diagnostics.Debug.WriteLine(reported);
+            }
+            else if (reported == "lastdays")
+            {
+                System.Diagnostics.Debug.WriteLine(reported);
+                System.Diagnostics.Debug.WriteLine("Meep");
+            }
+            else if (monthNames.Contains(reported))
+            {
+                System.Diagnostics.Debug.WriteLine(reported);
+            }
+            else
+            { 
+                reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
+            }
+
+            //die shit van bas
             if (_db.GetProject(organizationSlug, projectSlug, userName) == null)
             {
                 return new HttpNotFoundResult();
@@ -26,7 +67,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            IList<Report> reports;
+            
             if (filter != "")
             {
                 Filter f = new Filter(filter, value);
@@ -35,7 +76,7 @@ namespace Lisa.Breakpoint.WebApi
             } else { 
                 reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
             }
-
+            // einde die shit van bas
             if (reports == null)
             {
                 return new HttpNotFoundResult();
