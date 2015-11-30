@@ -13,10 +13,10 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-        [HttpGet("{organization}/{project}/{username}/{filter?}/{value?}")]
-        public IActionResult Get(string organization, string project, string userName, string filter = "", string value = "")
+        [HttpGet("{organizationSlug}/{projectSlug}/{username}/{filter?}/{value?}")]
+        public IActionResult Get(string organizationSlug, string projectSlug, string userName, string filter = "", string value = "")
         {
-            if (_db.GetProject(organization, project, userName) == null)
+            if (_db.GetProject(organizationSlug, projectSlug, userName) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -31,9 +31,9 @@ namespace Lisa.Breakpoint.WebApi
             {
                 Filter f = new Filter(filter, value);
 
-                reports = _db.GetAllReports(organization, project, userName, f);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, f);
             } else { 
-                reports = _db.GetAllReports(organization, project, userName);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
             }
 
             if (reports == null)
@@ -56,8 +56,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(report);
         }
 
-        [HttpPost("{organization}/{project}")]
-        public IActionResult Post([FromBody] Report report, string organization, string project)
+        [HttpPost("{organizationslug}/{projectslug}")]
+        public IActionResult Post([FromBody] Report report, string organizationSlug, string projectSlug)
         {
 
             if (report == null)
@@ -79,7 +79,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPatch("{id}/{userName}")]
         public IActionResult Patch(int id, string userName, [FromBody] Report report)
         {
-
+            // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (!statusCheck.Contains(report.Status))
             {
                 return new BadRequestResult();
