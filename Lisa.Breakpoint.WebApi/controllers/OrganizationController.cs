@@ -30,28 +30,28 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
-        [HttpGet("members/{organization}")]
-        public IActionResult GetOrganizationMembers(string organization)
+        [HttpGet("members/{organizationSlug}")]
+        public IActionResult GetOrganizationMembers(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetOrganizationMembers(organization);
+            var members = _db.GetOrganization(organizationSlug).Members;
 
             return new HttpOkObjectResult(members);
         }
 
-        [HttpGet("members/new/{organization}/{project}")]
-        public IActionResult GetMembersNotInProject(string organization, string project)
+        [HttpGet("members/new/{organizationSlug}/{projectSlug}")]
+        public IActionResult GetMembersNotInProject(string organizationSlug, string projectSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetMembersNotInProject(organization, project);
+            var members = _db.GetMembersNotInProject(organizationSlug, projectSlug);
 
             return new HttpOkObjectResult(members);
         }
@@ -85,7 +85,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new CreatedResult(location, postedOrganization);
             } else
             {
-                return new NoContentResult();
+                return new HttpStatusCodeResult(422);
             }
 
         }
@@ -98,15 +98,15 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(patchedOrganization);
         }
 
-        [HttpDelete("{organization}")]
-        public IActionResult Delete(string organization)
+        [HttpDelete("{organizationSlug}")]
+        public IActionResult Delete(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteOrganization(organization);
+            _db.DeleteOrganization(organizationSlug);
 
             return new HttpStatusCodeResult(204);
         }
