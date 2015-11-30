@@ -25,10 +25,10 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new HttpOkObjectResult(users);
         }
 
-        [HttpGet("{organization}/{project}/{userName}")]
-        public IActionResult GetGroupFromUser(string organization, string project, string userName)
+        [HttpGet("{organizationslug}/{projectSlug}/{userName}")]
+        public IActionResult GetGroupFromUser(string organizationSlug, string projectSlug, string userName)
         {
-            var role = _db.GetGroupFromUser(organization, project, userName);
+            var role = _db.GetGroupFromUser(organizationSlug, projectSlug, userName);
 
             if (role == null)
             {
