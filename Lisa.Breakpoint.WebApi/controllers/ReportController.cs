@@ -4,6 +4,7 @@ using Lisa.Breakpoint.WebApi.Models;
 using System.Collections.Generic;
 using System;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -18,43 +19,76 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}/{projectSlug}/{userName}")]
         public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported, string filter = "", string value = "")
         {
-
+            
             IList<Report> reports;
 
-            string days = Regex.Replace(reported, @"[^\d]", string.Empty);
+            DateTime filterDay = DateTime.Today;
+
+            IList<string> monthNames = new string[12] { "januari", "februari", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
+            int date = 0;
+            if (Regex.Replace(reported, @"[^\d]|\s+", string.Empty) != "")
+            {
+                date = Int32.Parse(Regex.Replace(reported, @"[^\d]", string.Empty));
+            }
 
             reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty).ToLower();
 
-            IList<string> monthNames = new string[12] { "januari", "februari", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
-            
+            bool monthYear = false;
+
+            if (monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
+            {
+                monthYear = true;
+                System.Diagnostics.Debug.WriteLine("check year");
+            }
+            else
+            {
+                reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty);
+            }
+
             if (reported == "today")
             {
-                DateTime today = DateTime.Today;
-                System.Diagnostics.Debug.WriteLine(today);
+
             }
             else if (reported == "yesterday")
             {
-                DateTime yesterday = DateTime.Today;
-                yesterday = yesterday.AddDays(-1);
-                System.Diagnostics.Debug.WriteLine(yesterday);
+                filterDay.AddDays(-1);
+                System.Diagnostics.Debug.WriteLine(filterDay);
             }
             else if (reported == "daysago")
             {
-                System.Diagnostics.Debug.WriteLine(reported);
+                filterDay.AddDays(-date);
+                System.Diagnostics.Debug.WriteLine(filterDay);
             }
             else if (reported == "lastdays")
             {
-                System.Diagnostics.Debug.WriteLine(reported);
-                System.Diagnostics.Debug.WriteLine("Meep");
+                //tussen morge en de dagen dat ingevuld is
+                System.Diagnostics.Debug.WriteLine(filterDay);
+            }
+            else if (monthYear)
+            {
+                System.Diagnostics.Debug.WriteLine(monthNames.IndexOf(reported) + 1);
+                System.Diagnostics.Debug.WriteLine(DateTime.Today.Month);
+
+                if ((monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
+                {
+                    date = Int32.Parse((monthNames.IndexOf(reported) + 1).ToString("00"));
+                    var tempyear = DateTime.Today.Year;
+                    var meep = date.ToString("00") + ' ' + tempyear;
+                    var meep2 = Int32.Parse(meep);
+                    System.Diagnostics.Debug.WriteLine(date);
+                    System.Diagnostics.Debug.WriteLine(tempyear);
+                }
+                else
+                {
+
+                }
+                System.Diagnostics.Debug.WriteLine(filterDay);
             }
             else if (monthNames.Contains(reported))
             {
-                System.Diagnostics.Debug.WriteLine(reported);
+
             }
-            else
-            { 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
-            }
+
 
             //die shit van bas
             if (_db.GetProject(organizationSlug, projectSlug, userName) == null)
@@ -76,6 +110,7 @@ namespace Lisa.Breakpoint.WebApi
             } else { 
                 reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
             }
+
             // einde die shit van bas
             if (reports == null)
             {
