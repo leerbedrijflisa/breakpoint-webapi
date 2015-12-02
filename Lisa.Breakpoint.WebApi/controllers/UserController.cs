@@ -80,19 +80,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new CreatedResult(location, postedGroup);
         }
 
-        [HttpGet("login/{userName}")]
-        public IActionResult LogIn(string userName)
-        {
-            var user = _db.UserExists(userName);
-
-            if (user != null)
-            {
-                return new HttpOkObjectResult(_db.UserExists(userName));
-            }
-
-            return new HttpNotFoundObjectResult(_db.UserExists(userName));
-        }
-
         private readonly RavenDB _db;
     }
 }

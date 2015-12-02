@@ -8,7 +8,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet]
         public string Get()
         {
-            return "1.0.0-alpha-1";
+            return "1.0.0-alpha-2";
         }
     }
 }

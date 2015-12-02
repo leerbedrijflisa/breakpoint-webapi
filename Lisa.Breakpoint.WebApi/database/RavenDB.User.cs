@@ -4,6 +4,7 @@ using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
@@ -73,19 +74,11 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public User UserExists(string userName)
+        public async Task<bool> UserExists(string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                var user = session.Query<User>()
-                    .Where(u => u.Username == userName)
-                    .ToList();
-
-                if (user.Count != 0)
-                {
-                    return user.First();
-                }
-                return null;
+                return await session.Query<User>().AnyAsync(u => u.Username.Equals(userName));
             }
         }
 
