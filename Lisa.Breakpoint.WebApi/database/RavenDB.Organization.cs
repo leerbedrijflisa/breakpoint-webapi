@@ -64,6 +64,9 @@ namespace Lisa.Breakpoint.WebApi.database
                 if (session.Query<Organization>().Where(o => o.Slug == organization.Slug).ToList().Count == 0)
                 {
                     session.Store(organization);
+                    string organizationId = session.Advanced.GetDocumentId(organization);
+                    organization.Number = organizationId.Split('/').Last();
+
                     session.SaveChanges();
 
                     return organization;

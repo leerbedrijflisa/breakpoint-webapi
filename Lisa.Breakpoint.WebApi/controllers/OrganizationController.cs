@@ -1,6 +1,7 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Mvc;
+using System.Collections.Generic;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -29,6 +30,8 @@ namespace Lisa.Breakpoint.WebApi
 
             return new HttpOkObjectResult(organizations);
         }
+
+        
 
         [HttpGet("members/{organizationSlug}")]
         public IActionResult GetOrganizationMembers(string organizationSlug)

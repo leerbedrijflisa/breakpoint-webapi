@@ -56,10 +56,9 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(report);
         }
 
-        [HttpPost("{organizationslug}/{projectslug}")]
-        public IActionResult Post([FromBody] Report report, string organizationSlug, string projectSlug)
+        [HttpPost("{organizationSlug}/{projectSlug}")]
+        public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
         {
-
             if (report == null)
             {
                 return new BadRequestResult();
