@@ -1,7 +1,7 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Microsoft.AspNet.Mvc;
 
-namespace Lisa.Breakpoint.WebApi.controllers
+namespace Lisa.Breakpoint.WebApi
 {
     [Route("platforms")]
     public class PlatformsController
