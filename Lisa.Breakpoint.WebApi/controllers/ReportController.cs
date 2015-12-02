@@ -64,7 +64,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            if (report.Platform.Count == 0)
+            if (report.Platform != null && report.Platform.Count == 0)
             {
                 report.Platform.Add("Not specified");
             }
