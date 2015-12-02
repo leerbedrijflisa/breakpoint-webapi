@@ -1,6 +1,9 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Mvc;
+using Microsoft.AspNet.Mvc.Filters;
+using System;
+using System.Collections.Generic;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -71,12 +74,42 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpPatch("{id}")]
-        public IActionResult Patch(int id, string organization, Project project)
+        [HttpPatch("{organizationSlug}/{projectSlug}")]
+        public IActionResult Patch(string organizationSlug, string projectSlug, IEnumerable<Patch> patches)
         {
-            var patchedProject = _db.PatchProject(id, project);
+            //var project = _db.GetProject(organizationSlug, projectSlug);
+            var project = new Project();
 
-            return new HttpOkObjectResult(patchedProject);
+            if (project == null || patches == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+            int projectNumber;
+            if (!int.TryParse(project.Number, out projectNumber))
+            {
+                return new HttpStatusCodeResult(500);
+            }
+
+            // Patch Report to database
+            try
+            {
+                if (_db.Patch<Organization>(projectNumber, patches))
+                {
+                    //return new HttpOkObjectResult(_db.GetProject(projectSlug));
+                    return new HttpOkObjectResult(new Project());
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(422);
+                }
+            }
+            catch (Exception)
+            {
+                // Internal server error if RavenDB throws exceptions
+                return new HttpStatusCodeResult(500);
+            }
         }
 
         [HttpPatch("{organization}/{projectSlug}/members")]

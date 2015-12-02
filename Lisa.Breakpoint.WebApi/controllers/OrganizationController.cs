@@ -1,6 +1,8 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Mvc;
+using System;
+using System.Collections.Generic;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -90,12 +92,48 @@ namespace Lisa.Breakpoint.WebApi
 
         }
 
-        [HttpPatch("{id}")]
-        public IActionResult Patch(int id, Organization organization)
-        {
-            var patchedOrganization = _db.PatchOrganization(id, organization);
+        //[HttpPatch("{id}")]
+        //public IActionResult Patch(int id, Organization organization)
+        //{
+        //    var patchedOrganization = _db.PatchOrganization(id, organization);
 
-            return new HttpOkObjectResult(patchedOrganization);
+        //    return new HttpOkObjectResult(patchedOrganization);
+        //}
+
+        [HttpPatch("{organizationSlug}")]
+        public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
+        {
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null || patches == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+            int organizationNumber;
+            if (!int.TryParse(organization.Number, out organizationNumber))
+            {
+                return new HttpStatusCodeResult(500);
+            }
+
+            // Patch Report to database
+            try
+            {
+                if (_db.Patch<Organization>(organizationNumber, patches))
+                {
+                    return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(422);
+                }
+            }
+            catch (Exception)
+            {
+                // Internal server error if RavenDB throws exceptions
+                return new HttpStatusCodeResult(500);
+            }
         }
 
         [HttpDelete("{organization}")]

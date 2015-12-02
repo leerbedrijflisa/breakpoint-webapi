@@ -2,7 +2,6 @@
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.DependencyInjection;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Raven.Client;
 using Raven.Client.Document;

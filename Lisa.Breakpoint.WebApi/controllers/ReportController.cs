@@ -90,11 +90,18 @@ namespace Lisa.Breakpoint.WebApi
             var patchFields = patchList.Select(p => p.Field);
 
             Report report = _db.GetReport(id);
+
+            if (report == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
             Project checkProject = _db.GetProjectByReport(id, userName);
 
             // Check if user is in project
             if (!checkProject.Members.Select(m => m.UserName).Contains(userName))
             {
+                // Not authenticated
                 return new HttpStatusCodeResult(401);
             }
 
@@ -128,6 +135,7 @@ namespace Lisa.Breakpoint.WebApi
 
                     if (!report.Reporter.Equals(member.UserName))
                     {
+                        // Not authenticated
                         return new HttpStatusCodeResult(401);
                     }
                 }
@@ -139,20 +147,22 @@ namespace Lisa.Breakpoint.WebApi
                 patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
             }
             
+            // Patch Report to database
             try
             {
                 // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                 if (_db.Patch<Report>(id, patches))
                 {
-                    new HttpOkObjectResult(_db.GetReport(id));
+                    return new HttpOkObjectResult(_db.GetReport(id));
                 }
                 else
                 {
-                    new HttpStatusCodeResult(422);
+                    return new HttpStatusCodeResult(422);
                 }
             }
             catch(Exception)
             {
+                // Internal server error if RavenDB throws exceptions
                 return new HttpStatusCodeResult(500);
             }
         }
@@ -173,6 +183,5 @@ namespace Lisa.Breakpoint.WebApi
         private readonly RavenDB _db;
 
         private readonly IList<string> statusCheck = new string[] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
-
     }
 }
