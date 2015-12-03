@@ -3,6 +3,7 @@ using System.Linq;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using Lisa.Breakpoint.WebApi.Models;
+using Raven.Json.Linq;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
@@ -17,20 +18,36 @@ namespace Lisa.Breakpoint.WebApi.database
                 var organization = session.Query<Organization>().SingleOrDefault(m => m.Slug.Equals(organizationSlug));
                 var organizationId = organization.Number;
                 var existingPlatforms = organization.Platforms;
-
-                var patches = new List<PatchRequest>();
-
-                foreach (var platform in platforms.Where(p => !existingPlatforms.Contains(p)))
+                if (existingPlatforms != null)
                 {
+                    var patches = new List<PatchRequest>();
+
+                    foreach (var platform in platforms.Where(p => !existingPlatforms.Contains(p)))
+                    {
+                        patches.Add(new PatchRequest()
+                        {
+                            Name = "Platforms",
+                            Type = PatchCommandType.Add,
+                            Value = platform
+                        });
+                    }
+
+                    documentStore.DatabaseCommands.Patch("organizations/" + organizationId, patches.ToArray());
+                }
+                else
+                {
+                    var patches = new List<PatchRequest>();
+
                     patches.Add(new PatchRequest()
                     {
                         Name = "Platforms",
-                        Type = PatchCommandType.Add,
-                        Value = platform
+                        Type = PatchCommandType.Set,
+                        Value = RavenJToken.FromObject(platforms)
                     });
-                }
 
-                documentStore.DatabaseCommands.Patch("organizations/" + organizationId, patches.ToArray());
+                    documentStore.DatabaseCommands.Patch("organizations/" + organizationId, patches.ToArray());
+                }
+                
             }
         }
     }

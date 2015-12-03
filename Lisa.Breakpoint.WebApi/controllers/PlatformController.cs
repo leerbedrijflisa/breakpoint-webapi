@@ -4,14 +4,14 @@ using Microsoft.AspNet.Mvc;
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("platforms")]
-    public class PlatformsController
+    public class PlatformController
     {
-        public PlatformsController(RavenDB db)
+        public PlatformController(RavenDB db)
         {
             _db = db;
         }
 
-        [HttpGet("{organizationSlug")]
+        [HttpGet("{organizationSlug}")]
         public IActionResult Get(string organizationSlug)
         {
             return new HttpOkObjectResult(_db.GetOrganization(organizationSlug).Platforms);
