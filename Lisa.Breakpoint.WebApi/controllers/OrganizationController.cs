@@ -1,5 +1,6 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
+using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 
 namespace Lisa.Breakpoint.WebApi
@@ -11,16 +12,19 @@ namespace Lisa.Breakpoint.WebApi
         {
             _db = db;
         }
-
-        [HttpGet("{username}")]
-        public IActionResult GetAll(string userName)
+        
+        [HttpGet]
+        [Authorize("Bearer")]
+        public IActionResult GetAll()
         {
-            if (_db.GetUser(userName) == null)
+            var user = HttpContext.User.Identity;
+
+            if (_db.GetUser(user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var organizations = _db.GetAllOrganizations(userName);
+            var organizations = _db.GetAllOrganizations(user.Name);
 
             if (organizations == null)
             {
@@ -56,7 +60,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(members);
         }
 
-        [HttpGet("get/{organizationSlug}", Name = "organization")]
+        [HttpGet("{organizationSlug}", Name = "organization")]
+        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -70,6 +75,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost]
+        [Authorize("Bearer")]
         public IActionResult Post([FromBody]Organization organization)
         {
             if (organization == null)
@@ -91,6 +97,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{id}")]
+        [Authorize("Bearer")]
         public IActionResult Patch(int id, Organization organization)
         {
             var patchedOrganization = _db.PatchOrganization(id, organization);
@@ -99,6 +106,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpDelete("{organizationSlug}")]
+        [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug)
         {
             if (_db.GetOrganization(organizationSlug) == null)

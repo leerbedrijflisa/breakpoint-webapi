@@ -13,7 +13,7 @@ using Lisa.Breakpoint.WebApi.database;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
-    [Route("/token")]
+    [Route("token")]
     public class TokenController : Controller
     {
         private readonly TokenAuthOptions tokenOptions;
@@ -120,3 +120,4 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
         private RavenDB _db;
     }
+}

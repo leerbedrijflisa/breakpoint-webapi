@@ -7,7 +7,7 @@ using Newtonsoft.Json.Serialization;
 using Raven.Client;
 using Raven.Client.Document;
 using System.Security.Cryptography;
-using Breakpoint.TokenAuthentication;
+using Lisa.Breakpoint.TokenAuthentication;
 
 namespace Lisa.Breakpoint.WebApi
 {
