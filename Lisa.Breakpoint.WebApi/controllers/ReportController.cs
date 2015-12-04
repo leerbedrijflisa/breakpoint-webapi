@@ -28,9 +28,10 @@ namespace Lisa.Breakpoint.WebApi
             DateTime filterDayTwo = DateTime.Today.AddDays(1);
 
             IList<string> monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
-            int date = 0;
+
             if (reported != null)
             {
+                int date = 0;
                 if (Regex.Replace(reported, @"[^\d]|\s+", string.Empty) != "")
                 {
                     date = Int32.Parse(Regex.Replace(reported, @"[^\d]", string.Empty));

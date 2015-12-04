@@ -18,20 +18,14 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug);
+                IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
                 IList<Report> filterOnDay = new List<Report>();
                 if (filterDays != null)
                 {
-                    foreach (var reportsOnDate in rList)
-                    {
-                        if (reportsOnDate.Reported >= filterDays[0] && reportsOnDate.Reported < filterDays[1])
-                        {
-                            filterOnDay.Add(reportsOnDate);
-                            System.Diagnostics.Debug.WriteLine("Meep");
-                        }
-                    }
-                    rList = filterOnDay.AsQueryable();
+                    DateTime dayOne = filterDays[0];
+                    DateTime dayTwo = filterDays[1];
+                    rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
                 }
 
                 if (filter != null)
@@ -63,7 +57,6 @@ namespace Lisa.Breakpoint.WebApi.database
                         rList = rList.ApplyFilters(tempFilters);
                     }
                 }
-
                 reports = rList.OrderBy(r => r.Priority)
                         .ThenByDescending(r => r.Reported.Date)
                         .ThenBy(r => r.Reported.TimeOfDay)
