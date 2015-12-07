@@ -100,26 +100,22 @@ namespace Lisa.Breakpoint.WebApi
 
         }
 
-        //[HttpPatch("{id}")]
-        //public IActionResult Patch(int id, Organization organization)
-        //{
-        //    var patchedOrganization = _db.PatchOrganization(id, organization);
-
-        //    return new HttpOkObjectResult(patchedOrganization);
-        //}
-
         [HttpPatch("{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
         {
+            if (patches == null)
+            {
+                return new BadRequestResult();
+            }
+
             var organization = _db.GetOrganization(organizationSlug);
 
-            if (organization == null || patches == null)
+            if (organization == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
             int organizationNumber;
             if (!int.TryParse(organization.Number, out organizationNumber))
             {

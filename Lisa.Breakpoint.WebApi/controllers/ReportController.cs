@@ -113,7 +113,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpStatusCodeResult(401);
             }
 
-            // If the status is attmpted to be patched, run permission checks
+            // If the status is attempted to be patched, run permission checks
             if (patchFields.Contains("status"))
             {
                 var statusPatch = patchList.Single(p => p.Field == "status");

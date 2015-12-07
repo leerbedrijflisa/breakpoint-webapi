@@ -80,15 +80,18 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, string projectSlug [FromBody] IEnumerable<Patch> patches)
         {
-            //var project = _db.GetProject(organizationSlug, projectSlug);
-            var project = new Project();
+            if (patches == null)
+            {
+                return new BadRequestResult();
+            }
 
-            if (project == null || patches == null)
+            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
+
+            if (project == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
             int projectNumber;
             if (!int.TryParse(project.Number, out projectNumber))
             {
@@ -100,8 +103,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (_db.Patch<Organization>(projectNumber, patches))
                 {
-                    //return new HttpOkObjectResult(_db.GetProject(projectSlug));
-                    return new HttpOkObjectResult(new Project());
+                    return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
                 }
                 else
                 {
