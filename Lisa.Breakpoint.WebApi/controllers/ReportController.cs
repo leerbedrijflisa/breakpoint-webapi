@@ -15,7 +15,6 @@ namespace Lisa.Breakpoint.WebApi
         public ReportController(RavenDB db)
         {
             _db = db;
-            _user = HttpContext.User.Identity;
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
@@ -88,6 +87,8 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Patch(int id, [FromBody] Patch[] patches)
         {
+            var user = HttpContext.User.Identity;
+
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (patches == null)
             {

@@ -35,7 +35,7 @@ namespace Lisa.Breakpoint.WebApi.database
             return true;
         }
 
-        public PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
+        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
         {
             var ravenPatches = new List<PatchRequest>();
 
@@ -56,7 +56,7 @@ namespace Lisa.Breakpoint.WebApi.database
                         p.Type = PatchCommandType.Add;
                         break;
                     case "remove":
-                        throw new NotImplementedException();
+                        p.Type = PatchCommandType.Remove;
                         break;
                     default:
                         throw new ArgumentException();
@@ -68,6 +68,5 @@ namespace Lisa.Breakpoint.WebApi.database
 
             return ravenPatches.ToArray();
         }
-
     }
 }

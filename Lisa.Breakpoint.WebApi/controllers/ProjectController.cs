@@ -78,7 +78,7 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Patch(string organizationSlug, string projectSlug [FromBody] IEnumerable<Patch> patches)
+        public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
             if (patches == null)
             {
