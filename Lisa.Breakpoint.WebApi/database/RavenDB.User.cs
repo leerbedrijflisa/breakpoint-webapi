@@ -4,7 +4,6 @@ using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
@@ -30,7 +29,7 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (session.Query<Group>().Where(g => g.Name == group.Name).ToList().Count == 0)
+                if (!session.Query<Group>().Where(g => g.Name == group.Name).Any())
                 {
                     session.Store(group);
                     session.SaveChanges();
@@ -67,18 +66,19 @@ namespace Lisa.Breakpoint.WebApi.database
                     return project.Members
                         .Where(m => m.UserName == userName)
                         .SingleOrDefault().Role;
-                } else
+                }
+                else
                 {
-                    return "no group";
+                    return null;
                 }
             }
         }
 
-        public async Task<bool> UserExists(string userName)
+        public bool UserExists(string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                return await session.Query<User>().AnyAsync(u => u.Username.Equals(userName));
+                return session.Query<User>().Any(u => u.Username.Equals(userName));
             }
         }
 
@@ -86,7 +86,7 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (session.Query<User>().Where(u => u.Username == user.Username).ToList().Count == 0)
+                if (!session.Query<User>().Where(u => u.Username == user.Username).Any())
                 {
                     session.Store(user);
                     session.SaveChanges();
@@ -127,8 +127,8 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                User organization = session.Load<User>(id);
-                session.Delete(organization);
+                User user = session.Load<User>(id);
+                session.Delete(user);
                 session.SaveChanges();
             }
         }

@@ -75,6 +75,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{id}")]
+        [Authorize("Bearer")]
         public IActionResult Patch(int id, string organization, [FromBody] Project project)
         {
             var patchedProject = _db.PatchProject(id, project);
@@ -83,6 +84,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}/members")]
+        [Authorize("Bearer")]
         public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] Patch patch)
         {
             if (organizationSlug == null || projectSlug == null || patch == null)

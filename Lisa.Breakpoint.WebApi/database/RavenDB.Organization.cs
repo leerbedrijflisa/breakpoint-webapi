@@ -41,19 +41,17 @@ namespace Lisa.Breakpoint.WebApi.database
                     .Where(p => p.Organization == organization && p.Slug == project)
                     .SingleOrDefault().Members;
 
-                var newMembers = session.Query<Organization>()
+                var members = session.Query<Organization>()
                     .Where(o => o.Slug == organization)
                     .SingleOrDefault().Members;
 
-                foreach (var newMember in newMembers)
-                {
-                    foreach (var member in projectMembers)
-                    {
-                        newMembers = newMembers.Where(m => m != member.UserName).ToArray();
-                    }
-                }
-                
-                return newMembers;
+                // Filter organization members by checking if the project contains the member
+                var x = members
+                    .Where(name => !projectMembers
+                        .Select(pm => pm.UserName)
+                        .Contains(name));
+
+                return x.ToList();
             }
         }
 
@@ -61,7 +59,7 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (session.Query<Organization>().Where(o => o.Slug == organization.Slug).ToList().Count == 0)
+                if (!session.Query<Organization>().Where(o => o.Slug == organization.Slug).Any())
                 {
                     session.Store(organization);
                     session.SaveChanges();

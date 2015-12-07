@@ -1,6 +1,7 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Mvc;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
@@ -10,6 +11,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         public UserController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
 
         [HttpGet("", Name = "users")]
@@ -81,5 +83,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         }
 
         private readonly RavenDB _db;
+        private readonly IIdentity _user;
     }
 }

@@ -6,6 +6,7 @@
     "EntityFramework.Relational": "7.0.0-beta8",
     "Microsoft.AspNet.Authentication.JwtBearer": "1.0.0-beta8",
     "Microsoft.AspNet.Cors": "6.0.0-beta8",
+    "Microsoft.AspNet.Diagnostics": "1.0.0-beta8",
     "Microsoft.AspNet.Hosting.Abstractions": "1.0.0-beta8",
     "Microsoft.AspNet.Http.Abstractions": "1.0.0-beta8",
     "Microsoft.AspNet.IISPlatformHandler": "1.0.0-beta8",
@@ -21,7 +22,8 @@
     "RavenDB.Client": "3.0.3785",
     "RavenDB.Server": "3.0.3785",
     "System.Collections.Immutable": "1.1.36",
-    "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
+    "System.IdentityModel.Tokens": "5.0.0-beta8-210131116",
+    "System.Spatial": "5.6.4"
   },
   "exclude": [
     "wwwroot",

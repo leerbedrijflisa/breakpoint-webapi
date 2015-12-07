@@ -4,10 +4,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
-
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-
 using Lisa.Breakpoint.TokenAuthentication;
 using Lisa.Breakpoint.WebApi.database;
 
@@ -64,17 +62,15 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new HttpOkObjectResult(tokenResponse);
         }
 
-
-
         /// <summary>
         /// Request a new token for a given username/password pair.
         /// </summary>
         /// <param name="req"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] AuthRequest req)
+        public IActionResult Post([FromBody] AuthRequest req)
         {
-            if (!await _db.UserExists(req.username))
+            if (!_db.UserExists(req.username))
             {
                 return new HttpUnauthorizedResult();
             }
@@ -110,6 +106,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
             var identity = new ClaimsIdentity(new GenericIdentity(user.Username, "TokenAuth"), claims);
 
             var securityToken = handler.CreateToken(
+                audience: tokenOptions.Audience,
                 issuer: tokenOptions.Issuer,
                 signingCredentials: tokenOptions.SigningCredentials,
                 subject: identity,

@@ -2,6 +2,8 @@
 using Microsoft.AspNet.Mvc;
 using Lisa.Breakpoint.WebApi.Models;
 using System.Collections.Generic;
+using Microsoft.AspNet.Authorization;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -11,17 +13,19 @@ namespace Lisa.Breakpoint.WebApi
         public ReportController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{username}/{filter?}/{value?}")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string userName, string filter = "", string value = "")
+        [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
+        [Authorize("Bearer")]
+        public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "")
         {
-            if (_db.GetProject(organizationSlug, projectSlug, userName) == null)
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            if (_db.GetUser(userName) == null)
+            if (_db.GetUser(_user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -31,9 +35,9 @@ namespace Lisa.Breakpoint.WebApi
             {
                 Filter f = new Filter(filter, value);
 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, f);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, f);
             } else { 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name);
             }
 
             if (reports == null)
@@ -44,6 +48,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{id}", Name = "report")]
+        [Authorize("Bearer")]
         public IActionResult Get(int id)
         {
             Report report = _db.GetReport(id);
@@ -57,6 +62,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationslug}/{projectslug}")]
+        [Authorize("Bearer")]
         public IActionResult Post([FromBody] Report report, string organizationSlug, string projectSlug)
         {
 
@@ -76,8 +82,9 @@ namespace Lisa.Breakpoint.WebApi
             return new CreatedResult(location, report);
         }
 
-        [HttpPatch("{id}/{userName}")]
-        public IActionResult Patch(int id, string userName, [FromBody] Report report)
+        [HttpPatch("{id}")]
+        [Authorize("Bearer")]
+        public IActionResult Patch(int id, [FromBody] Report report)
         {
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (!statusCheck.Contains(report.Status))
@@ -87,18 +94,18 @@ namespace Lisa.Breakpoint.WebApi
 
             Report checkReport = _db.GetReport(id);
 
-            Project checkProject = _db.GetProject(checkReport.Organization, checkReport.Project, userName);
+            Project checkProject = _db.GetProject(checkReport.Organization, checkReport.Project, _user.Name);
             
             //If the status is Won't fix (approved) than it will check if the user is a manager, if that is not the case then return badrequestresult.
             if (report.Status == statusCheck[3])
             {
                 foreach (var members in checkProject.Members)
                 {
-                    if (members.UserName == userName && members.Role != "manager")
+                    if (members.UserName == _user.Name && members.Role != "manager")
                     {
                         return new BadRequestResult();
                     }
-                    if (members.UserName == userName && members.Role == "manager")
+                    if (members.UserName == _user.Name && members.Role == "manager")
                     {
                         break;
                     }
@@ -108,15 +115,15 @@ namespace Lisa.Breakpoint.WebApi
             {
                 foreach (var members in checkProject.Members)
                 {
-                    if (members.UserName == userName && members.Role == "developer" && report.Reporter == userName)
+                    if (members.UserName == _user.Name && members.Role == "developer" && report.Reporter == _user.Name)
                     {
                         break;
                     }
-                    else if (members.UserName == userName && members.Role == "manager" || members.Role == "tester")
+                    else if (members.UserName == _user.Name && members.Role == "manager" || members.Role == "tester")
                     {
                         break;
                     }
-                    else if (members.UserName != userName && members.Role == "developer")
+                    else if (members.UserName != _user.Name && members.Role == "developer")
                     {
                         return new BadRequestResult();
                     }
@@ -129,6 +136,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpDelete("{id}")]
+        [Authorize("Bearer")]
         public IActionResult Delete(int id)
         {
             if (_db.GetReport(id) == null)
@@ -142,7 +150,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-
+        private readonly IIdentity _user;
         private readonly IList<string> statusCheck = new string[] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
 
     }

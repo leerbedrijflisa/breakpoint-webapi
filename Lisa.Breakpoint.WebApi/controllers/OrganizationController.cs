@@ -2,6 +2,7 @@
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -11,20 +12,20 @@ namespace Lisa.Breakpoint.WebApi
         public OrganizationController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
         
         [HttpGet]
         [Authorize("Bearer")]
         public IActionResult GetAll()
         {
-            var user = HttpContext.User.Identity;
 
-            if (_db.GetUser(user.Name) == null)
+            if (_db.GetUser(_user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var organizations = _db.GetAllOrganizations(user.Name);
+            var organizations = _db.GetAllOrganizations(_user.Name);
 
             if (organizations == null)
             {
@@ -89,7 +90,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 string location = Url.RouteUrl("organization", new { organizationSlug = organization }, Request.Scheme);
                 return new CreatedResult(location, postedOrganization);
-            } else
+            }
+            else
             {
                 return new HttpStatusCodeResult(422);
             }
@@ -120,5 +122,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
+        private readonly IIdentity _user;
     }
 }
