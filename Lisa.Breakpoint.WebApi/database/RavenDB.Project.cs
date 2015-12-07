@@ -74,16 +74,12 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                var project = session.Query<Project>()
+                var groups = session.Query<Project>()
                     .Where(p => p.Organization == organization && p.Slug == projectSlug)
+                    .Select(p => p.Groups)
                     .SingleOrDefault();
-
-                if (project.Groups != null)
-                {
-                    return project.Groups;
-                }
-
-                return null;
+                
+                return groups;
             }
         }
 
@@ -91,13 +87,14 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (session.Query<Project>().Where(p => p.Organization == project.Organization && p.Slug == project.Slug).ToList().Count == 0)
+                if (!session.Query<Project>().Where(p => p.Organization == project.Organization && p.Slug == project.Slug).Any())
                 {
                     session.Store(project);
                     session.SaveChanges();
 
                     return project;
-                } else
+                }
+                else
                 {
                     return null;
                 }
@@ -233,8 +230,8 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                Project organization = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
-                session.Delete(organization);
+                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
+                session.Delete(project);
                 session.SaveChanges();
             }
         }

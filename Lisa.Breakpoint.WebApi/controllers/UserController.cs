@@ -1,6 +1,7 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Mvc;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
@@ -10,6 +11,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         public UserController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
 
         [HttpGet("", Name = "users")]
@@ -25,10 +27,10 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new HttpOkObjectResult(users);
         }
 
-        [HttpGet("{organization}/{project}/{userName}")]
-        public IActionResult GetGroupFromUser(string organization, string project, string userName)
+        [HttpGet("{organizationslug}/{projectSlug}/{userName}")]
+        public IActionResult GetGroupFromUser(string organizationSlug, string projectSlug, string userName)
         {
-            var role = _db.GetGroupFromUser(organization, project, userName);
+            var role = _db.GetGroupFromUser(organizationSlug, projectSlug, userName);
 
             if (role == null)
             {
@@ -80,19 +82,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new CreatedResult(location, postedGroup);
         }
 
-        [HttpGet("login/{userName}")]
-        public IActionResult LogIn(string userName)
-        {
-            var user = _db.UserExists(userName);
-
-            if (user != null)
-            {
-                return new HttpOkObjectResult(_db.UserExists(userName));
-            }
-
-            return new HttpNotFoundObjectResult(_db.UserExists(userName));
-        }
-
         private readonly RavenDB _db;
+        private readonly IIdentity _user;
     }
 }

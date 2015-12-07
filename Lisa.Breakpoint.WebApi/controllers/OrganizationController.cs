@@ -1,8 +1,10 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
+using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -12,17 +14,20 @@ namespace Lisa.Breakpoint.WebApi
         public OrganizationController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
-
-        [HttpGet("{username}")]
-        public IActionResult GetAll(string userName)
+        
+        [HttpGet]
+        [Authorize("Bearer")]
+        public IActionResult GetAll()
         {
-            if (_db.GetUser(userName) == null)
+
+            if (_db.GetUser(_user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var organizations = _db.GetAllOrganizations(userName);
+            var organizations = _db.GetAllOrganizations(_user.Name);
 
             if (organizations == null)
             {
@@ -32,33 +37,34 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
-        [HttpGet("members/{organization}")]
-        public IActionResult GetOrganizationMembers(string organization)
+        [HttpGet("members/{organizationSlug}")]
+        public IActionResult GetOrganizationMembers(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetOrganizationMembers(organization);
+            var members = _db.GetOrganization(organizationSlug).Members;
 
             return new HttpOkObjectResult(members);
         }
 
-        [HttpGet("members/new/{organization}/{project}")]
-        public IActionResult GetMembersNotInProject(string organization, string project)
+        [HttpGet("members/new/{organizationSlug}/{projectSlug}")]
+        public IActionResult GetMembersNotInProject(string organizationSlug, string projectSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetMembersNotInProject(organization, project);
+            var members = _db.GetMembersNotInProject(organizationSlug, projectSlug);
 
             return new HttpOkObjectResult(members);
         }
 
-        [HttpGet("get/{organizationSlug}", Name = "organization")]
+        [HttpGet("{organizationSlug}", Name = "organization")]
+        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -72,6 +78,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost]
+        [Authorize("Bearer")]
         public IActionResult Post([FromBody]Organization organization)
         {
             if (organization == null)
@@ -85,9 +92,10 @@ namespace Lisa.Breakpoint.WebApi
             {
                 string location = Url.RouteUrl("organization", new { organizationSlug = organization }, Request.Scheme);
                 return new CreatedResult(location, postedOrganization);
-            } else
+            }
+            else
             {
-                return new NoContentResult();
+                return new HttpStatusCodeResult(422);
             }
 
         }
@@ -101,6 +109,7 @@ namespace Lisa.Breakpoint.WebApi
         //}
 
         [HttpPatch("{organizationSlug}")]
+        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -136,19 +145,21 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpDelete("{organization}")]
-        public IActionResult Delete(string organization)
+        [HttpDelete("{organizationSlug}")]
+        [Authorize("Bearer")]
+        public IActionResult Delete(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteOrganization(organization);
+            _db.DeleteOrganization(organizationSlug);
 
             return new HttpStatusCodeResult(204);
         }
 
         private readonly RavenDB _db;
+        private readonly IIdentity _user;
     }
 }

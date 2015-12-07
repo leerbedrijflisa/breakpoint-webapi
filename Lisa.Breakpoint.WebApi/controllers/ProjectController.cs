@@ -1,9 +1,10 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
+using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.Filters;
 using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -13,49 +14,49 @@ namespace Lisa.Breakpoint.WebApi
         public ProjectController(RavenDB db)
         {
             _db = db;
+            _user = HttpContext.User.Identity;
         }
 
-        [HttpGet("{organization}/{username}")]
-        public IActionResult GetAll(string organization, string userName)
+        [HttpGet("{organizationSlug}")]
+        [Authorize("Bearer")]
+        public IActionResult GetAll(string organizationSlug)
         {
-            if (_db.GetOrganization(organization) == null)
+            if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            if (_db.GetUser(userName) == null)
+            var projects = _db.GetAllProjects(organizationSlug, _user.Name);
+            if (projects == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var organizations = _db.GetAllProjects(organization, userName);
-            if (organizations == null)
-            {
-                return new HttpNotFoundResult();
-            }
-
-            return new HttpOkObjectResult(organizations);
+            return new HttpOkObjectResult(projects);
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{userName}/{includeAllGroups?}", Name = "project")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
+        [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
+        [Authorize("Bearer")]
+        public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
-            if (projectSlug == null || userName == null)
+            if (projectSlug == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var project = _db.GetProject(organizationSlug, projectSlug, userName, includeAllGroups);
+            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name, includeAllGroups);
 
             if (project == null)
             {
                 return new HttpNotFoundResult();
             }
+
             return new HttpOkObjectResult(project);
         }
 
-        [HttpPost("{userName}")]
-        public IActionResult Post([FromBody]Project project, string userName)
+        [HttpPost]
+        [Authorize("Bearer")]
+        public IActionResult Post([FromBody]Project project)
         {
             if (project == null)
             {
@@ -66,16 +67,18 @@ namespace Lisa.Breakpoint.WebApi
 
             if (postedProject != null)
             {
-                string location = Url.RouteUrl("project", new { organizationSlug = project.Organization, projectSlug = project.Slug, userName = userName }, Request.Scheme);
+                string location = Url.RouteUrl("project", new { organizationSlug = project.Organization, projectSlug = project.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedProject);
-            } else
+            }
+            else
             {
                 return new NoContentResult();
             }
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]
-        public IActionResult Patch(string organizationSlug, string projectSlug, IEnumerable<Patch> patches)
+        [Authorize("Bearer")]
+        public IActionResult Patch(string organizationSlug, string projectSlug [FromBody] IEnumerable<Patch> patches)
         {
             //var project = _db.GetProject(organizationSlug, projectSlug);
             var project = new Project();
@@ -112,19 +115,21 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpPatch("{organization}/{projectSlug}/members")]
-        public IActionResult PatchMembers(string organization, string projectSlug, [FromBody] TempMemberPatch patch)
+        
+        [HttpPatch("{organizationSlug}/{projectSlug}/members")]
+        [Authorize("Bearer")]
+        public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
         {
-            if (organization == null || projectSlug == null || patch == null)
+            if (organizationSlug == null || projectSlug == null || patch == null)
             {
                 return new BadRequestResult();
             }
 
-            var patchedProjectMembers = _db.PatchProjectMembers(organization, projectSlug, patch);
+            var patchedProjectMembers = _db.PatchProjectMembers(organizationSlug, projectSlug, patch);
 
             if (patchedProjectMembers != null)
             {
-                string location = Url.RouteUrl("project", new { organizationSlug = organization, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
+                string location = Url.RouteUrl("project", new { organizationSlug = organizationSlug, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
                 return new CreatedResult(location, patchedProjectMembers);
             }
             else
@@ -133,10 +138,11 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpDelete("{organization}/{project}/{userName}")]
-        public IActionResult Delete(string organizationSlug, string project, string userName)
+        [HttpDelete("{organizationSlug}/{project}/")]
+        [Authorize("Bearer")]
+        public IActionResult Delete(string organizationSlug, string project)
         {
-            if (_db.GetProject(organizationSlug, project, userName) == null)
+            if (_db.GetProject(organizationSlug, project, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -147,5 +153,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
+        private readonly IIdentity _user;
     }
 }
