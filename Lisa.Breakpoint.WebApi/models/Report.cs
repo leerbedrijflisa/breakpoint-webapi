@@ -15,7 +15,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string   Reporter { get; set; }
         public DateTime Reported { get; set; }
         public string   Status { get; set; }
-        public Priority Priority { get; set; }
+        public string Priority { get; set; }
         public string   PriorityString { get; set; }
         public string   Version { get; set; }
         public AssignedTo AssignedTo { get; set; }
@@ -29,6 +29,16 @@ namespace Lisa.Breakpoint.WebApi.Models
         FixBeforeRelease,
         FixForNextRelease,
         FixWhenever
+    }
+
+    public static class PriorityClass
+    {
+        public const string FixImmediately = "FixImmediately";
+        public const string FixBeforeRelease = "FixBeforeRelease";
+        public const string FixForNextRelease = "FixForNextRelease";
+        public const string FixWhenever = "FixWhenever";
+
+        public static readonly IEnumerable<string> List = new[] { FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever };
     }
 
     public class AssignedTo
