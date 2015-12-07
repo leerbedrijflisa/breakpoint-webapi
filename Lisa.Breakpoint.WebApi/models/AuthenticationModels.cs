@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens;
 
 namespace Lisa.Breakpoint.TokenAuthentication
@@ -12,6 +13,7 @@ namespace Lisa.Breakpoint.TokenAuthentication
 
     public class AuthRequest
     {
+        [Required]
         public string username { get; set; }
     }
 

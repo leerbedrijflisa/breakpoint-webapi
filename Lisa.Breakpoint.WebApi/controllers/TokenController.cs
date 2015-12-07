@@ -70,6 +70,11 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] AuthRequest req)
         {
+            if (!ModelState.IsValid)
+            {
+                return new HttpStatusCodeResult(422);
+            }
+
             if (!_db.UserExists(req.username))
             {
                 return new HttpUnauthorizedResult();
@@ -85,7 +90,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 tokenExpires = expires
             };
 
-            return new HttpOkObjectResult(new { user = req.username, token = token, tokenExpires = expires });
+            return new HttpOkObjectResult(tokenResponse);
         }
 
         /// <summary>
