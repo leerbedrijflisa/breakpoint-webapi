@@ -21,7 +21,6 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult GetAll()
         {
-
             if (_db.GetUser(_user.Name) == null)
             {
                 return new HttpNotFoundResult();

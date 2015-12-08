@@ -23,7 +23,9 @@ namespace Lisa.Breakpoint.WebApi.database
 
             // Fail if patch contains fields not in object that's getting patched
             var properties = typeof(T).GetProperties();
-            if (patchFields.Where(f => !properties.Select(p => p.Name).Contains(f)).Count() > 0)
+            if (patchFields.Where(f => !properties
+                    .Select(p => p.Name)
+                    .Contains(f)).Count() > 0)
             {
                 return false;
             }
