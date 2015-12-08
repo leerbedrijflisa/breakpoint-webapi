@@ -11,7 +11,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         public UserController(RavenDB db)
         {
             _db = db;
-            _user = HttpContext.User.Identity;
         }
 
         [HttpGet("", Name = "users")]

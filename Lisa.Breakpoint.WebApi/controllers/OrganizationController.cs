@@ -12,18 +12,13 @@ namespace Lisa.Breakpoint.WebApi
         public OrganizationController(RavenDB db)
         {
             _db = db;
-            _user = HttpContext.User.Identity;
         }
         
         [HttpGet]
         [Authorize("Bearer")]
         public IActionResult GetAll()
         {
-
-            if (_db.GetUser(_user.Name) == null)
-            {
-                return new HttpNotFoundResult();
-            }
+            _user = HttpContext.User.Identity;
 
             var organizations = _db.GetAllOrganizations(_user.Name);
 
@@ -36,6 +31,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("members/{organizationSlug}")]
+        [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {
             if (_db.GetOrganization(organizationSlug) == null)
@@ -49,6 +45,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("members/new/{organizationSlug}/{projectSlug}")]
+        [Authorize("Bearer")]
         public IActionResult GetMembersNotInProject(string organizationSlug, string projectSlug)
         {
             if (_db.GetOrganization(organizationSlug) == null)
@@ -77,12 +74,14 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpPost]
         [Authorize("Bearer")]
-        public IActionResult Post([FromBody]Organization organization)
+        public IActionResult Post([FromBody] Organization organization)
         {
             if (organization == null)
             {
                 return new BadRequestResult();
             }
+
+            organization.Slug = RavenDB._toUrlSlug(organization.Name);
 
             var postedOrganization = _db.PostOrganization(organization);
 
@@ -122,6 +121,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private readonly IIdentity _user;
+        private IIdentity _user;
     }
 }

@@ -11,14 +11,15 @@ namespace Lisa.Breakpoint.WebApi
     {
         public ProjectController(RavenDB db)
         {
-            _db = db;
-            _user = HttpContext.User.Identity;
+            _db = db;            
         }
 
         [HttpGet("{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult GetAll(string organizationSlug)
         {
+            _user = HttpContext.User.Identity;
+
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
@@ -37,6 +38,8 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
+            _user = HttpContext.User.Identity;
+
             if (projectSlug == null)
             {
                 return new HttpNotFoundResult();
@@ -60,6 +63,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new BadRequestResult();
             }
+
+            project.Slug = RavenDB._toUrlSlug(project.Name);
 
             var postedProject = _db.PostProject(project);
 
@@ -109,6 +114,8 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug, string project)
         {
+            _user = HttpContext.User.Identity;
+
             if (_db.GetProject(organizationSlug, project, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
@@ -120,6 +127,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private readonly IIdentity _user;
+        private IIdentity _user;
     }
 }
