@@ -16,79 +16,15 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{userName}")]
+        [HttpGet("{organizationSlug}/{projectSlug}/{userName}/{filter?}/{value?}")]
         public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported = null, string filter = "", string value = "")
         {
             IList<Report> reports;
 
-            bool filterDate = false;
-            bool monthYear = false;
-
-            DateTime filterDay = DateTime.Today;
-            DateTime filterDayTwo = DateTime.Today.AddDays(1);
-
-            IList<string> monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
-
+            IList<DateTime> dateTimes = new DateTime[2];
             if (reported != null)
             {
-                int date = 0;
-                if (Regex.Replace(reported, @"[^\d]|\s+", string.Empty) != "")
-                {
-                    date = Int32.Parse(Regex.Replace(reported, @"[^\d]", string.Empty));
-                }
-
-                reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty).ToLower();
-
-                if (monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
-                {
-                    monthYear = true;
-                }
-                else
-                {
-                    reported = Regex.Replace(reported, @"[\d]|\s+", string.Empty);
-                }
-
-                if (reported == "today")
-                {
-                    filterDate = true;
-                }
-                else if (reported == "yesterday")
-                {
-                    filterDay = filterDay.AddDays(-1);
-                    filterDayTwo = filterDayTwo.AddDays(-1);
-                    filterDate = true;
-                }
-                else if (reported == "daysago")
-                {
-                    filterDay = filterDay.AddDays(-date);
-                    filterDayTwo = filterDayTwo.AddDays(-date);
-                    filterDate = true;
-                }
-                else if (reported == "lastdays")
-                {
-                    filterDay = filterDay.AddDays(-date);
-                    filterDate = true;
-                }
-                else if (monthYear)
-                {
-                    filterDay = new DateTime(date, monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = new DateTime(date, monthNames.IndexOf(reported) + 2, 1);
-                    filterDate = true;
-                }
-                else if (monthNames.Contains(reported))
-                {
-                    if ((monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
-                    {
-                        filterDay = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 1, 1);
-                        filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
-                    }
-                    else
-                    {
-                        filterDay = new DateTime(filterDay.AddYears(-1).Year, monthNames.IndexOf(reported) + 1, 1);
-                        filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
-                    }
-                    filterDate = true;
-                }
+                dateTimes = this.checkReported(reported);
             }
 
             //die dingen van bas
@@ -101,25 +37,28 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new HttpNotFoundResult();
             }
-            
-            if (filter != "" || filterDate )
+            var meep = dateTimes[0].Date;
+            if (filter != "" || dateTimes[0].Date != DateTime.MinValue.Date)
             {
-                DateTime[] dateTimes = new DateTime[2];
-
-                Filter f = null;
-
-                if (filterDate)
+                DateTime[] dateTimeObject = new DateTime[2];
+                if (dateTimes[0].Date == DateTime.MinValue.AddDays(1).Date)
                 {
-                    dateTimes[0] = filterDay;
-                    dateTimes[1] = filterDayTwo;
+                    return new HttpStatusCodeResult(422);
+                }
+                else if (dateTimes[0].Date != DateTime.MinValue.Date)
+                {
+                    dateTimeObject[0] = dateTimes[0];
+                    dateTimeObject[1] = dateTimes[1];
                 }
 
+                Filter f = null;
+                
                 if (filter != "")
                 {
                     f = new Filter(filter, value);
                 }
 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, dateTimes, f);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, userName, dateTimeObject, f);
             } else { 
                 reports = _db.GetAllReports(organizationSlug, projectSlug, userName);
             }
@@ -229,6 +168,70 @@ namespace Lisa.Breakpoint.WebApi
 
             return new HttpStatusCodeResult(204);
         }
+
+        private IList<DateTime> checkReported(string reported)
+        {
+            reported = reported.ToLower();
+            IList<string> monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
+            int date = 0;
+            DateTime filterDay = DateTime.Today;
+            DateTime filterDayTwo = DateTime.Today.AddDays(1);
+
+            
+            bool monthYear = false;
+            if (Regex.Match(reported, @"\d+").Value != "")
+            {
+                date = int.Parse(Regex.Match(reported, @"\d+").Value);
+            }
+
+            if (monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
+            {
+                monthYear = true;
+            }
+
+            if (reported == "today")
+            {
+
+            }
+            else if (reported == "yesterday")
+            {
+                filterDay = filterDay.AddDays(-1);
+                filterDayTwo = filterDayTwo.AddDays(-1);
+            }
+            else if (Regex.Match(reported, @"\d+\W+days\W+ago").Success)
+            {
+                filterDay = filterDay.AddDays(-date);
+                filterDayTwo = filterDayTwo.AddDays(-date);
+            }
+            else if (Regex.Match(reported, @"last\W+\d+\W+days").Success)
+            {
+                filterDay = filterDay.AddDays(-date);
+            }
+            else if (monthYear)
+            {
+                filterDay = new DateTime(date, monthNames.IndexOf(reported) + 1, 1);
+                filterDayTwo = new DateTime(date, monthNames.IndexOf(reported) + 2, 1);
+            }
+            else if (monthNames.Contains(reported))
+            {
+                if ((monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
+                {
+                    filterDay = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
+                }
+                else
+                {
+                    filterDay = new DateTime(filterDay.AddYears(-1).Year, monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = new DateTime(filterDay.Year, monthNames.IndexOf(reported) + 2, 1);
+                }
+            }
+            else
+            {
+                filterDay = DateTime.MinValue.AddDays(1);
+            }
+            IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
+            return dateTimes;
+        } 
 
         private readonly RavenDB _db;
 
