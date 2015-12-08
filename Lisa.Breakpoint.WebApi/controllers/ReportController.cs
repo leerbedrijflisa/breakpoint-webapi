@@ -61,11 +61,10 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(report);
         }
 
-        [HttpPost("{organizationslug}/{projectslug}")]
+        [HttpPost("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
         public IActionResult Post([FromBody] Report report, string organizationSlug, string projectSlug)
         {
-
             if (report == null)
             {
                 return new BadRequestResult();
@@ -75,6 +74,10 @@ namespace Lisa.Breakpoint.WebApi
             {
                 report.Platform.Add("Not specified");
             }
+
+            // Set organization and project slug's 
+            report.Organization = organizationSlug;
+            report.Project = projectSlug;
 
             _db.PostReport(report);
 
