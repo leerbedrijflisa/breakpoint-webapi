@@ -21,7 +21,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
 
-                if (filterDays[0] != DateTime.MinValue.Date)
+                if (filterDays[0] != DateTime.MinValue)
                 {
                     DateTime dayOne = filterDays[0];
                     DateTime dayTwo = filterDays[1];
