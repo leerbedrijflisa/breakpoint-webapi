@@ -17,7 +17,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{userName}/{filter?}/{value?}")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string userName, [FromQuery] string reported = null, string filter = "", string value = "")
+        public IActionResult Get(string organizationSlug, string projectSlug, string userName, string filter = "", string value = "", [FromQuery] string reported = null)
         {
             IList<Report> reports;
 
@@ -37,7 +37,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new HttpNotFoundResult();
             }
-            var meep = dateTimes[0].Date;
+            
             if (filter != "" || dateTimes[0].Date != DateTime.MinValue.Date)
             {
                 DateTime[] dateTimeObject = new DateTime[2];
@@ -176,7 +176,6 @@ namespace Lisa.Breakpoint.WebApi
             int date = 0;
             DateTime filterDay = DateTime.Today;
             DateTime filterDayTwo = DateTime.Today.AddDays(1);
-
             
             bool monthYear = false;
             if (Regex.Match(reported, @"\d+").Value != "")
