@@ -35,6 +35,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
+        
+
         [HttpGet("members/{organizationSlug}")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {

@@ -60,18 +60,16 @@ namespace Lisa.Breakpoint.WebApi
 
             return new HttpOkObjectResult(report);
         }
-
-        [HttpPost("{organizationslug}/{projectslug}")]
+        [HttpPost("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Post([FromBody] Report report, string organizationSlug, string projectSlug)
+        public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
         {
-
             if (report == null)
             {
                 return new BadRequestResult();
             }
 
-            if (report.Platform.Count == 0)
+            if (report.Platform != null && report.Platform.Count == 0)
             {
                 report.Platform.Add("Not specified");
             }
