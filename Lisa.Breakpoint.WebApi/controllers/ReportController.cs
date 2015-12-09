@@ -2,6 +2,8 @@
 using Microsoft.AspNet.Mvc;
 using Lisa.Breakpoint.WebApi.Models;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
 
@@ -12,7 +14,7 @@ namespace Lisa.Breakpoint.WebApi
     {
         public ReportController(RavenDB db)
         {
-            _db = db;            
+            _db = db;
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
@@ -85,60 +87,98 @@ namespace Lisa.Breakpoint.WebApi
             string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
             return new CreatedResult(location, report);
         }
-
+            
         [HttpPatch("{id}")]
         [Authorize("Bearer")]
-        public IActionResult Patch(int id, [FromBody] Report report)
+        public IActionResult Patch(int id, [FromBody] Patch[] patches)
         {
             _user = HttpContext.User.Identity;
 
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
-            if (!statusCheck.Contains(report.Status))
+            if (patches == null)
             {
                 return new BadRequestResult();
             }
 
-            Report checkReport = _db.GetReport(id);
-
-            Project checkProject = _db.GetProject(checkReport.Organization, checkReport.Project, _user.Name);
+            var patchList = patches.Distinct().ToList();
+            var patchFields = patchList.Select(p => p.Field);
             
-            //If the status is Won't fix (approved) than it will check if the user is a manager, if that is not the case then return badrequestresult.
-            if (report.Status == statusCheck[3])
+            Report report = _db.GetReport(id);
+
+            if (report == null)
             {
-                foreach (var members in checkProject.Members)
-                {
-                    if (members.UserName == _user.Name && members.Role != "manager")
-                    {
-                        return new BadRequestResult();
-                    }
-                    if (members.UserName == _user.Name && members.Role == "manager")
-                    {
-                        break;
-                    }
-                }
+                return new HttpNotFoundResult();
             }
-            if (report.Status == statusCheck[4])
+
+            Project checkProject = _db.GetProjectByReport(id, _user.Name);
+
+            // Check if user is in project
+            if (!checkProject.Members.Select(m => m.UserName).Contains(_user.Name))
             {
-                foreach (var members in checkProject.Members)
+                // Not authenticated
+                return new HttpStatusCodeResult(401);
+            }
+
+            // If the status is attempted to be patched, run permission checks
+            if (patchFields.Contains("status"))
+            {
+                var statusPatch = patchList.Single(p => p.Field == "status");
+
+                if (!statusCheck.Contains(statusPatch.Value))
                 {
-                    if (members.UserName == _user.Name && members.Role == "developer" && report.Reporter == _user.Name)
+                    return new BadRequestResult();
+                }
+
+                // If the status is patching to Won't Fix (approved), require the user to be a project manager
+                if (statusPatch.Value.Equals(statusCheck[3]) && !checkProject.Members.Single(m => m.UserName.Equals(_user.Name)).Role.Equals("manager"))
+                {
+                    // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+                    return new HttpStatusCodeResult(422);
+                }
+
+                // Is the status is patching to Closed, check if the user is either a manager, tester, or the developer who reported the problem.
+                // Effectively, you're only checking whether the user is a developer, and if that's the case, if the developer has created the report.
+                // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
+                if (statusPatch.Value.Equals(statusCheck[4]))
+                {
+                    var member = checkProject.Members.Single(m => m.UserName.Equals(_user.Name));
+
+                    checkProject.Members
+                            .Single(m => m.UserName.Equals(_user.Name))
+                            .Role.Equals("developer");
+
+                    if (!report.Reporter.Equals(member.UserName))
                     {
-                        break;
-                    }
-                    else if (members.UserName == _user.Name && members.Role == "manager" || members.Role == "tester")
-                    {
-                        break;
-                    }
-                    else if (members.UserName != _user.Name && members.Role == "developer")
-                    {
-                        return new BadRequestResult();
+                        // Not authenticated
+                        return new HttpStatusCodeResult(401);
                     }
                 }
             }
 
-            Report patchedReport = _db.PatchReport(id, report);
-
-            return new HttpOkObjectResult(patchedReport);
+            // Do not patch the date it was reported
+            if (patchFields.Contains("Reported"))
+            {
+                patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
+            }
+            
+            // Patch Report to database
+            try
+            {
+                // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
+                if (_db.Patch<Report>(id, patches))
+                {
+                    return new HttpOkObjectResult(_db.GetReport(id));
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(422);
+                }
+            }
+            catch(Exception)
+            {
+                // Internal server error if RavenDB throws exceptions
+                return new HttpStatusCodeResult(500);
+            }
         }
 
         [HttpDelete("{id}")]

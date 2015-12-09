@@ -127,7 +127,7 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PatchProjectMembers(string organizationSlug, string projectSlug, Patch patch)
+        public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -233,6 +233,18 @@ namespace Lisa.Breakpoint.WebApi.database
                 Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
                 session.Delete(project);
                 session.SaveChanges();
+            }
+        }
+
+        internal Project GetProjectByReport(int id, string username)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                var report = session.Load<Report>(id);
+
+                return session.Query<Project>()
+                    .Where(p => p.Organization == report.Organization && p.Slug == report.Project)
+                    .SingleOrDefault();
             }
         }
     }

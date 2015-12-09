@@ -2,6 +2,8 @@
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -79,18 +81,51 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Patch(int id, string organization, [FromBody] Project project)
+        public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
-            var patchedProject = _db.PatchProject(id, project);
+            if (patches == null)
+            {
+                return new BadRequestResult();
+            }
 
-            return new HttpOkObjectResult(patchedProject);
+            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
+
+            if (project == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            int projectNumber;
+            if (!int.TryParse(project.Number, out projectNumber))
+            {
+                return new HttpStatusCodeResult(500);
+            }
+
+            // Patch Report to database
+            try
+            {
+                if (_db.Patch<Organization>(projectNumber, patches))
+                {
+                    return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(422);
+                }
+            }
+            catch (Exception)
+            {
+                // Internal server error if RavenDB throws exceptions
+                return new HttpStatusCodeResult(500);
+            }
         }
 
+        
         [HttpPatch("{organizationSlug}/{projectSlug}/members")]
         [Authorize("Bearer")]
-        public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] Patch patch)
+        public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
         {
             if (organizationSlug == null || projectSlug == null || patch == null)
             {

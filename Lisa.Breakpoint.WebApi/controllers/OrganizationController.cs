@@ -2,6 +2,8 @@
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using System;
+using System.Collections.Generic;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -99,13 +101,45 @@ namespace Lisa.Breakpoint.WebApi
 
         }
 
-        [HttpPatch("{id}")]
+        [HttpPatch("{organizationSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Patch(int id, Organization organization)
+        public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
         {
-            var patchedOrganization = _db.PatchOrganization(id, organization);
+            if (patches == null)
+            {
+                return new BadRequestResult();
+            }
 
-            return new HttpOkObjectResult(patchedOrganization);
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            int organizationNumber;
+            if (!int.TryParse(organization.Number, out organizationNumber))
+            {
+                return new HttpStatusCodeResult(500);
+            }
+
+            // Patch Report to database
+            try
+            {
+                if (_db.Patch<Organization>(organizationNumber, patches))
+                {
+                    return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
+                }
+                else
+                {
+                    return new HttpStatusCodeResult(422);
+                }
+            }
+            catch (Exception)
+            {
+                // Internal server error if RavenDB throws exceptions
+                return new HttpStatusCodeResult(500);
+            }
         }
 
         [HttpDelete("{organizationSlug}")]

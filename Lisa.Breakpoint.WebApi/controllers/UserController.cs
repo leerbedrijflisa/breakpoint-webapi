@@ -82,6 +82,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         }
 
         private readonly RavenDB _db;
-        private readonly IIdentity _user;
+        private IIdentity _user;
     }
 }
