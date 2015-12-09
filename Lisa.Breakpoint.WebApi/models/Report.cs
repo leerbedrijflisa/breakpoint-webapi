@@ -15,7 +15,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string   Reporter { get; set; }
         public DateTime Reported { get; set; }
         public string   Status { get; set; }
-        public string Priority { get; set; }
+        public Priority Priority { get; set; }
         public string   PriorityString { get; set; }
         public string   Version { get; set; }
         public AssignedTo AssignedTo { get; set; }

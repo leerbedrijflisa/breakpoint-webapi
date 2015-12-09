@@ -192,7 +192,7 @@ namespace Lisa.Breakpoint.WebApi.database
         }
         private static Expression<Func<Report, bool>> WherePriority(Priority priority)
         {
-            return r => r.Priority == priority.ToString();
+            return r => r.Priority == priority;
         }
         private static Expression<Func<Report, bool>> WhereReportedAfter(DateTime dateTime)
         {
