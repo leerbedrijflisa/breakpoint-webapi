@@ -90,6 +90,9 @@ namespace Lisa.Breakpoint.WebApi.database
                 if (!session.Query<Project>().Where(p => p.Organization == project.Organization && p.Slug == project.Slug).Any())
                 {
                     session.Store(project);
+                    string projectId = session.Advanced.GetDocumentId(project);
+                    project.Number = projectId.Split('/').Last();
+
                     session.SaveChanges();
 
                     return project;
