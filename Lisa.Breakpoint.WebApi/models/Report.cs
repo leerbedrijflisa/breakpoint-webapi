@@ -31,6 +31,16 @@ namespace Lisa.Breakpoint.WebApi.Models
         FixWhenever
     }
 
+    public static class PriorityClass
+    {
+        public const string FixImmediately = "FixImmediately";
+        public const string FixBeforeRelease = "FixBeforeRelease";
+        public const string FixForNextRelease = "FixForNextRelease";
+        public const string FixWhenever = "FixWhenever";
+
+        public static readonly IEnumerable<string> List = new[] { FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever };
+    }
+
     public class AssignedTo
     {
         public string Type { get; set; }
