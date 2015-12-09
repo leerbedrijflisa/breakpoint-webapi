@@ -12,14 +12,15 @@ namespace Lisa.Breakpoint.WebApi
     {
         public ReportController(RavenDB db)
         {
-            _db = db;
-            _user = HttpContext.User.Identity;
+            _db = db;            
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "")
         {
+            _user = HttpContext.User.Identity;
+
             if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
@@ -60,6 +61,7 @@ namespace Lisa.Breakpoint.WebApi
 
             return new HttpOkObjectResult(report);
         }
+
         [HttpPost("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
@@ -74,6 +76,10 @@ namespace Lisa.Breakpoint.WebApi
                 report.Platform.Add("Not specified");
             }
 
+            // Set organization and project slug's 
+            report.Organization = organizationSlug;
+            report.Project = projectSlug;
+
             _db.PostReport(report);
 
             string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
@@ -84,6 +90,8 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Patch(int id, [FromBody] Report report)
         {
+            _user = HttpContext.User.Identity;
+
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (!statusCheck.Contains(report.Status))
             {
@@ -148,8 +156,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private readonly IIdentity _user;
+        private IIdentity _user;
         private readonly IList<string> statusCheck = new string[] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
-
     }
 }

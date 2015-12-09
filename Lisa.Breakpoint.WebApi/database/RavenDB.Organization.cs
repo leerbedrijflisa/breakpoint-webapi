@@ -11,16 +11,17 @@ namespace Lisa.Breakpoint.WebApi.database
     {
         public IList<Organization> GetAllOrganizations(string userName)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                if (userName != null || userName != "")
+                using (IDocumentSession session = documentStore.Initialize().OpenSession())
                 {
                     return session.Query<Organization>()
                         .Where(o => o.Members.Any(m => m == userName))
                         .ToList();
                 }
-                return null;
             }
+
+            return null;
         }
 
         public Organization GetOrganization(string organization)
@@ -69,10 +70,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
                     return organization;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
         }
 
