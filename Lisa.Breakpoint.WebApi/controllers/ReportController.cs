@@ -262,7 +262,7 @@ namespace Lisa.Breakpoint.WebApi
 
         private readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
 
-        private readonly IList<string> statusCheck = new string[] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
+        private readonly IList<string> statusCheck = new string[5] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
 
     }
 }
