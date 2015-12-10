@@ -30,7 +30,7 @@ namespace Lisa.Breakpoint.WebApi
             if (reported != null)
             {
                 //Calls a function to determine if reported has a correct specific value
-                dateTimes = this._checkReported(reported);
+                dateTimes = _checkReported(reported);
                 //When the specific value is invalid it will return a unprocessable entity status code
                 if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                 {
@@ -297,16 +297,15 @@ namespace Lisa.Breakpoint.WebApi
             return dateTimes;
         } 
 
-        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDay)
+        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
         {
-            DateTime filterDayTwo;
             if (reported == _monthNames[11])
             {
-                filterDayTwo = new DateTime(filterDay.AddYears(1).Year, 1, 1);
+                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
             }
             else
             {
-                filterDayTwo = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 2, 1);
+                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
             };
 
             return filterDayTwo;
