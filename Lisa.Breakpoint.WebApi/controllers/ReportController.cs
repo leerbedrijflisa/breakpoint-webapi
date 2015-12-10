@@ -273,7 +273,7 @@ namespace Lisa.Breakpoint.WebApi
                 //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                filterDayTwo = _calculateFilterDayTwo(reported, filterDayTwo);
+                filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
             }
             else if (_monthNames.Contains(reported))
             {
@@ -281,12 +281,12 @@ namespace Lisa.Breakpoint.WebApi
                 if ((_monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
                 {
                     filterDay = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDayTwo);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
                 }
                 else
                 {
                     filterDay = new DateTime(filterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDayTwo);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
                 }
             }
             else
@@ -297,15 +297,16 @@ namespace Lisa.Breakpoint.WebApi
             return dateTimes;
         } 
 
-        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
+        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDay)
         {
+            DateTime filterDayTwo;
             if (reported == _monthNames[11])
             {
-                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
+                filterDayTwo = new DateTime(filterDay.AddYears(1).Year, 1, 1);
             }
             else
             {
-                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
+                filterDayTwo = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 2, 1);
             };
 
             return filterDayTwo;
