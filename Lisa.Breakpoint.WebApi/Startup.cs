@@ -82,6 +82,26 @@ namespace Lisa.Breakpoint.WebApi
         {
             app.UseIISPlatformHandler();
 
+            app.UseBreakpointJWTAuthentication(key, tokenOptions);
+            app.UseCors("Breakpoint");
+
+            app.UseMvcWithDefaultRoute();
+        }
+    }
+
+    public static class StartupExtensions
+    {
+        public static IServiceCollection AddBreakpointDB(this IServiceCollection services)
+        {
+            var docStore = new DocumentStore() { Url = "http://localhost:8080", DefaultDatabase = "breakpoint" };
+            docStore.Conventions.SaveEnumsAsIntegers = true;
+            services.AddInstance<IDocumentStore>(docStore);
+            services.AddSingleton<RavenDB>();
+            return services;
+        }
+
+        public static IApplicationBuilder UseBreakpointJWTAuthentication(this IApplicationBuilder app, RsaSecurityKey key, TokenAuthOptions tokenOptions)
+        {
             // Register a simple error handler to catch token expiries and change them to a 401, 
             // and return all other errors as a 500. This should almost certainly be improved for
             // a real application.
@@ -114,11 +134,14 @@ namespace Lisa.Breakpoint.WebApi
                     }
                     // We're not trying to handle anything else so just let the default 
                     // handler handle.
-                    else await next();
+                    else
+                    {
+                        await next();
+                    }
                 });
             });
 
-            app.UseJwtBearerAuthentication(options =>
+            return app.UseJwtBearerAuthentication(options =>
             {
                 // Basic settings - signing key to validate with, audience and issuer.
                 options.TokenValidationParameters.IssuerSigningKey = key;
@@ -137,21 +160,6 @@ namespace Lisa.Breakpoint.WebApi
                 // used, some leeway here could be useful.
                 options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(0);
             });
-
-            app.UseCors("Breakpoint");
-            app.UseMvcWithDefaultRoute();
-        }
-    }
-
-    public static class StartupExtensions
-    {
-        public static IServiceCollection AddBreakpointDB(this IServiceCollection services)
-        {
-            var docStore = new DocumentStore() { Url = "http://localhost:8080", DefaultDatabase = "breakpoint" };
-            docStore.Conventions.SaveEnumsAsIntegers = true;
-            services.AddInstance<IDocumentStore>(docStore);
-            services.AddSingleton<RavenDB>();
-            return services;
         }
     }
 }
