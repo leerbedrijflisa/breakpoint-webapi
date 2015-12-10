@@ -14,12 +14,19 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, Filter filter = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, DateTime[] filterDays = null, Filter filter = null)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug);
+                IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
+
+                if (filterDays[0] != DateTime.MinValue)
+                {
+                    DateTime dayOne = filterDays[0];
+                    DateTime dayTwo = filterDays[1];
+                    rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
+                }
 
                 if (filter != null)
                 {
@@ -50,7 +57,6 @@ namespace Lisa.Breakpoint.WebApi.database
                         rList = rList.ApplyFilters(tempFilters);
                     }
                 }
-
                 reports = rList.OrderBy(r => r.Priority)
                         .ThenByDescending(r => r.Reported.Date)
                         .ThenBy(r => r.Reported.TimeOfDay)
@@ -80,7 +86,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 report.Number = reportId.Split('/').Last();
                 report.Reported = DateTime.Now;
 
-                AddPlatforms(report.Organization, report.Platform);
+                AddPlatforms(report.Organization, report.Platforms);
 
                 session.SaveChanges();
 
