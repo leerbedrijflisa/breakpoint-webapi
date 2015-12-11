@@ -57,28 +57,29 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(project);
         }
 
-        [HttpPost]
+        [HttpPost("{organizationSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Post([FromBody]Project project)
+        public IActionResult Post(string organizationSlug, [FromBody]Project project)
         {
-            if (project == null)
+            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 return new BadRequestResult();
             }
 
-            project.Slug = RavenDB._toUrlSlug(project.Name);
+            if (_db.OrganizationExists(organizationSlug))
+            {
+                return new HttpNotFoundResult();
+            }
 
-            var postedProject = _db.PostProject(project);
+            var postedProject = _db.PostProject(project, organizationSlug);
 
             if (postedProject != null)
             {
                 string location = Url.RouteUrl("project", new { organizationSlug = project.Organization, projectSlug = project.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedProject);
             }
-            else
-            {
-                return new NoContentResult();
-            }
+
+            return new DuplicateEntityResult();
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]

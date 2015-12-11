@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens;
 
 namespace Lisa.Breakpoint.TokenAuthentication
 {
@@ -52,6 +53,22 @@ namespace Lisa.Breakpoint.TokenAuthentication
             if (!File.Exists(file)) throw new FileNotFoundException("Check configuration - cannot find auth key file: " + file);
             var keyParams = JsonConvert.DeserializeObject<RSAParametersWithPrivate>(File.ReadAllText(file));
             return keyParams.ToRSAParameters();
+        }
+
+
+        public static RsaSecurityKey GetRSAKey()
+        {
+            if (!File.Exists("rsa.json"))
+            {
+                GenerateKeyAndSave("rsa.json");
+            }
+
+            RSAParameters keyParams = GetKeyParameters("rsa.json");
+
+            // Create the key, and a set of token options to record signing credentials 
+            // using that key, along with the other parameters we will need in the 
+            // token controlller.
+            return new RsaSecurityKey(keyParams);
         }
 
 

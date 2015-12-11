@@ -18,7 +18,6 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug, string filter = null, string value = null, [FromQuery] string reported = null)
@@ -103,24 +102,25 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
         {
-            if (report == null)
+            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new BadRequestResult();
             }
-
-            if (report.Platforms != null && report.Platforms.Count == 0)
+            
+            if (!_db.ProjectExists(organizationSlug, projectSlug))
             {
-                report.Platforms.Add("Not specified");
+                return new HttpNotFoundResult();
             }
 
-            // Set organization and project slug's 
-            report.Organization = organizationSlug;
-            report.Project = projectSlug;
+            var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
-            _db.PostReport(report);
+            if (postedReport != null)
+            {
+                string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
+                return new CreatedResult(location, postedReport);
+            }
 
-            string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
-            return new CreatedResult(location, report);
+            return new DuplicateEntityResult();
         }
             
         [HttpPatch("{id}")]

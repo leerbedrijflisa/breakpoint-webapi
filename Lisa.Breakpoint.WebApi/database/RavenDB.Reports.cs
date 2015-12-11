@@ -76,8 +76,16 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Report PostReport(Report report)
+        public Report PostReport(Report report, string organization, string project)
         {
+            if (report.Platforms != null && report.Platforms.Count == 0)
+            {
+                report.Platforms.Add("Not specified");
+            }
+
+            report.Organization = organization;
+            report.Project = project;
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 session.Store(report);

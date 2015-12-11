@@ -45,13 +45,17 @@ namespace Lisa.Breakpoint.WebApi.controllers
             if (user == null)
             {
                 return new BadRequestResult();
-
             }
 
             var postedUser = _db.PostUser(user);
 
-            string location = Url.RouteUrl("users", new {  }, Request.Scheme);
-            return new CreatedResult(location, postedUser);
+            if (postedUser != null)
+            {
+                string location = Url.RouteUrl("users", new { }, Request.Scheme);
+                return new CreatedResult(location, postedUser);
+            }
+
+            return new DuplicateEntityResult();
         }
 
         [HttpGet("groups", Name = "groups")]
@@ -77,8 +81,15 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
             var postedGroup = _db.PostGroup(group);
 
-            string location = Url.RouteUrl("groups", new {  }, Request.Scheme);
-            return new CreatedResult(location, postedGroup);
+            if (postedGroup != null)
+            {
+                string location = Url.RouteUrl("groups", new { }, Request.Scheme);
+                return new CreatedResult(location, postedGroup);
+            }
+            else
+            {
+                return new DuplicateEntityResult();
+            }
         }
 
         private readonly RavenDB _db;
