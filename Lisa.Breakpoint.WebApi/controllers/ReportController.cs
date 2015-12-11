@@ -236,7 +236,7 @@ namespace Lisa.Breakpoint.WebApi
             int date = 0;
             DateTime filterDay = DateTime.Today;
             DateTime filterDayTwo = DateTime.Today.AddDays(1);
-            
+
             bool monthYear = false;
 
             //Filters out all the characters and white spaces
@@ -246,9 +246,8 @@ namespace Lisa.Breakpoint.WebApi
                 if (!int.TryParse(unparsedDate, out date))
                 {
                     filterDay = DateTime.MinValue.AddDays(1);
-                    date = 0;
                 }
-                
+
             }
 
             DateTime d1 = new DateTime(1970, 1, 1);
@@ -256,6 +255,7 @@ namespace Lisa.Breakpoint.WebApi
             if (date > span.TotalDays)
             {
                 filterDay = DateTime.MinValue.AddDays(1);
+                date = 0;
             }
 
             //Checks if monthNames contains a month and if the date is between a certain amount
@@ -274,13 +274,13 @@ namespace Lisa.Breakpoint.WebApi
                 filterDay = filterDay.AddDays(-1);
                 filterDayTwo = filterDayTwo.AddDays(-1);
             }
-            else if (Regex.Match(reported, @"\d+\W+days\W+ago").Success)
+            else if (Regex.IsMatch(reported, @"(\d+\W+days\W+ago)"))
             {
                 //Subtracts the amount of days you entered on both so you get 1 day
                 filterDay = filterDay.AddDays(-date);
                 filterDayTwo = filterDayTwo.AddDays(-date);
             }
-            else if (Regex.Match(reported, @"last\W+\d+\W+days").Success)
+            else if (Regex.IsMatch(reported, @"last\W+\d+\W+days"))
             {
                 //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
                 filterDay = filterDay.AddDays(-date);
