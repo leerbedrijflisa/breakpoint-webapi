@@ -58,6 +58,7 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Organization PostOrganization(OrganizationPost organization)
         {
+            _errors = new List<Error>();
 
             var organizationEntity = new Organization()
             {
@@ -68,7 +69,20 @@ namespace Lisa.Breakpoint.WebApi.database
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<Organization>().Where(o => o.Slug == organizationEntity.Slug).Any())
+                foreach(var user in organization.Members)
+                {
+                    if (!session.Query<User>().Any(u => u.Username == user))
+                    {
+                        _errors.Add(new Error(1305, new { value = user }));
+                    }
+                }
+
+                if (session.Query<Organization>().Where(o => o.Slug == organizationEntity.Slug).Any())
+                {
+                    _errors.Add(new Error(1102, new { type = "organization", value = "name" }));
+                }
+
+                if (_errors.Count() == 0)
                 {
                     session.Store(organizationEntity);
                     string organizationId = session.Advanced.GetDocumentId(organizationEntity);

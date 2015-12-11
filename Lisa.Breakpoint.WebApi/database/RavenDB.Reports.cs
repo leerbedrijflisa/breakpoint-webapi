@@ -78,6 +78,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Report PostReport(ReportPost report, string organization, string project)
         {
+            _errors = new List<Error>();
+
             if (report.Platforms == null)
             {
                 report.Platforms = new List<string>();
@@ -106,17 +108,22 @@ namespace Lisa.Breakpoint.WebApi.database
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                session.Store(reportEntity);
+                if (_errors.Count() == 0)
+                {
+                    session.Store(reportEntity);
 
-                string reportId = session.Advanced.GetDocumentId(reportEntity);
-                reportEntity.Number = reportId.Split('/').Last();
-                reportEntity.Reported = DateTime.Now;
+                    string reportId = session.Advanced.GetDocumentId(reportEntity);
+                    reportEntity.Number = reportId.Split('/').Last();
+                    reportEntity.Reported = DateTime.Now;
 
-                AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
+                    AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
 
-                session.SaveChanges();
+                    session.SaveChanges();
 
-                return reportEntity;
+                    return reportEntity;
+                }
+
+                return null;
             }
         }
 

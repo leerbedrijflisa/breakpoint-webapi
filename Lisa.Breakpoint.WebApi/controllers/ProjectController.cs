@@ -64,6 +64,16 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
             List<Error> errors = new List<Error>();
+            
+            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
+            {
+                return new BadRequestResult();
+            }
+
+            if (!_db.OrganizationExists(organizationSlug))
+            {
+                return new HttpNotFoundResult();
+            }
 
             if (!ModelState.IsValid)
             {
@@ -87,25 +97,15 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestObjectResult(errors);
             }
 
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
-            {
-                return new BadRequestResult();
-            }
-
-            if (_db.OrganizationExists(organizationSlug))
-            {
-                return new HttpNotFoundResult();
-            }
-
             var postedProject = _db.PostProject(project, organizationSlug);
 
-            if (postedProject != null)
+            if (_db.Errors.Count() == 0)
             {
                 string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedProject);
             }
 
-            return new DuplicateEntityResult();
+            return new UnprocessableEntityObjectResult(_db.Errors);
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]

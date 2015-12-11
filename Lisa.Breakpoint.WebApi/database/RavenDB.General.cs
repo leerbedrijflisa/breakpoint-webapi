@@ -87,6 +87,6 @@ namespace Lisa.Breakpoint.WebApi.database
             return ravenPatches.ToArray();
         }
 
-        private IEnumerable<Error> _errors;
+        private List<Error> _errors;
     }
 }

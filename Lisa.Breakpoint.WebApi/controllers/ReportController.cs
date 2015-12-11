@@ -105,6 +105,16 @@ namespace Lisa.Breakpoint.WebApi
         {
             List<Error> errors = new List<Error>();
 
+            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return new BadRequestResult();
+            }
+
+            if (!_db.ProjectExists(organizationSlug, projectSlug))
+            {
+                return new HttpNotFoundResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
@@ -127,25 +137,15 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestObjectResult(errors);
             }
 
-            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
-            {
-                return new BadRequestResult();
-            }
-            
-            if (!_db.ProjectExists(organizationSlug, projectSlug))
-            {
-                return new HttpNotFoundResult();
-            }
-
             var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
-            if (postedReport != null)
+            if (_db.Errors.Count() == 0)
             {
                 string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
                 return new CreatedResult(location, postedReport);
             }
 
-            return new DuplicateEntityResult();
+            return new UnprocessableEntityObjectResult(_db.Errors);
         }
             
         [HttpPatch("{id}")]

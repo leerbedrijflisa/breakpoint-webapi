@@ -16,6 +16,9 @@ namespace Lisa.Breakpoint.WebApi
                 case 1101:
                     message = string.Format("Field '{0}' is required.", obj.field);
                     break;
+                case 1102:
+                    message = string.Format("The {0} provided already exists, or shared it's {1} with another {0}.", obj.type, obj.value);
+                    break;
                 case 1200:
                     message = string.Format("The field '{0}' with value '{1}' can only contain letters.", obj.field, obj.value);
                     break;
@@ -42,17 +45,23 @@ namespace Lisa.Breakpoint.WebApi
                 case 1300:
                     message = string.Format("The field '{0}' with id '{1}' doesn't exists.", obj.field, obj.value);
                     break;
-                case 1301:
-                    message = string.Format("The exam with subject '{0}', cohort '{1}', name '{2}' and crebo '{3}' already exists.", obj.subject, obj.cohort, obj.name, obj.crebo);
-                    break;
-                case 1302:
-                    message = string.Format("The assessor with username '{0}' was not found.", obj.value);
-                    break;
+                //case 1301:
+                //    message = string.Format("The exam with subject '{0}', cohort '{1}', name '{2}' and crebo '{3}' already exists.", obj.subject, obj.cohort, obj.name, obj.crebo);
+                //    break;
+                //case 1302:
+                //    message = string.Format("The assessor with username '{0}' was not found.", obj.value);
+                //    break;
                 case 1303:
                     message = string.Format("The action '{0}' doesn't exist.", obj.value);
                     break;
                 case 1304:
                     message = string.Format("The field {0} is not found.", obj.field);
+                    break;
+                case 1305:
+                    message = string.Format("The user {0} does not exists.", obj.value);
+                    break;
+                case 1306:
+                    message = string.Format("The specified user {0} is not a member of this organization.", obj.value);
                     break;
             }
             return message;

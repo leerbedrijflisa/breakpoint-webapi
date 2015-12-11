@@ -84,6 +84,11 @@ namespace Lisa.Breakpoint.WebApi
         {
             List<Error> errors = new List<Error>();
 
+            if (organization == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
@@ -106,20 +111,15 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestObjectResult(errors);
             }
 
-            if (organization == null)
-            {
-                return new BadRequestResult();
-            }
             var postedOrganization = _db.PostOrganization(organization);
 
-            if (postedOrganization != null)
+            if (_db.Errors.Count() == 0)
             {
                 string location = Url.RouteUrl("organization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedOrganization);
             }
-
-            return new DuplicateEntityResult();
-
+            
+            return new UnprocessableEntityObjectResult(_db.Errors);
         }
 
         [HttpPatch("{organizationSlug}")]

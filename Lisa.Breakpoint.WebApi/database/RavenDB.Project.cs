@@ -85,6 +85,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Project PostProject(ProjectPost project, string organizationSlug)
         {
+            _errors = new List<Error>();
+
             var projectEntity = new Project()
             {
                 Name = project.Name,
@@ -99,7 +101,24 @@ namespace Lisa.Breakpoint.WebApi.database
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<Project>().Where(p => p.Organization == projectEntity.Organization && p.Slug == projectEntity.Slug).Any())
+                // If there is already a duplicate project in the organization
+                if (session.Query<Project>().Where(p => p.Organization == projectEntity.Organization && p.Slug == projectEntity.Slug).Any())
+                {
+                    _errors.Add(new Error(1102, new { type = "project", value = "name" }));
+                }
+
+                var organizationMembers = session.Query<Organization>().SingleOrDefault(o => o.Slug == projectEntity.Organization).Members;
+
+                // Check if all project members are part of the organization
+                foreach (var user in projectEntity.Members)
+                {
+                    if (!organizationMembers.Any(m => m == user.Username))
+                    {
+                        _errors.Add(new Error(1305, new { value = user.Username }));
+                    }
+                }
+
+                if (_errors.Count() == 0)
                 {
                     session.Store(projectEntity);
                     string projectId = session.Advanced.GetDocumentId(projectEntity);
@@ -109,10 +128,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
                     return projectEntity;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
         }
 
@@ -268,7 +285,7 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Organization>().Any(o => o.Slug == organizationSlug)
-                    && session.Query<Project>().Any(p => p.Slug == projectSlug);
+                    && session.Query<Project>().Any(p => p.Slug == projectSlug && p.Organization == organizationSlug);
             }
         }
     }
