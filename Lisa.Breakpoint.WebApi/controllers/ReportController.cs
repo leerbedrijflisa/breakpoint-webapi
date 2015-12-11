@@ -21,7 +21,7 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "", [FromQuery] string reported = null)
+        public IActionResult Get(string organizationSlug, string projectSlug, string filter = null, string value = null, [FromQuery] string reported = null)
         {
             _user = HttpContext.User.Identity;
             IList<Report> reports;
@@ -30,7 +30,8 @@ namespace Lisa.Breakpoint.WebApi
             if (reported != null)
             {
                 //Calls a function to determine if reported has a correct specific value
-                dateTimes = _checkReported(reported);
+
+                dateTimes = _CheckReported(reported);
                 //When the specific value is invalid it will return a unprocessable entity status code
                 if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                 {
@@ -50,7 +51,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
             
-            if (filter != "" || dateTimes[0] != DateTime.MinValue)
+            if (filter != null || dateTimes[0] != DateTime.MinValue)
             {
                 //If the dateTimes is filled with not the standard value, overwrite the dateTimeObject for use in the database class
                 DateTime[] dateTimeObject = new DateTime[2];
@@ -59,11 +60,15 @@ namespace Lisa.Breakpoint.WebApi
                     dateTimeObject[0] = dateTimes[0];
                     dateTimeObject[1] = dateTimes[1];
                 }
+                else
+                {
+                    dateTimeObject = null;
+                }
 
                 //If filter is filled set the filter and value for use in the database class
                 Filter f = null;
                 
-                if (filter != "")
+                if (filter != null)
                 {
                     f = new Filter(filter, value);
                 }
@@ -225,7 +230,7 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpStatusCodeResult(204);
         }
 
-        private IList<DateTime> _checkReported(string reported)
+        private IList<DateTime> _CheckReported(string reported)
         {
             reported = reported.ToLower();
             int date = 0;
@@ -238,11 +243,23 @@ namespace Lisa.Breakpoint.WebApi
             string unparsedDate = Regex.Match(reported, @"\d+").Value;
             if (unparsedDate != "")
             {
-                date = int.Parse(unparsedDate);
+                if (!int.TryParse(unparsedDate, out date))
+                {
+                    filterDay = DateTime.MinValue.AddDays(1);
+                    date = 0;
+                }
+                
+            }
+
+            DateTime d1 = new DateTime(1970, 1, 1);
+            TimeSpan span = DateTime.Today - d1;
+            if (date > span.TotalDays)
+            {
+                filterDay = DateTime.MinValue.AddDays(1);
             }
 
             //Checks if monthNames contains a month and if the date is between a certain amount
-            if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
+            if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.MinValue.Year)
             {
                 monthYear = true;
             }
@@ -253,27 +270,34 @@ namespace Lisa.Breakpoint.WebApi
             }
             else if (reported == "yesterday")
             {
-                //Distracts 1 day to get the date of yesterday
+                //Subtracts 1 day to get the date of yesterday
                 filterDay = filterDay.AddDays(-1);
                 filterDayTwo = filterDayTwo.AddDays(-1);
             }
             else if (Regex.Match(reported, @"\d+\W+days\W+ago").Success)
             {
-                //Distracts the amount of days you entered on both so you get 1 day
+                //Subtracts the amount of days you entered on both so you get 1 day
                 filterDay = filterDay.AddDays(-date);
                 filterDayTwo = filterDayTwo.AddDays(-date);
             }
             else if (Regex.Match(reported, @"last\W+\d+\W+days").Success)
             {
-                //Distracts the amount of days so you can filter between 25 days ago and tomorrow
+                //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
                 filterDay = filterDay.AddDays(-date);
             }
             else if (monthYear) //Gets the date of a certain year
             {
                 //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
-                filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                if (_monthNames.Contains(reported))
+                {
+                    filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                }
+                else
+                {
+                    filterDay = DateTime.MinValue.AddDays(1);
+                }
             }
             else if (_monthNames.Contains(reported))
             {
