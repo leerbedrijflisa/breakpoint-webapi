@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
+using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -17,32 +18,61 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
+
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "")
+        public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "", [FromQuery] string reported = null)
         {
             _user = HttpContext.User.Identity;
+            IList<Report> reports;
+            IList<DateTime> dateTimes = new DateTime[2];
 
-            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            if (reported != null)
             {
-                return new HttpNotFoundResult();
+                //Calls a function to determine if reported has a correct specific value
+                dateTimes = _checkReported(reported);
+                //When the specific value is invalid it will return a unprocessable entity status code
+                if (dateTimes[0] == DateTime.MinValue.AddDays(1))
+                {
+                    return new HttpStatusCodeResult(422);
+                }
             }
 
+            //if the user not exist it'll return a 404
             if (_db.GetUser(_user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            IList<Report> reports;
-            if (filter != "")
+            //if project isn't found it'll return an error 404
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
-                Filter f = new Filter(filter, value);
+                return new HttpNotFoundResult();
+            }
+            
+            if (filter != "" || dateTimes[0] != DateTime.MinValue)
+            {
+                //If the dateTimes is filled with not the standard value, overwrite the dateTimeObject for use in the database class
+                DateTime[] dateTimeObject = new DateTime[2];
+                if (dateTimes[0] != DateTime.MinValue)
+                {
+                    dateTimeObject[0] = dateTimes[0];
+                    dateTimeObject[1] = dateTimes[1];
+                }
 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, f);
+                //If filter is filled set the filter and value for use in the database class
+                Filter f = null;
+                
+                if (filter != "")
+                {
+                    f = new Filter(filter, value);
+                }
+
+                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, dateTimeObject, f);
             } else { 
                 reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name);
             }
-
+            
             if (reports == null)
             {
                 return new HttpNotFoundResult();
@@ -73,9 +103,9 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            if (report.Platform != null && report.Platform.Count == 0)
+            if (report.Platforms != null && report.Platforms.Count == 0)
             {
-                report.Platform.Add("Not specified");
+                report.Platforms.Add("Not specified");
             }
 
             // Set organization and project slug's 
@@ -195,8 +225,98 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpStatusCodeResult(204);
         }
 
+        private IList<DateTime> _checkReported(string reported)
+        {
+            reported = reported.ToLower();
+            int date = 0;
+            DateTime filterDay = DateTime.Today;
+            DateTime filterDayTwo = DateTime.Today.AddDays(1);
+            
+            bool monthYear = false;
+
+            //Filters out all the characters and white spaces
+            string unparsedDate = Regex.Match(reported, @"\d+").Value;
+            if (unparsedDate != "")
+            {
+                date = int.Parse(unparsedDate);
+            }
+
+            //Checks if monthNames contains a month and if the date is between a certain amount
+            if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= 2199)
+            {
+                monthYear = true;
+            }
+
+            if (reported == "today")
+            {
+                //Breaks the if so it won't give errors
+            }
+            else if (reported == "yesterday")
+            {
+                //Distracts 1 day to get the date of yesterday
+                filterDay = filterDay.AddDays(-1);
+                filterDayTwo = filterDayTwo.AddDays(-1);
+            }
+            else if (Regex.Match(reported, @"\d+\W+days\W+ago").Success)
+            {
+                //Distracts the amount of days you entered on both so you get 1 day
+                filterDay = filterDay.AddDays(-date);
+                filterDayTwo = filterDayTwo.AddDays(-date);
+            }
+            else if (Regex.Match(reported, @"last\W+\d+\W+days").Success)
+            {
+                //Distracts the amount of days so you can filter between 25 days ago and tomorrow
+                filterDay = filterDay.AddDays(-date);
+            }
+            else if (monthYear) //Gets the date of a certain year
+            {
+                //Replaces the numbers in the string so it won't give errors
+                reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
+                filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+            }
+            else if (_monthNames.Contains(reported))
+            {
+                //If the month is below or equal to the current month, get the month of this year
+                if ((_monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
+                {
+                    filterDay = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                }
+                else
+                {
+                    filterDay = new DateTime(filterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                }
+            }
+            else
+            {
+                filterDay = DateTime.MinValue.AddDays(1);
+            }
+            IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
+            return dateTimes;
+        } 
+
+        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
+        {
+            if (reported == _monthNames[11])
+            {
+                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
+            }
+            else
+            {
+                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
+            };
+
+            return filterDayTwo;
+        }
         private readonly RavenDB _db;
         private IIdentity _user;
-        private readonly IList<string> statusCheck = new string[] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
+
+
+        private readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
+
+        private readonly IList<string> statusCheck = new string[5] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
+        
     }
 }
