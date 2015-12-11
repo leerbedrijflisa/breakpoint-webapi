@@ -111,5 +111,13 @@ namespace Lisa.Breakpoint.WebApi.database
                 session.SaveChanges();
             }
         }
+
+        public bool OrganizationExists(string organizationSlug)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Organization>().Any(m => m.Slug == organizationSlug);
+            }
+        }
     }
 }

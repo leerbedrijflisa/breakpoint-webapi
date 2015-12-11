@@ -83,9 +83,10 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PostProject(Project project)
+        public Project PostProject(Project project, string organizationSlug)
         {
             project.Slug = _toUrlSlug(project.Name);
+            project.Organization = organizationSlug;
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -241,7 +242,7 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        internal Project GetProjectByReport(int id, string username)
+        public Project GetProjectByReport(int id, string username)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -250,6 +251,15 @@ namespace Lisa.Breakpoint.WebApi.database
                 return session.Query<Project>()
                     .Where(p => p.Organization == report.Organization && p.Slug == report.Project)
                     .SingleOrDefault();
+            }
+        }
+
+        public bool ProjectExists(string organizationSlug, string projectSlug)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Organization>().Any(o => o.Slug == organizationSlug)
+                    && session.Query<Project>().Any(p => p.Slug == projectSlug);
             }
         }
     }

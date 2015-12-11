@@ -82,6 +82,7 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 report.Platforms.Add("Not specified");
             }
+
             report.Organization = organization;
             report.Project = project;
 

@@ -18,7 +18,6 @@ namespace Lisa.Breakpoint.WebApi
             _db = db;
         }
 
-
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug, string filter = "", string value = "", [FromQuery] string reported = null)
@@ -98,16 +97,21 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
         {
-            if (report == null)
+            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new BadRequestResult();
             }
             
+            if (!_db.ProjectExists(organizationSlug, projectSlug))
+            {
+                return new HttpNotFoundResult();
+            }
+
             var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
             if (postedReport != null)
             {
-                string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
+                string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
                 return new CreatedResult(location, postedReport);
             }
 

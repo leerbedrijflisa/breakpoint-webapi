@@ -57,16 +57,21 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(project);
         }
 
-        [HttpPost]
+        [HttpPost("{organizationSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Post([FromBody]Project project)
+        public IActionResult Post(string organizationSlug, [FromBody]Project project)
         {
-            if (project == null)
+            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 return new BadRequestResult();
             }
 
-            var postedProject = _db.PostProject(project);
+            if (_db.OrganizationExists(organizationSlug))
+            {
+                return new HttpNotFoundResult();
+            }
+
+            var postedProject = _db.PostProject(project, organizationSlug);
 
             if (postedProject != null)
             {
