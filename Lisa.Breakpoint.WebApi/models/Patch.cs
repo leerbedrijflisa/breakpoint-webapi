@@ -1,9 +1,16 @@
-﻿namespace Lisa.Breakpoint.WebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Lisa.Breakpoint.WebApi.Models
 {
     public class Patch
     {
+        [Required]
         public string Action { get; set; }
+
+        [Required]
         public string Field { get; set; }
+
+        [Required]
         public object Value { get; set; }
     }
 

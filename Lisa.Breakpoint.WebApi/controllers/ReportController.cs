@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -95,8 +96,32 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpPost("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] Report report)
+        public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] ReportPost report)
         {
+            List<Error> errors = new List<Error>();
+
+            if (!ModelState.IsValid)
+            {
+                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
+                foreach (var property in modelStateErrors)
+                {
+                    var propertyName = property.Key;
+                    foreach (var error in property.Value.Errors)
+                    {
+                        if (error.Exception == null)
+                        {
+                            errors.Add(new Error(1101, new { field = propertyName }));
+                        }
+                        else
+                        {
+                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
+                        }
+                    }
+                }
+
+                return new BadRequestObjectResult(errors);
+            }
+
             if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new BadRequestResult();
@@ -143,7 +168,7 @@ namespace Lisa.Breakpoint.WebApi
             Project checkProject = _db.GetProjectByReport(id, _user.Name);
 
             // Check if user is in project
-            if (!checkProject.Members.Select(m => m.UserName).Contains(_user.Name))
+            if (!checkProject.Members.Select(m => m.Username).Contains(_user.Name))
             {
                 // Not authenticated
                 return new HttpStatusCodeResult(401);
@@ -160,7 +185,7 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 // If the status is patching to Won't Fix (approved), require the user to be a project manager
-                if (statusPatch.Value.Equals(statusCheck[3]) && !checkProject.Members.Single(m => m.UserName.Equals(_user.Name)).Role.Equals("manager"))
+                if (statusPatch.Value.Equals(statusCheck[3]) && !checkProject.Members.Single(m => m.Username.Equals(_user.Name)).Role.Equals("manager"))
                 {
                     // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                     return new HttpStatusCodeResult(422);
@@ -171,13 +196,13 @@ namespace Lisa.Breakpoint.WebApi
                 // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
                 if (statusPatch.Value.Equals(statusCheck[4]))
                 {
-                    var member = checkProject.Members.Single(m => m.UserName.Equals(_user.Name));
+                    var member = checkProject.Members.Single(m => m.Username.Equals(_user.Name));
 
                     checkProject.Members
-                            .Single(m => m.UserName.Equals(_user.Name))
+                            .Single(m => m.Username.Equals(_user.Name))
                             .Role.Equals("developer");
 
-                    if (!report.Reporter.Equals(member.UserName))
+                    if (!report.Reporter.Equals(member.Username))
                     {
                         // Not authenticated
                         return new HttpStatusCodeResult(401);

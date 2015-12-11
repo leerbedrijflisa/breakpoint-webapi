@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Lisa.Breakpoint.WebApi.Models
 {
@@ -23,6 +24,37 @@ namespace Lisa.Breakpoint.WebApi.Models
         public IList<string> Platforms { get; set; }
     }
 
+    public class ReportPost
+    {
+        [Required]
+        public string Title { get; set; }
+
+        [Required]
+        public string StepByStep { get; set; }
+
+        [Required]
+        public string Expectation { get; set; }
+
+        [Required]
+        public string WhatHappened { get; set; }
+
+        [Required]
+        public string Reporter { get; set; }
+
+        [Required]
+        public string Status { get; set; }
+
+        [Required]
+        public Priority Priority { get; set; }
+
+        [Required]
+        public string Version { get; set; }
+
+        [Required]
+        public AssignedTo AssignedTo { get; set; }
+        public IList<string> Platforms { get; set; }
+    }
+
     public enum Priority
     {
         FixImmediately,
@@ -43,14 +75,18 @@ namespace Lisa.Breakpoint.WebApi.Models
 
     public class AssignedTo
     {
+        [Required]
         public string Type { get; set; }
+        [Required]
         public string Value { get; set; }
     }
 
     public class Comment
     {
         public DateTime Posted { get; set; }
+        [Required]
         public string   Author { get; set; }
+        [Required]
         public string   Text { get; set; }
     }
 

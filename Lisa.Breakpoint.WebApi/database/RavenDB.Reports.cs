@@ -76,29 +76,47 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Report PostReport(Report report, string organization, string project)
+        public Report PostReport(ReportPost report, string organization, string project)
         {
-            if (report.Platforms != null && report.Platforms.Count == 0)
+            if (report.Platforms == null)
+            {
+                report.Platforms = new List<string>();
+            }
+
+            if (report.Platforms.Count == 0)
             {
                 report.Platforms.Add("Not specified");
             }
 
-            report.Organization = organization;
-            report.Project = project;
+            var reportEntity = new Report()
+            {
+                Title = report.Title,
+                Organization = organization,
+                Project = project,
+                StepByStep = report.StepByStep,
+                Expectation = report.Expectation,
+                WhatHappened = report.WhatHappened,
+                Reporter = report.Reporter,
+                Status = report.Status,
+                Priority = report.Priority,
+                Version = report.Version,
+                AssignedTo = report.AssignedTo,
+                Platforms = report.Platforms
+            };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                session.Store(report);
+                session.Store(reportEntity);
 
-                string reportId = session.Advanced.GetDocumentId(report);
-                report.Number = reportId.Split('/').Last();
-                report.Reported = DateTime.Now;
+                string reportId = session.Advanced.GetDocumentId(reportEntity);
+                reportEntity.Number = reportId.Split('/').Last();
+                reportEntity.Reported = DateTime.Now;
 
-                AddPlatforms(report.Organization, report.Platforms);
+                AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
 
                 session.SaveChanges();
 
-                return report;
+                return reportEntity;
             }
         }
 

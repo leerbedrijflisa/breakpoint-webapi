@@ -2,8 +2,10 @@
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -78,8 +80,32 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpPost]
         [Authorize("Bearer")]
-        public IActionResult Post([FromBody] Organization organization)
+        public IActionResult Post([FromBody] OrganizationPost organization)
         {
+            List<Error> errors = new List<Error>();
+
+            if (!ModelState.IsValid)
+            {
+                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
+                foreach (var property in modelStateErrors)
+                {
+                    var propertyName = property.Key;
+                    foreach (var error in property.Value.Errors)
+                    {
+                        if (error.Exception == null)
+                        {
+                            errors.Add(new Error(1101, new { field = propertyName }));
+                        }
+                        else
+                        {
+                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
+                        }
+                    }
+                }
+
+                return new BadRequestObjectResult(errors);
+            }
+
             if (organization == null)
             {
                 return new BadRequestResult();

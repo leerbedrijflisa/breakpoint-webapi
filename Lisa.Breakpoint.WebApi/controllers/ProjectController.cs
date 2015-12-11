@@ -2,8 +2,10 @@
 using Lisa.Breakpoint.WebApi.Models;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -59,8 +61,32 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpPost("{organizationSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Post(string organizationSlug, [FromBody]Project project)
+        public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
+            List<Error> errors = new List<Error>();
+
+            if (!ModelState.IsValid)
+            {
+                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
+                foreach (var property in modelStateErrors)
+                {
+                    var propertyName = property.Key;
+                    foreach (var error in property.Value.Errors)
+                    {
+                        if (error.Exception == null)
+                        {
+                            errors.Add(new Error(1101, new { field = propertyName }));
+                        }
+                        else
+                        {
+                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
+                        }
+                    }
+                }
+
+                return new BadRequestObjectResult(errors);
+            }
+
             if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 return new BadRequestResult();
@@ -75,7 +101,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (postedProject != null)
             {
-                string location = Url.RouteUrl("project", new { organizationSlug = project.Organization, projectSlug = project.Slug }, Request.Scheme);
+                string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedProject);
             }
 

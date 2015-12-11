@@ -40,7 +40,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] User user)
+        public IActionResult Post([FromBody] UserPost user)
         {
             if (user == null)
             {

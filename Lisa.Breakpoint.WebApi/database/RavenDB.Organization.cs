@@ -49,27 +49,33 @@ namespace Lisa.Breakpoint.WebApi.database
                 // Filter organization members by checking if the project contains the member
                 var x = members
                     .Where(name => !projectMembers
-                        .Select(pm => pm.UserName)
+                        .Select(pm => pm.Username)
                         .Contains(name));
 
                 return x.ToList();
             }
         }
 
-        public Organization PostOrganization(Organization organization)
+        public Organization PostOrganization(OrganizationPost organization)
         {
-            organization.Slug = _toUrlSlug(organization.Name);
+
+            var organizationEntity = new Organization()
+            {
+                Name = organization.Name,
+                Members = organization.Members,
+                Slug = _toUrlSlug(organization.Name)
+            };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<Organization>().Where(o => o.Slug == organization.Slug).Any())
+                if (!session.Query<Organization>().Where(o => o.Slug == organizationEntity.Slug).Any())
                 {
-                    session.Store(organization);
-                    string organizationId = session.Advanced.GetDocumentId(organization);
-                    organization.Number = organizationId.Split('/').Last();
+                    session.Store(organizationEntity);
+                    string organizationId = session.Advanced.GetDocumentId(organizationEntity);
+                    organizationEntity.Number = organizationId.Split('/').Last();
                     session.SaveChanges();
 
-                    return organization;
+                    return organizationEntity;
                 }
 
                 return null;

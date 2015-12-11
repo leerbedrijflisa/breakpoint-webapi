@@ -14,7 +14,7 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Members.Any(m => m.UserName == userName) && p.Organization == organizationName)
+                    .Where(p => p.Members.Any(m => m.Username == userName) && p.Organization == organizationName)
                     .ToList();
             }
         }
@@ -40,7 +40,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 {
                     foreach (Member member in project.Members)
                     {
-                        if (member.UserName == userName)
+                        if (member.Username == userName)
                         {
                             var role  = member.Role;
                             if (role != "")
@@ -83,22 +83,31 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PostProject(Project project, string organizationSlug)
+        public Project PostProject(ProjectPost project, string organizationSlug)
         {
-            project.Slug = _toUrlSlug(project.Name);
-            project.Organization = organizationSlug;
+            var projectEntity = new Project()
+            {
+                Name = project.Name,
+                ProjectManager = project.ProjectManager,
+                Version = project.Version,
+                Browsers = project.Browsers,
+                Groups = project.Groups,
+                Members = project.Members,
+                Organization = organizationSlug,
+                Slug = _toUrlSlug(project.Name),
+            };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<Project>().Where(p => p.Organization == project.Organization && p.Slug == project.Slug).Any())
+                if (!session.Query<Project>().Where(p => p.Organization == projectEntity.Organization && p.Slug == projectEntity.Slug).Any())
                 {
-                    session.Store(project);
-                    string projectId = session.Advanced.GetDocumentId(project);
-                    project.Number = projectId.Split('/').Last();
+                    session.Store(projectEntity);
+                    string projectId = session.Advanced.GetDocumentId(projectEntity);
+                    projectEntity.Number = projectId.Split('/').Last();
 
                     session.SaveChanges();
 
-                    return project;
+                    return projectEntity;
                 }
                 else
                 {
@@ -180,12 +189,12 @@ namespace Lisa.Breakpoint.WebApi.database
                         bool isInProject = false;
                         Member newMember = new Member();
 
-                        newMember.UserName = member;
+                        newMember.Username = member;
                         newMember.Role = role;
 
                         foreach (var m in members)
                         {
-                            if (m.UserName == newMember.UserName)
+                            if (m.Username == newMember.Username)
                             {
                                 isInProject = true;
                                 break;
@@ -203,7 +212,7 @@ namespace Lisa.Breakpoint.WebApi.database
 
                         for (int i = 0; i < members.Count; i++)
                         {
-                            if (members[i].UserName == member)
+                            if (members[i].Username == member)
                             {
                                 members.RemoveAt(i);
                                 break;
@@ -214,7 +223,7 @@ namespace Lisa.Breakpoint.WebApi.database
                     {
                         foreach (var m in members)
                         {
-                            if (m.UserName == member)
+                            if (m.Username == member)
                             {
                                 m.Role = role;
                                 break;

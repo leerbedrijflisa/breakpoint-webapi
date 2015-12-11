@@ -58,13 +58,13 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var project = session.Query<Project>()
-                    .Where(p => p.Organization == organization && p.Slug == projectslug && p.Members.Any(m => m.UserName == userName))
+                    .Where(p => p.Organization == organization && p.Slug == projectslug && p.Members.Any(m => m.Username == userName))
                     .SingleOrDefault();
 
                 if (project != null)
                 {
                     return project.Members
-                        .Where(m => m.UserName == userName)
+                        .Where(m => m.Username == userName)
                         .SingleOrDefault().Role;
                 }
                 else
@@ -82,16 +82,22 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public User PostUser(User user)
+        public User PostUser(UserPost user)
         {
+            var userEntity = new User()
+            {
+                Username = user.Username,
+                FullName = user.FullName
+            };
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<User>().Where(u => u.Username == user.Username).Any())
+                if (!session.Query<User>().Where(u => u.Username == userEntity.Username).Any())
                 {
-                    session.Store(user);
+                    session.Store(userEntity);
                     session.SaveChanges();
 
-                    return user;
+                    return userEntity;
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Lisa.Breakpoint.WebApi.Models
 {
@@ -15,14 +16,33 @@ namespace Lisa.Breakpoint.WebApi.Models
         public IList<Member> Members  { get; set; }
     }
 
+    public class ProjectPost
+    {
+        [Required]
+        public string Name { get; set; }
+
+        [Required]
+        public string ProjectManager { get; set; }
+        public IList<string> Version { get; set; }
+        public IList<string> Browsers { get; set; }
+
+        [Required]
+        public IList<Group> Groups { get; set; }
+
+        [Required]
+        public IList<Member> Members { get; set; }
+    }
+
     public class Group
     {
         public Group()
         {
             Disabled = false;
         }
-
+        [Required]
         public int    Level { get; set; }
+
+        [Required]
         public string Name  { get; set; }
         public bool   Disabled { get; set; }
     }

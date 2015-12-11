@@ -1,9 +1,15 @@
-﻿namespace Lisa.Breakpoint.WebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Lisa.Breakpoint.WebApi.Models
 {
-    public class Member
+    public class Member : User
     {
         public string Role { get; set; }
-        public string UserName { get; set; }
-        public string FullName { get; set; }
+    }
+
+    public class MemberPost : UserPost
+    {
+        [Required]
+        public string Role { get; set; }
     }
 }
