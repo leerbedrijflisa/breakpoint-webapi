@@ -85,6 +85,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Project PostProject(Project project)
         {
+            project.Slug = _toUrlSlug(project.Name);
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 if (!session.Query<Project>().Where(p => p.Organization == project.Organization && p.Slug == project.Slug).Any())

@@ -102,20 +102,16 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new BadRequestResult();
             }
+            
+            var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
-            if (report.Platforms != null && report.Platforms.Count == 0)
+            if (postedReport != null)
             {
-                report.Platforms.Add("Not specified");
+                string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
+                return new CreatedResult(location, postedReport);
             }
 
-            // Set organization and project slug's 
-            report.Organization = organizationSlug;
-            report.Project = projectSlug;
-
-            _db.PostReport(report);
-
-            string location = Url.RouteUrl("report", new { id = report.Number }, Request.Scheme);
-            return new CreatedResult(location, report);
+            return new DuplicateEntityResult();
         }
             
         [HttpPatch("{id}")]

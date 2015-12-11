@@ -66,8 +66,6 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            project.Slug = RavenDB._toUrlSlug(project.Name);
-
             var postedProject = _db.PostProject(project);
 
             if (postedProject != null)
@@ -75,10 +73,8 @@ namespace Lisa.Breakpoint.WebApi
                 string location = Url.RouteUrl("project", new { organizationSlug = project.Organization, projectSlug = project.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedProject);
             }
-            else
-            {
-                return new NoContentResult();
-            }
+
+            return new DuplicateEntityResult();
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]

@@ -84,20 +84,15 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new BadRequestResult();
             }
-
-            organization.Slug = RavenDB._toUrlSlug(organization.Name);
-
             var postedOrganization = _db.PostOrganization(organization);
 
             if (postedOrganization != null)
             {
-                string location = Url.RouteUrl("organization", new { organizationSlug = organization }, Request.Scheme);
+                string location = Url.RouteUrl("organization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
                 return new CreatedResult(location, postedOrganization);
             }
-            else
-            {
-                return new HttpStatusCodeResult(422);
-            }
+
+            return new DuplicateEntityResult();
 
         }
 

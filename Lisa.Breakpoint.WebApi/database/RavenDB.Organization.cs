@@ -58,6 +58,8 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Organization PostOrganization(Organization organization)
         {
+            organization.Slug = _toUrlSlug(organization.Name);
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 if (!session.Query<Organization>().Where(o => o.Slug == organization.Slug).Any())
