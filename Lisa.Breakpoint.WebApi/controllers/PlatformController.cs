@@ -19,7 +19,14 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            return new HttpOkObjectResult(_db.GetOrganization(organizationSlug).Platforms);
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            return new HttpOkObjectResult(organization.Platforms);
         }
 
         private RavenDB _db;
