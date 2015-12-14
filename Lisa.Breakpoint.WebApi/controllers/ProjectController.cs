@@ -1,5 +1,6 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using Newtonsoft.Json;
@@ -15,7 +16,8 @@ namespace Lisa.Breakpoint.WebApi
     {
         public ProjectController(RavenDB db)
         {
-            _db = db;            
+            _db = db;
+            ErrorHandler.Clear();
         }
 
         [HttpGet("{organizationSlug}")]
@@ -44,7 +46,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             _user = HttpContext.User.Identity;
 
-            if (projectSlug == null)
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
             }
@@ -63,8 +65,6 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
-            List<Error> errors = new List<Error>();
-            
             if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 return new BadRequestResult();
@@ -77,35 +77,20 @@ namespace Lisa.Breakpoint.WebApi
 
             if (!ModelState.IsValid)
             {
-                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
-                foreach (var property in modelStateErrors)
-                {
-                    var propertyName = property.Key;
-                    foreach (var error in property.Value.Errors)
-                    {
-                        if (error.Exception == null)
-                        {
-                            errors.Add(new Error(1101, new { field = propertyName }));
-                        }
-                        else
-                        {
-                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
-                        }
-                    }
-                }
-
-                return new BadRequestObjectResult(errors);
+                return (ErrorHandler.FromModelState(ModelState)) ? new BadRequestObjectResult(ErrorHandler.FatalError) : new BadRequestObjectResult(ErrorHandler.Errors);
             }
 
             var postedProject = _db.PostProject(project, organizationSlug);
 
-            if (_db.Errors.Count() == 0)
+            if (ErrorHandler.HasErrors)
             {
-                string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
-                return new CreatedResult(location, postedProject);
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            return new UnprocessableEntityObjectResult(_db.Errors);
+            string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
+            return new CreatedResult(location, postedProject);
+
+
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]

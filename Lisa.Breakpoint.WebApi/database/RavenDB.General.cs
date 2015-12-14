@@ -18,14 +18,6 @@ namespace Lisa.Breakpoint.WebApi.database
             this.documentStore = documentStore;
         }
 
-        public IEnumerable<Error> Errors
-        {
-            get
-            {
-                return _errors;
-            }
-        }
-
         public bool Patch<T>(int id, IEnumerable<Patch> patches)
         {
             var patchFields = patches.Select(p => p.Field);
@@ -86,7 +78,5 @@ namespace Lisa.Breakpoint.WebApi.database
 
             return ravenPatches.ToArray();
         }
-
-        private List<Error> _errors;
     }
 }

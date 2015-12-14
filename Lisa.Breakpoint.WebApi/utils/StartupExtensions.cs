@@ -10,7 +10,7 @@ using System.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Microsoft.AspNet.Http;
 
-namespace Lisa.Breakpoint.WebApi
+namespace Lisa.Breakpoint.WebApi.utils
 {
     public static class StartupExtensions
     {

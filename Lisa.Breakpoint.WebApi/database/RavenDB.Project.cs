@@ -1,4 +1,5 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
@@ -85,8 +86,6 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Project PostProject(ProjectPost project, string organizationSlug)
         {
-            _errors = new List<Error>();
-
             var projectEntity = new Project()
             {
                 Name = project.Name,
@@ -104,7 +103,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 // If there is already a duplicate project in the organization
                 if (session.Query<Project>().Where(p => p.Organization == projectEntity.Organization && p.Slug == projectEntity.Slug).Any())
                 {
-                    _errors.Add(new Error(1102, new { type = "project", value = "name" }));
+                    ErrorHandler.Add(new Error(1102, new { type = "project", value = "name" }));
                 }
 
                 var organizationMembers = session.Query<Organization>().SingleOrDefault(o => o.Slug == projectEntity.Organization).Members;
@@ -114,22 +113,22 @@ namespace Lisa.Breakpoint.WebApi.database
                 {
                     if (!organizationMembers.Any(m => m == user.Username))
                     {
-                        _errors.Add(new Error(1305, new { value = user.Username }));
+                        ErrorHandler.Add(new Error(1305, new { value = user.Username }));
                     }
                 }
 
-                if (_errors.Count() == 0)
+                if (ErrorHandler.HasErrors)
                 {
-                    session.Store(projectEntity);
-                    string projectId = session.Advanced.GetDocumentId(projectEntity);
-                    projectEntity.Number = projectId.Split('/').Last();
-
-                    session.SaveChanges();
-
-                    return projectEntity;
+                    return null;
                 }
 
-                return null;
+                session.Store(projectEntity);
+                string projectId = session.Advanced.GetDocumentId(projectEntity);
+                projectEntity.Number = projectId.Split('/').Last();
+
+                session.SaveChanges();
+
+                return projectEntity;
             }
         }
 

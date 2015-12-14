@@ -1,11 +1,10 @@
 ﻿using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -16,6 +15,7 @@ namespace Lisa.Breakpoint.WebApi
         public OrganizationController(RavenDB db)
         {
             _db = db;
+            ErrorHandler.Clear();
         }
         
         [HttpGet]
@@ -34,18 +34,18 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
-        
-
         [HttpGet("members/{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetOrganization(organizationSlug).Members;
+            var members = organization.Members;
 
             return new HttpOkObjectResult(members);
         }
@@ -91,35 +91,18 @@ namespace Lisa.Breakpoint.WebApi
 
             if (!ModelState.IsValid)
             {
-                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
-                foreach (var property in modelStateErrors)
-                {
-                    var propertyName = property.Key;
-                    foreach (var error in property.Value.Errors)
-                    {
-                        if (error.Exception == null)
-                        {
-                            errors.Add(new Error(1101, new { field = propertyName }));
-                        }
-                        else
-                        {
-                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
-                        }
-                    }
-                }
-
-                return new BadRequestObjectResult(errors);
+                return (ErrorHandler.FromModelState(ModelState)) ? new BadRequestObjectResult(ErrorHandler.FatalError) : new BadRequestObjectResult(ErrorHandler.Errors);
             }
 
             var postedOrganization = _db.PostOrganization(organization);
 
-            if (_db.Errors.Count() == 0)
+            if (ErrorHandler.HasErrors)
             {
-                string location = Url.RouteUrl("organization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
-                return new CreatedResult(location, postedOrganization);
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
-            
-            return new UnprocessableEntityObjectResult(_db.Errors);
+
+            string location = Url.RouteUrl("organization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
+            return new CreatedResult(location, postedOrganization);
         }
 
         [HttpPatch("{organizationSlug}")]

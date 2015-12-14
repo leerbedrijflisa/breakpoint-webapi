@@ -7,7 +7,7 @@ using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
+using Lisa.Breakpoint.WebApi.utils;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -17,6 +17,7 @@ namespace Lisa.Breakpoint.WebApi
         public ReportController(RavenDB db)
         {
             _db = db;
+            ErrorHandler.Clear();
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
@@ -103,8 +104,6 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] ReportPost report)
         {
-            List<Error> errors = new List<Error>();
-
             if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new BadRequestResult();
@@ -117,34 +116,18 @@ namespace Lisa.Breakpoint.WebApi
 
             if (!ModelState.IsValid)
             {
-                var modelStateErrors = ModelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
-                foreach (var property in modelStateErrors)
-                {
-                    var propertyName = property.Key;
-                    foreach (var error in property.Value.Errors)
-                    {
-                        if (error.Exception == null)
-                        {
-                            errors.Add(new Error(1101, new { field = propertyName }));
-                        }
-                        else
-                        {
-                            return new BadRequestObjectResult(JsonConvert.SerializeObject(error.Exception.Message));
-                        }
-                    }
-                }
-                return new BadRequestObjectResult(errors);
+                return (ErrorHandler.FromModelState(ModelState)) ? new BadRequestObjectResult(ErrorHandler.FatalError) : new BadRequestObjectResult(ErrorHandler.Errors);
             }
 
             var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
-            if (_db.Errors.Count() == 0)
+            if (ErrorHandler.HasErrors)
             {
-                string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
-                return new CreatedResult(location, postedReport);
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            return new UnprocessableEntityObjectResult(_db.Errors);
+            string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
+            return new CreatedResult(location, postedReport);
         }
             
         [HttpPatch("{id}")]
