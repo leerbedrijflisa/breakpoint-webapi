@@ -133,7 +133,6 @@ namespace Lisa.Breakpoint.WebApi
                         }
                     }
                 }
-
                 return new BadRequestObjectResult(errors);
             }
 
@@ -262,8 +261,6 @@ namespace Lisa.Breakpoint.WebApi
             DateTime filterDay = DateTime.Today;
             DateTime filterDayTwo = DateTime.Today.AddDays(1);
 
-            bool monthYear = false;
-
             //Filters out all the characters and white spaces
             string unparsedDate = Regex.Match(reported, @"\d+").Value;
             if (unparsedDate != "")
@@ -281,12 +278,6 @@ namespace Lisa.Breakpoint.WebApi
             {
                 filterDay = DateTime.MinValue.AddDays(1);
                 date = 0;
-            }
-
-            //Checks if monthNames contains a month and if the date is between a certain amount
-            if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.MinValue.Year)
-            {
-                monthYear = true;
             }
 
             if (reported == "today")
@@ -310,7 +301,7 @@ namespace Lisa.Breakpoint.WebApi
                 //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
                 filterDay = filterDay.AddDays(-date);
             }
-            else if (monthYear) //Gets the date of a certain year
+            else if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.Today.Year) //Gets the date of a certain year
             {
                 //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
@@ -361,7 +352,6 @@ namespace Lisa.Breakpoint.WebApi
         }
         private readonly RavenDB _db;
         private IIdentity _user;
-
 
         private readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
 

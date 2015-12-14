@@ -11,7 +11,7 @@ namespace Lisa.Breakpoint.WebApi.database
     {
         public IList<Organization> GetAllOrganizations(string userName)
         {
-            if (string.IsNullOrWhiteSpace(userName))
+            if (!string.IsNullOrWhiteSpace(userName))
             {
                 using (IDocumentSession session = documentStore.Initialize().OpenSession())
                 {
