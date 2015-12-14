@@ -1,4 +1,5 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
@@ -58,8 +59,6 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Organization PostOrganization(OrganizationPost organization)
         {
-            _errors = new List<Error>();
-
             var organizationEntity = new Organization()
             {
                 Name = organization.Name,
@@ -73,26 +72,26 @@ namespace Lisa.Breakpoint.WebApi.database
                 {
                     if (!session.Query<User>().Any(u => u.Username == user))
                     {
-                        _errors.Add(new Error(1305, new { value = user }));
+                        ErrorHandler.Add(new Error(1305, new { value = user }));
                     }
                 }
 
                 if (session.Query<Organization>().Where(o => o.Slug == organizationEntity.Slug).Any())
                 {
-                    _errors.Add(new Error(1102, new { type = "organization", value = "name" }));
+                    ErrorHandler.Add(new Error(1102, new { type = "organization", value = "name" }));
                 }
 
-                if (_errors.Count() == 0)
+                if (ErrorHandler.HasErrors)
                 {
-                    session.Store(organizationEntity);
-                    string organizationId = session.Advanced.GetDocumentId(organizationEntity);
-                    organizationEntity.Number = organizationId.Split('/').Last();
-                    session.SaveChanges();
-
-                    return organizationEntity;
+                    return null;
                 }
 
-                return null;
+                session.Store(organizationEntity);
+                string organizationId = session.Advanced.GetDocumentId(organizationEntity);
+                organizationEntity.Number = organizationId.Split('/').Last();
+                session.SaveChanges();
+
+                return organizationEntity;
             }
         }
 

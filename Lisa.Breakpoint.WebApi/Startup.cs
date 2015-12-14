@@ -6,6 +6,8 @@ using Newtonsoft.Json.Serialization;
 using Lisa.Breakpoint.TokenAuthentication;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Authentication.JwtBearer;
+using Lisa.Breakpoint.WebApi.utils;
+using Lisa.Breakpoint.WebApi.TokenAuthentication;
 
 namespace Lisa.Breakpoint.WebApi
 {

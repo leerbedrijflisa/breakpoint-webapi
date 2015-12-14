@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNet.Mvc;
 
-namespace Lisa.Breakpoint.WebApi
+namespace Lisa.Breakpoint.WebApi.utils
 {
     public class UnprocessableEntityObjectResult : ObjectResult
     {

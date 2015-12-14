@@ -1,4 +1,5 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
 using Raven.Abstractions.Extensions;
 using Raven.Client;
@@ -78,8 +79,6 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Report PostReport(ReportPost report, string organization, string project)
         {
-            _errors = new List<Error>();
-
             if (report.Platforms == null)
             {
                 report.Platforms = new List<string>();
@@ -108,22 +107,22 @@ namespace Lisa.Breakpoint.WebApi.database
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (_errors.Count() == 0)
+                if (ErrorHandler.HasErrors)
                 {
-                    session.Store(reportEntity);
-
-                    string reportId = session.Advanced.GetDocumentId(reportEntity);
-                    reportEntity.Number = reportId.Split('/').Last();
-                    reportEntity.Reported = DateTime.Now;
-
-                    AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
-
-                    session.SaveChanges();
-
-                    return reportEntity;
+                    return null;
                 }
 
-                return null;
+                session.Store(reportEntity);
+
+                string reportId = session.Advanced.GetDocumentId(reportEntity);
+                reportEntity.Number = reportId.Split('/').Last();
+                reportEntity.Reported = DateTime.Now;
+
+                AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
+
+                session.SaveChanges();
+
+                return reportEntity;
             }
         }
 

@@ -1,10 +1,11 @@
-﻿namespace Lisa.Breakpoint.WebApi
+﻿using Lisa.Breakpoint.WebApi.utils;
+
+namespace Lisa.Breakpoint.WebApi
 {
     public class Error
     {
         public Error(int code, object values = null)
         {
-
             Code = code;
             Message = ErrorMessages.Get(code, values);
             if (values != null)
