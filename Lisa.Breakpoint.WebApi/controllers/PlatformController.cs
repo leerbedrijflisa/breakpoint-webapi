@@ -14,6 +14,11 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}")]
         public IActionResult Get(string organizationSlug)
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug))
+            {
+                return new BadRequestResult();
+            }
+
             return new HttpOkObjectResult(_db.GetOrganization(organizationSlug).Platforms);
         }
 
