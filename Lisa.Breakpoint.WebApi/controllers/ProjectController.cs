@@ -89,8 +89,6 @@ namespace Lisa.Breakpoint.WebApi
 
             string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
             return new CreatedResult(location, postedProject);
-
-
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]

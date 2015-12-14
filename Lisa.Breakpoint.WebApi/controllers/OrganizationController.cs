@@ -34,6 +34,20 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
+        [HttpGet("{organizationSlug}", Name = "organization")]
+        [Authorize("Bearer")]
+        public IActionResult Get(string organizationSlug)
+        {
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            return new HttpOkObjectResult(organization);
+        }
+
         [HttpGet("members/{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
@@ -64,26 +78,10 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(members);
         }
 
-        [HttpGet("{organizationSlug}", Name = "organization")]
-        [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug)
-        {
-            var organization = _db.GetOrganization(organizationSlug);
-
-            if (organization == null)
-            {
-                return new HttpNotFoundResult();
-            }
-
-            return new HttpOkObjectResult(organization);
-        }
-
         [HttpPost]
         [Authorize("Bearer")]
         public IActionResult Post([FromBody] OrganizationPost organization)
         {
-            List<Error> errors = new List<Error>();
-
             if (organization == null)
             {
                 return new BadRequestResult();

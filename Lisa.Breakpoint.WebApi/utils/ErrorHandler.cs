@@ -34,7 +34,7 @@ namespace Lisa.Breakpoint.WebApi.utils
         }
 
         /// <summary>
-        /// Gets and adds all modelstate errors to the error list. Fatal errors are saved in the FatalError property
+        /// Gets and adds all modelstate errors to the error list. Fatal errors are saved in the FatalError property.
         /// </summary>
         /// <returns>True when a fatal error has occured, false otherwise.</returns>
         public static bool FromModelState(ModelStateDictionary modelState)
@@ -63,7 +63,7 @@ namespace Lisa.Breakpoint.WebApi.utils
         }
 
         /// <summary>
-        /// Clears the error list
+        /// Clears the error list.
         /// </summary>
         public static void Clear()
         {

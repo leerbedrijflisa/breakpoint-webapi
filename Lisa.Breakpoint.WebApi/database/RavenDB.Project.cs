@@ -44,7 +44,7 @@ namespace Lisa.Breakpoint.WebApi.database
                         if (member.Username == userName)
                         {
                             var role  = member.Role;
-                            if (role != "")
+                            if (!string.IsNullOrWhiteSpace(role))
                             {
                                 int level = project.Groups
                                     .Where(g => g.Name == role)
