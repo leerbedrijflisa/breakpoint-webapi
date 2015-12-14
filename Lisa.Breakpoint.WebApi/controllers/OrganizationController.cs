@@ -3,10 +3,8 @@ using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -36,18 +34,18 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organizations);
         }
 
-        
-
         [HttpGet("members/{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            var organization = _db.GetOrganization(organizationSlug);
+
+            if (organization == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var members = _db.GetOrganization(organizationSlug).Members;
+            var members = organization.Members;
 
             return new HttpOkObjectResult(members);
         }

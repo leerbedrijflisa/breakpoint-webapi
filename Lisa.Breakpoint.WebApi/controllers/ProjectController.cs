@@ -46,7 +46,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             _user = HttpContext.User.Identity;
 
-            if (projectSlug == null)
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
             }
