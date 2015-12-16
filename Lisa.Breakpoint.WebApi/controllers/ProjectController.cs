@@ -3,10 +3,8 @@ using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
