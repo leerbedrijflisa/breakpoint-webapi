@@ -298,6 +298,19 @@ namespace Lisa.Breakpoint.WebApi
                     filterDay = DateTime.MinValue.AddDays(1);
                 }
             }
+            else if (date >= 1970 && date <= DateTime.Today.Year)
+            {
+                reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
+                if (reported != string.Empty)
+                {
+                    filterDay = DateTime.MinValue.AddDays(1);
+                }
+                else
+                {
+                    filterDay = new DateTime(date, 1, 1);
+                    filterDayTwo = filterDay.AddYears(1);
+                }
+            }
             else if (_monthNames.Contains(reported))
             {
                 //If the month is below or equal to the current month, get the month of this year
