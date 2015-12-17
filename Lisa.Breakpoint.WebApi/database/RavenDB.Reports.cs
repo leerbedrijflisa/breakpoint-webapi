@@ -32,10 +32,18 @@ namespace Lisa.Breakpoint.WebApi.database
                     rList = rList.ApplyFilters(filters.ToArray());
                 }
 
-                reports = rList.OrderBy(r => r.Priority)
-                        .ThenByDescending(r => r.Reported.Date)
-                        .ThenBy(r => r.Reported.TimeOfDay)
-                        .ToList();
+                if (ErrorHandler.HasErrors)
+                {
+                    return null;
+                }
+
+                // First, cast the ravenDB queryable to a regular list,
+                // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
+                reports = rList.ToList().AsQueryable()
+                    .OrderBy(x => x, new ReportComparer())
+                    .ThenByDescending(r => r.Reported.Date)
+                    .ThenBy(r => r.Reported.TimeOfDay)
+                    .ToList();
 
                 return reports;
             }

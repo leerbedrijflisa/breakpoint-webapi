@@ -8,9 +8,9 @@ namespace Lisa.Breakpoint.WebApi.controllers
     public class ValueController
     {
         [HttpGet("priorities")]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return Priorities.List;
+            return new HttpOkObjectResult(Priorities.List);
         }
     }
 }
