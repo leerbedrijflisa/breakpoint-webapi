@@ -22,7 +22,7 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
         [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string filter = null, string value = null, [FromQuery] string reported = null)
+        public IActionResult Get(string organizationSlug, string projectSlug, string filter = null, string value = null, [FromQuery] string version = null, [FromQuery] string reported = null)
         {
             _user = HttpContext.User.Identity;
             IList<Report> reports;
@@ -74,9 +74,11 @@ namespace Lisa.Breakpoint.WebApi
                     f = new Filter(filter, value);
                 }
 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, dateTimeObject, f);
-            } else { 
-                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name);
+                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, version, dateTimeObject, f);
+            }
+            else
+            {
+                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, version);
             }
             
             if (reports == null)

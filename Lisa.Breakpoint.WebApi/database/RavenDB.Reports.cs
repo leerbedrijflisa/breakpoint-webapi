@@ -15,7 +15,7 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, DateTime[] filterDays = null, Filter filter = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, string version, DateTime[] filterDays = null, Filter filter = null)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -27,6 +27,11 @@ namespace Lisa.Breakpoint.WebApi.database
                     DateTime dayOne = filterDays[0];
                     DateTime dayTwo = filterDays[1];
                     rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
+                }
+
+                if (!string.IsNullOrWhiteSpace(version))
+                {
+                    rList = rList.Where(r => r.Version == version);
                 }
 
                 if (filter != null)
@@ -254,20 +259,7 @@ namespace Lisa.Breakpoint.WebApi.database
 
             foreach (Filter filter in filters)
             {
-                filter.Type = filter.Type.Replace("Filter", "").ToLower();
-
-                if (filter.Type == "version")
-                {
-                    if (filter.Value != "all")
-                    {
-                        if (filter.Value == "none")
-                        {
-                            filter.Value = "";
-                        }
-                        outerPredicate = outerPredicate.And(WhereVersion(filter.Value));
-                    }
-                }
-                else if (filter.Type == "title")
+                if (filter.Type == "title")
                 {
                     if (filter.Value != "")
                     {
