@@ -42,6 +42,9 @@ namespace Lisa.Breakpoint.WebApi.utils
                 case 1206:
                     message = string.Format("The field '{0}' with value '{1}' can only contain letters, numbers, spaces and dots.", obj.field, obj.value);
                     break;
+                case 1207:
+                    message = string.Format("The field '{0}' with value '{1}' is an invalid value.", obj.field, obj.value);
+                    break;
                 case 1300:
                     message = string.Format("The field '{0}' with id '{1}' doesn't exists.", obj.field, obj.value);
                     break;

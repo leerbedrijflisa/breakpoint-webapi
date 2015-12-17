@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
-using System.Text.RegularExpressions;
 using Lisa.Breakpoint.WebApi.utils;
 
 namespace Lisa.Breakpoint.WebApi
@@ -32,11 +31,11 @@ namespace Lisa.Breakpoint.WebApi
             {
                 //Calls a function to determine if reported has a correct specific value
 
-                dateTimes = _CheckReported(reported);
+                dateTimes = FilterHandler.CheckReported(reported);
                 //When the specific value is invalid it will return a unprocessable entity status code
                 if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                 {
-                    return new HttpStatusCodeResult(422);
+                    return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
                 }
             }
 
@@ -237,119 +236,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpStatusCodeResult(204);
         }
 
-        private IList<DateTime> _CheckReported(string reported)
-        {
-            reported = reported.ToLower();
-            int date = 0;
-            DateTime filterDay = DateTime.Today;
-            DateTime filterDayTwo = DateTime.Today.AddDays(1);
-
-            //Filters out all the characters and white spaces
-            string unparsedDate = Regex.Match(reported, @"\d+").Value;
-            if (unparsedDate != "")
-            {
-                if (!int.TryParse(unparsedDate, out date))
-                {
-                    filterDay = DateTime.MinValue.AddDays(1);
-                }
-
-            }
-
-            DateTime d1 = new DateTime(1970, 1, 1);
-            TimeSpan span = DateTime.Today - d1;
-            if (date > span.TotalDays)
-            {
-                filterDay = DateTime.MinValue.AddDays(1);
-                date = 0;
-            }
-
-            if (reported == "today")
-            {
-                //Breaks the if so it won't give errors
-            }
-            else if (reported == "yesterday")
-            {
-                //Subtracts 1 day to get the date of yesterday
-                filterDay = filterDay.AddDays(-1);
-                filterDayTwo = filterDayTwo.AddDays(-1);
-            }
-            else if (Regex.IsMatch(reported, @"(\d+\W+days\W+ago)"))
-            {
-                //Subtracts the amount of days you entered on both so you get 1 day
-                filterDay = filterDay.AddDays(-date);
-                filterDayTwo = filterDayTwo.AddDays(-date);
-            }
-            else if (Regex.IsMatch(reported, @"last\W+\d+\W+days"))
-            {
-                //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
-                filterDay = filterDay.AddDays(-date);
-            }
-            else if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.Today.Year) //Gets the date of a certain year
-            {
-                //Replaces the numbers in the string so it won't give errors
-                reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
-                if (_monthNames.Contains(reported))
-                {
-                    filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
-                }
-                else
-                {
-                    filterDay = DateTime.MinValue.AddDays(1);
-                }
-            }
-            else if (date >= 1970 && date <= DateTime.Today.Year)
-            {
-                reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
-                if (reported != string.Empty)
-                {
-                    filterDay = DateTime.MinValue.AddDays(1);
-                }
-                else
-                {
-                    filterDay = new DateTime(date, 1, 1);
-                    filterDayTwo = filterDay.AddYears(1);
-                }
-            }
-            else if (_monthNames.Contains(reported))
-            {
-                //If the month is below or equal to the current month, get the month of this year
-                if ((_monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
-                {
-                    filterDay = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
-                }
-                else
-                {
-                    filterDay = new DateTime(filterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
-                }
-            }
-            else
-            {
-                filterDay = DateTime.MinValue.AddDays(1);
-            }
-            IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
-            return dateTimes;
-        } 
-
-        private DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
-        {
-            if (reported == _monthNames[11])
-            {
-                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
-            }
-            else
-            {
-                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
-            };
-
-            return filterDayTwo;
-        }
         private readonly RavenDB _db;
         private IIdentity _user;
-
-        private readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
 
         private readonly IList<string> statusCheck = new string[5] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
         
