@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi.utils
 {
@@ -25,7 +26,10 @@ namespace Lisa.Breakpoint.WebApi.utils
 
         public static bool HasErrors
         {
-            get { return _errors.Any(); }
+            get
+            {
+                return _errors.Any();
+            }
         }
 
         public static void Add(Error item)
@@ -54,8 +58,15 @@ namespace Lisa.Breakpoint.WebApi.utils
                     }
                     else
                     {
-                        fatalError = true;
-                        _fatalError = JsonConvert.SerializeObject(error.Exception.Message);
+                        if (Regex.IsMatch(error.Exception.Message, @"^Could not find member"))
+                        {
+                            _errors.Add(new Error(1103, new { field = property.Key }));
+                        }
+                        else
+                        {
+                            fatalError = true;
+                            _fatalError = JsonConvert.SerializeObject(error.Exception.Message);
+                        }
                     }
                 }
             }
