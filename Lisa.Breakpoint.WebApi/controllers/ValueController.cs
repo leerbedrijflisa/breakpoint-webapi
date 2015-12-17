@@ -10,7 +10,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("priorities")]
         public IEnumerable<string> Get()
         {
-            return PriorityClass.List;
+            return Priorities.List;
         }
     }
 }

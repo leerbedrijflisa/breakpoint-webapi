@@ -94,10 +94,11 @@ namespace Lisa.Breakpoint.WebApi
             
             reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters, dateTimeObject);
             
-            if (reports == null)
+            if (ErrorHandler.HasErrors)
             {
-                return new HttpNotFoundResult();
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
+
             return new HttpOkObjectResult(reports);
         }
 

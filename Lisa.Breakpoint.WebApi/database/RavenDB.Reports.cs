@@ -1,7 +1,6 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
-using Raven.Abstractions.Extensions;
 using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
@@ -38,8 +37,6 @@ namespace Lisa.Breakpoint.WebApi.database
                         .ThenBy(r => r.Reported.TimeOfDay)
                         .ToList();
 
-                reports.ForEach(r => r.PriorityString = r.Priority.ToString());
-
                 return reports;
             }
         }
@@ -64,6 +61,11 @@ namespace Lisa.Breakpoint.WebApi.database
                 report.Platforms.Add("Not specified");
             }
 
+            if (!Priorities.List.Contains(report.Priority))
+            {
+                ErrorHandler.Add(Priorities.InvalidValueError);
+            }
+
             var reportEntity = new Report()
             {
                 Title = report.Title,
@@ -77,16 +79,17 @@ namespace Lisa.Breakpoint.WebApi.database
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms
+                Platforms = report.Platforms,
+                Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
+
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (ErrorHandler.HasErrors)
-                {
-                    return null;
-                }
-
                 session.Store(reportEntity);
 
                 string reportId = session.Advanced.GetDocumentId(reportEntity);

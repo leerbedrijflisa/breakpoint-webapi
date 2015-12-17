@@ -16,8 +16,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string   Reporter { get; set; }
         public DateTime Reported { get; set; }
         public string   Status { get; set; }
-        public Priority Priority { get; set; }
-        public string   PriorityString { get; set; }
+        public string   Priority { get; set; }
         public string   Version { get; set; }
         public AssignedTo AssignedTo { get; set; }
         public IList<Comment> Comments { get; set; }
@@ -45,7 +44,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string Status { get; set; }
 
         [Required]
-        public Priority Priority { get; set; }
+        public string Priority { get; set; }
 
         [Required]
         public string Version { get; set; }
@@ -55,20 +54,14 @@ namespace Lisa.Breakpoint.WebApi.Models
         public IList<string> Platforms { get; set; }
     }
 
-    public enum Priority
-    {
-        FixImmediately,
-        FixBeforeRelease,
-        FixForNextRelease,
-        FixWhenever
-    }
-
-    public static class PriorityClass
+    public static class Priorities
     {
         public const string FixImmediately = "FixImmediately";
         public const string FixBeforeRelease = "FixBeforeRelease";
         public const string FixForNextRelease = "FixForNextRelease";
         public const string FixWhenever = "FixWhenever";
+
+        public static Error InvalidValueError = new Error(1208, new { field = "priority", value = string.Format("{0}, {1}, {2}, {3}", FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever) });
 
         public static readonly IEnumerable<string> List = new[] { FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever };
     }

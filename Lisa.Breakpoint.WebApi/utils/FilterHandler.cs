@@ -45,11 +45,15 @@ namespace Lisa.Breakpoint.WebApi.utils
                 }
                 else if (filter.Type == FilterTypes.Priority)
                 {
+                    if (!Priorities.List.Contains(filter.Value))
+                    {
+                        ErrorHandler.Add(Priorities.InvalidValueError);
+                        return reports;
+                    }
+
                     if (filter.Value != "all")
                     {
-                        // Parse filter value to corresponding enum value to filter with
-                        var priority = (Priority)Enum.Parse(typeof(Priority), filter.Value);
-                        outerPredicate = outerPredicate.And(r => r.Priority == priority);
+                        outerPredicate = outerPredicate.And(r => r.Priority == filter.Value);
                     }
                 }
                 else if (filter.Type == FilterTypes.Status)
