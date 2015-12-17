@@ -20,19 +20,34 @@ namespace Lisa.Breakpoint.WebApi
             ErrorHandler.Clear();
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{filter?}/{value?}")]
+        [HttpGet("{organizationSlug}/{projectSlug}/")]
         [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string filter = null, string value = null, [FromQuery] string version = null, [FromQuery] string reported = null)
+        public IActionResult Get(string organizationSlug, string projectSlug,
+            [FromQuery] string title = null, 
+            [FromQuery] string reporter = null, 
+            [FromQuery] string reported = null, 
+            [FromQuery] string status = null, 
+            [FromQuery] string priority = null, 
+            [FromQuery] string version = null,
+            [FromQuery] string member = null,
+            [FromQuery] string group = null)
         {
             _user = HttpContext.User.Identity;
+
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            {
+                return new HttpNotFoundResult();
+            }
+            
             IList<Report> reports;
             IList<DateTime> dateTimes = new DateTime[2];
+            var filters = new List<Filter>();
 
             if (reported != null)
             {
                 //Calls a function to determine if reported has a correct specific value
-
                 dateTimes = _CheckReported(reported);
+
                 //When the specific value is invalid it will return a unprocessable entity status code
                 if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                 {
@@ -40,40 +55,45 @@ namespace Lisa.Breakpoint.WebApi
                 }
             }
 
-            //if project isn't found it'll return an error 404
-            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            // Add all filters (yeah it's a lot)
+            if (!string.IsNullOrWhiteSpace(title))
             {
-                return new HttpNotFoundResult();
+                filters.Add(new Filter(FilterTypes.Title, title));
+            }
+            if (!string.IsNullOrWhiteSpace(reporter))
+            {
+                filters.Add(new Filter(FilterTypes.Reporter, reporter));
+            }
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                filters.Add(new Filter(FilterTypes.Status, status));
+            }
+            if (!string.IsNullOrWhiteSpace(priority))
+            {
+                filters.Add(new Filter(FilterTypes.Priority, priority));
+            }
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                filters.Add(new Filter(FilterTypes.Version, version));
+            }
+            if (!string.IsNullOrWhiteSpace(member))
+            {
+                filters.Add(new Filter(FilterTypes.Member, member));
+            }
+            if (!string.IsNullOrWhiteSpace(group))
+            {
+                filters.Add(new Filter(FilterTypes.Group, group));
+            }
+
+            DateTime[] dateTimeObject = null;
+            if (dateTimes[0] != DateTime.MinValue)
+            {
+                dateTimeObject = new DateTime[2];
+                dateTimeObject[0] = dateTimes[0];
+                dateTimeObject[1] = dateTimes[1];
             }
             
-            if (filter != null || dateTimes[0] != DateTime.MinValue)
-            {
-                //If the dateTimes is filled with not the standard value, overwrite the dateTimeObject for use in the database class
-                DateTime[] dateTimeObject = new DateTime[2];
-                if (dateTimes[0] != DateTime.MinValue)
-                {
-                    dateTimeObject[0] = dateTimes[0];
-                    dateTimeObject[1] = dateTimes[1];
-                }
-                else
-                {
-                    dateTimeObject = null;
-                }
-
-                //If filter is filled set the filter and value for use in the database class
-                Filter f = null;
-                
-                if (filter != null)
-                {
-                    f = new Filter(filter, value);
-                }
-
-                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, version, dateTimeObject, f);
-            }
-            else
-            {
-                reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, version);
-            }
+            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters, dateTimeObject);
             
             if (reports == null)
             {

@@ -9,131 +9,101 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public static IQueryable<Report> ApplyFilters(this IQueryable<Report> reports, params Filter[] filters)
         {
+            bool UseOr = false;
+            // The AND clauses for the filtering. The default expression will always default to true (number is never empty)
             Expression<Func<Report, bool>> outerPredicate = r => r.Number != string.Empty;
+            // The OR clauses for the filtering. The default expression will always default to false (number is never -1)
             Expression<Func<Report, bool>> innerPredicate = r => r.Number == "-1";
 
             foreach (Filter filter in filters)
             {
-                if (filter.Type == "title")
+                if (filter.Type == FilterTypes.Title)
                 {
-                    if (filter.Value != "")
+                    if (string.IsNullOrWhiteSpace(filter.Value))
                     {
-                        outerPredicate = outerPredicate.And(WhereTitleStartsWith(filter.Value));
+                        outerPredicate = outerPredicate.And(r => r.Title.StartsWith(filter.Value));
                     }
                 }
-                else if (filter.Type == "priority")
+                else if (filter.Type == FilterTypes.Version)
                 {
-                    if (filter.Value != "all")
+                    if (filter.Value.Contains(","))
                     {
-                        outerPredicate = outerPredicate.And(WherePriority((Priority)Enum.Parse(typeof(Priority), filter.Value)));
-                    }
-                }
-                else if (filter.Type == "status")
-                {
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(WhereStatus(filter.Value));
-                    }
-                }
-                else if (filter.Type == "group")
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(WhereNoGroups());
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(WhereAllGroups());
+                        var versions = filter.Value.Split(',');
+                        Expression<Func<Report, bool>> predicate = r => r.Number == "-1";
+                        foreach (var version in versions)
+                        {
+                            predicate = predicate.Or(r => r.Version == version);
+                        }
+                        outerPredicate = outerPredicate.And(predicate);
                     }
                     else
                     {
-                        innerPredicate = innerPredicate.Or(WhereGroup(filter.Value));
+                        outerPredicate = outerPredicate.And(r => r.Version == filter.Value);
                     }
                 }
-                else if (filter.Type == "member")
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(WhereNoMembers());
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(WhereAllMembers());
-                    }
-                    else
-                    {
-                        innerPredicate = innerPredicate.Or(WhereMember(filter.Value));
-                    }
-                }
-                else if (filter.Type == "reporter")
+                else if (filter.Type == FilterTypes.Priority)
                 {
                     if (filter.Value != "all")
                     {
-                        outerPredicate = outerPredicate.And(WhereReporter(filter.Value));
+                        // Parse filter value to corresponding enum value to filter with
+                        var priority = (Priority)Enum.Parse(typeof(Priority), filter.Value);
+                        outerPredicate = outerPredicate.And(r => r.Priority == priority);
+                    }
+                }
+                else if (filter.Type == FilterTypes.Status)
+                {
+                    if (filter.Value != "all")
+                    {
+                        outerPredicate = outerPredicate.And(r => r.Status == filter.Value.Replace("%20", " "));
+                    }
+                }
+                else if (filter.Type == FilterTypes.Group)
+                {
+                    if (filter.Value == "none")
+                    {
+                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "group");
+                    }
+                    else if (filter.Value == "all")
+                    {
+                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "group");
+                        UseOr = true;
+                    }
+                    else
+                    {
+                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "group");
+                        UseOr = true;
+                    }
+                }
+                else if (filter.Type == FilterTypes.Member)
+                {
+                    if (filter.Value == "none")
+                    {
+                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "person");
+                    }
+                    else if (filter.Value == "all")
+                    {
+                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "person");
+                        UseOr = true;
+                    }
+                    else
+                    {
+                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "person");
+                        UseOr = true;
+                    }
+                }
+                else if (filter.Type == FilterTypes.Reporter)
+                {
+                    if (filter.Value != "all")
+                    {
+                        outerPredicate = outerPredicate.And(r => r.Reporter == filter.Value);
                     }
                 }
             }
 
-            reports = reports.Where(outerPredicate.And(innerPredicate));
+            // Apply filters
+            reports = UseOr ? reports.Where(outerPredicate.And(innerPredicate)) : reports.Where(outerPredicate);
 
             return reports;
-        }
-
-        private static Expression<Func<Report, bool>> WhereVersion(string term)
-        {
-            return r => r.Version == term;
-        }
-        private static Expression<Func<Report, bool>> WhereTitleStartsWith(string term)
-        {
-            return r => r.Title.StartsWith(term.ToString());
-        }
-        private static Expression<Func<Report, bool>> WhereGroup(string term)
-        {
-            return r => r.AssignedTo.Value == term && r.AssignedTo.Type == "group";
-        }
-        private static Expression<Func<Report, bool>> WhereMember(string term)
-        {
-            return r => r.AssignedTo.Value == term && r.AssignedTo.Type == "person";
-        }
-        private static Expression<Func<Report, bool>> WhereReporter(string term)
-        {
-            return r => r.Reporter == term;
-        }
-        private static Expression<Func<Report, bool>> WhereStatus(string term)
-        {
-            return r => r.Status == term.Replace("%20", " ");
-        }
-        private static Expression<Func<Report, bool>> WhereNoGroups()
-        {
-            return r => r.AssignedTo.Type != "group";
-        }
-        private static Expression<Func<Report, bool>> WhereNoMembers()
-        {
-            return r => r.AssignedTo.Type != "person";
-        }
-        private static Expression<Func<Report, bool>> WhereAllGroups()
-        {
-            return r => r.AssignedTo.Type == "group";
-        }
-        private static Expression<Func<Report, bool>> WhereAllMembers()
-        {
-            return r => r.AssignedTo.Type == "person";
-        }
-        private static Expression<Func<Report, bool>> WherePriority(Priority priority)
-        {
-            return r => r.Priority == priority;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedAfter(DateTime dateTime)
-        {
-            return r => r.Reported > dateTime;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedBefore(DateTime dateTime)
-        {
-            return r => r.Reported < dateTime;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedOn(DateTime dateTime)
-        {
-            return r => r.Reported == dateTime;
         }
     }
 
@@ -149,5 +119,16 @@ namespace Lisa.Breakpoint.WebApi.utils
             return Expression.Lambda<Func<T, bool>>
                   (Expression.AndAlso(expr1.Body, expr2.Body), expr1.Parameters);
         }
+    }
+
+    public static class FilterTypes
+    {
+        public const string Title = "title";
+        public const string Reporter = "reporter";
+        public const string Status = "status";
+        public const string Priority = "priority";
+        public const string Version = "version";
+        public const string Member = "member";
+        public const string Group = "group";
     }
 }
