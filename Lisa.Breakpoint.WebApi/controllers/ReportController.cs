@@ -40,12 +40,6 @@ namespace Lisa.Breakpoint.WebApi
                 }
             }
 
-            //if the user not exist it'll return a 404
-            if (_db.GetUser(_user.Name) == null)
-            {
-                return new HttpNotFoundResult();
-            }
-
             //if project isn't found it'll return an error 404
             if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
