@@ -70,6 +70,11 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] AuthRequest req)
         {
+            if (req == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 return new HttpStatusCodeResult(422);
