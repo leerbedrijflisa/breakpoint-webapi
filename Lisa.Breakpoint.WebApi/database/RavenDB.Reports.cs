@@ -8,14 +8,13 @@ using Raven.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, DateTime[] filterDays = null, Filter filter = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters, DateTime[] filterDays = null)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -29,35 +28,11 @@ namespace Lisa.Breakpoint.WebApi.database
                     rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
                 }
 
-                if (filter != null)
+                if (filters.Any())
                 {
-                    string[] types = { };
-                    string[] values = { };
-                    bool multipleFilters = false;
-
-                    if (filter.Type.IndexOf('&') != -1 && filter.Value.IndexOf('&') != -1)
-                    {
-                        types = filter.Type.Split('&');
-                        values = filter.Value.Split('&');
-
-                        multipleFilters = true;
-                    }
-
-                    if (!multipleFilters)
-                    {
-                        rList = rList.ApplyFilters(filter);
-                    }
-                    else if (multipleFilters)
-                    {
-                        int filterCount = types.Count();
-                        Filter[] tempFilters = new Filter[filterCount];
-                        for (int i = 0; i < types.Length; i++)
-                        {
-                            tempFilters[i] = new Filter(types[i], values[i]);
-                        }
-                        rList = rList.ApplyFilters(tempFilters);
-                    }
+                    rList = rList.ApplyFilters(filters.ToArray());
                 }
+
                 reports = rList.OrderBy(r => r.Priority)
                         .ThenByDescending(r => r.Reported.Date)
                         .ThenBy(r => r.Reported.TimeOfDay)
