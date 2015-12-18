@@ -50,6 +50,7 @@ namespace Lisa.Breakpoint.WebApi
                 //When the specific value is invalid it will return a unprocessable entity status code
                 if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                 {
+                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = reported }));
                     return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
                 }
             }

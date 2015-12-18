@@ -110,7 +110,6 @@ namespace Lisa.Breakpoint.WebApi.utils
 
         public static IList<DateTime> CheckReported(string reported)
         {
-            string errorReport = reported;
             reported = reported.ToLower();
             int date = 0;
             DateTime filterDay = DateTime.Today;
@@ -122,7 +121,6 @@ namespace Lisa.Breakpoint.WebApi.utils
             {
                 if (!int.TryParse(unparsedDate, out date))
                 {
-                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                     filterDay = DateTime.MinValue.AddDays(1);
                 }
 
@@ -132,7 +130,6 @@ namespace Lisa.Breakpoint.WebApi.utils
             TimeSpan span = DateTime.Today - d1;
             if (date > span.TotalDays)
             {
-                ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                 filterDay = DateTime.MinValue.AddDays(1);
                 date = 0;
             }
@@ -171,13 +168,11 @@ namespace Lisa.Breakpoint.WebApi.utils
                     }
                     else
                     {
-                        ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                         filterDay = DateTime.MinValue.AddDays(1);
                     }
                 }
                 else
                 {
-                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                     filterDay = DateTime.MinValue.AddDays(1);
                 }
             }
@@ -186,7 +181,6 @@ namespace Lisa.Breakpoint.WebApi.utils
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (reported != string.Empty)
                 {
-                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                     filterDay = DateTime.MinValue.AddDays(1);
                 }
                 else
@@ -211,7 +205,6 @@ namespace Lisa.Breakpoint.WebApi.utils
             }
             else
             {
-                ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                 filterDay = DateTime.MinValue.AddDays(1);
             }
             IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
