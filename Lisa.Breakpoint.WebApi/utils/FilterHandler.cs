@@ -11,36 +11,39 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public static IQueryable<Report> ApplyFilters(this IQueryable<Report> reports, params Filter[] filters)
         {
-            bool UseOr = false;
-            // The AND clauses for the filtering. The default expression will always default to true (number is never empty)
-            Expression<Func<Report, bool>> outerPredicate = r => r.Number != string.Empty;
-            // The OR clauses for the filtering. The default expression will always default to false (number is never -1)
-            Expression<Func<Report, bool>> innerPredicate = r => r.Number == "-1";
+            Expression<Func<Report, bool>> filterPredicate = null;
 
             foreach (Filter filter in filters)
             {
                 if (filter.Type == FilterTypes.Title)
                 {
-                    if (string.IsNullOrWhiteSpace(filter.Value))
-                    {
-                        outerPredicate = outerPredicate.And(r => r.Title.StartsWith(filter.Value));
-                    }
+                    // Add onto the existing expression, or create a new expression if the expression is not created yet
+                    Expression<Func<Report, bool>> expression = r => r.Title.StartsWith(filter.Value);
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Version)
                 {
                     if (filter.Value.Contains(","))
                     {
                         var versions = filter.Value.Split(',');
-                        Expression<Func<Report, bool>> predicate = r => r.Number == "-1";
+
+                        // Create a new lambda expression which will contain all versions to allow
+                        Expression<Func<Report, bool>> versionpredicate = null;
+
+                        // Add the versions to filter on to the lambda expression
                         foreach (var version in versions)
                         {
-                            predicate = predicate.Or(r => r.Version == version);
+                            Expression<Func<Report, bool>> expression = r => r.Version == version;
+                            versionpredicate = versionpredicate != null ? versionpredicate.Or(expression) : expression;
                         }
-                        outerPredicate = outerPredicate.And(predicate);
+
+                        // Add the built version filter expression to the main expression
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(versionpredicate) : versionpredicate;
                     }
                     else
                     {
-                        outerPredicate = outerPredicate.And(r => r.Version == filter.Value);
+                        Expression<Func<Report, bool>> expression = r => r.Version == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                 }
                 else if (filter.Type == FilterTypes.Priority)
@@ -50,64 +53,76 @@ namespace Lisa.Breakpoint.WebApi.utils
                         ErrorHandler.Add(Priorities.InvalidValueError);
                         return reports;
                     }
-
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(r => r.Priority == filter.Value);
-                    }
+                    
+                    Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Status)
                 {
-                    if (filter.Value != "all")
+                    if (!Statuses.List.Contains(filter.Value))
                     {
-                        outerPredicate = outerPredicate.And(r => r.Status == filter.Value.Replace("%20", " "));
+                        ErrorHandler.Add(Statuses.InvalidValueError);
+                        return reports;
                     }
-                }
-                else if (filter.Type == FilterTypes.Group)
-                {
-                    if (filter.Value == "none")
+
+                    if (filter.Value.Contains(","))
                     {
-                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "group");
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "group");
-                        UseOr = true;
-                    }
-                    else
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "group");
-                        UseOr = true;
-                    }
-                }
-                else if (filter.Type == FilterTypes.Member)
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "person");
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "person");
-                        UseOr = true;
+                        var values = filter.Value.Split(',');
+                        Expression<Func<Report, bool>> statuspredicate = null;
+                        foreach (var value in values)
+                        {
+                            Expression<Func<Report, bool>> expression = r => r.Status == value;
+                            statuspredicate = statuspredicate != null ? statuspredicate.Or(expression) : expression;
+                        }
+                        filterPredicate = filterPredicate.And(statuspredicate);
                     }
                     else
                     {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "person");
-                        UseOr = true;
+                        Expression<Func<Report, bool>> expression = r => r.Status == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    }
+                }
+                else if (filter.Type == FilterTypes.AssignedTo)
+                {
+                    // Filter to all reports that are assigned to a group
+                    if (filter.Value == "group")
+                    {
+                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "group");
+                    }
+                    // Filter to all reports that are assigned to a person
+                    else if (filter.Value == "member")
+                    {
+                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "person");
+                    }
+                    // Use multiple filter values
+                    else if (filter.Value.Contains(','))
+                    {
+                        var values = filter.Value.Split(',');
+                        Expression<Func<Report, bool>> assigneepredicate = null;
+
+                        foreach (var value in values)
+                        {
+                            Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == value;
+                            assigneepredicate = assigneepredicate != null ? assigneepredicate.Or(expression) : expression;
+                        }
+
+                        filterPredicate = filterPredicate.And(assigneepredicate);
+                    }
+                    else
+                    {
+                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                 }
                 else if (filter.Type == FilterTypes.Reporter)
                 {
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(r => r.Reporter == filter.Value);
-                    }
+                    Expression<Func<Report, bool>> expression = r => r.Reporter == filter.Value;
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
             }
 
             // Apply filters
-            reports = UseOr ? reports.Where(outerPredicate.And(innerPredicate)) : reports.Where(outerPredicate);
+            reports = reports.Where(filterPredicate);
 
             return reports;
         }
@@ -129,7 +144,6 @@ namespace Lisa.Breakpoint.WebApi.utils
                     ErrorHandler.Add(new Error(1207, new { field = "reported", value = errorReport }));
                     filterDay = DateTime.MinValue.AddDays(1);
                 }
-
             }
 
             DateTime d1 = new DateTime(1970, 1, 1);
@@ -241,15 +255,15 @@ namespace Lisa.Breakpoint.WebApi.utils
 
     public static class PredicateBuilder
     {
-        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> originalExpression, Expression<Func<T, bool>> additionalExpression)
         {
             return Expression.Lambda<Func<T, bool>>
-                  (Expression.OrElse(expr1.Body, expr2.Body), expr1.Parameters);
+                  (Expression.OrElse(originalExpression.Body, additionalExpression.Body), originalExpression.Parameters);
         }
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> originalExpression, Expression<Func<T, bool>> additionalExpression)
         {
             return Expression.Lambda<Func<T, bool>>
-                  (Expression.AndAlso(expr1.Body, expr2.Body), expr1.Parameters);
+                  (Expression.AndAlso(originalExpression.Body, additionalExpression.Body), originalExpression.Parameters);
         }
     }
 
@@ -260,7 +274,8 @@ namespace Lisa.Breakpoint.WebApi.utils
         public const string Status = "status";
         public const string Priority = "priority";
         public const string Version = "version";
-        public const string Member = "member";
-        public const string Group = "group";
+        public const string Assignee = "member";
+        public const string AssignedGroup = "group";
+        public const string AssignedTo = "assignedto";
     }
 }

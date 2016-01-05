@@ -28,8 +28,7 @@ namespace Lisa.Breakpoint.WebApi
             [FromQuery] string status = null, 
             [FromQuery] string priority = null, 
             [FromQuery] string version = null,
-            [FromQuery] string member = null,
-            [FromQuery] string group = null)
+            [FromQuery] string assignedTo = null)
         {
             _user = HttpContext.User.Identity;
 
@@ -75,13 +74,9 @@ namespace Lisa.Breakpoint.WebApi
             {
                 filters.Add(new Filter(FilterTypes.Version, version));
             }
-            if (!string.IsNullOrWhiteSpace(member))
+            if (!string.IsNullOrWhiteSpace(assignedTo))
             {
-                filters.Add(new Filter(FilterTypes.Member, member));
-            }
-            if (!string.IsNullOrWhiteSpace(group))
-            {
-                filters.Add(new Filter(FilterTypes.Group, group));
+                filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
 
             DateTime[] dateTimeObject = null;

@@ -54,18 +54,6 @@ namespace Lisa.Breakpoint.WebApi.Models
         public IList<string> Platforms { get; set; }
     }
 
-    public static class Priorities
-    {
-        public const string FixImmediately = "FixImmediately";
-        public const string FixBeforeRelease = "FixBeforeRelease";
-        public const string FixForNextRelease = "FixForNextRelease";
-        public const string FixWhenever = "FixWhenever";
-
-        public static Error InvalidValueError = new Error(1208, new { field = "priority", value = string.Format("{0}, {1}, {2}, {3}", FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever) });
-
-        public static readonly IEnumerable<string> List = new[] { FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever };
-    }
-
     public class AssignedTo
     {
         [Required]
