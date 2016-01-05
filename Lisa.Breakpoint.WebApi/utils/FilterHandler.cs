@@ -144,32 +144,25 @@ namespace Lisa.Breakpoint.WebApi.utils
                 filterDay = filterDay.AddDays(-1);
                 filterDayTwo = filterDayTwo.AddDays(-1);
             }
-            else if (Regex.IsMatch(reported, @"(\d+\W+days\W+ago)"))
+            else if (Regex.IsMatch(reported, @"^\d+\W+days\W+ago$"))
             {
                 //Subtracts the amount of days you entered on both so you get 1 day
                 filterDay = filterDay.AddDays(-date);
                 filterDayTwo = filterDayTwo.AddDays(-date);
             }
-            else if (Regex.IsMatch(reported, @"last\W+\d+\W+days"))
+            else if (Regex.IsMatch(reported, @"^last\W+\d+\W+days$"))
             {
                 //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
                 filterDay = filterDay.AddDays(-date);
             }
             else if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.Today.Year) //Gets the date of a certain year
             {
-                //Replaces the numbers in the string so it won't give errors
+                       //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (_monthNames.Contains(reported))
                 {
-                    if (_monthNames.IndexOf(reported) + 1 <= DateTime.Today.Month)
-                    {
-                        filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                        filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
-                    }
-                    else
-                    {
-                        filterDay = DateTime.MinValue.AddDays(1);
-                    }
+                    filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
                 }
                 else
                 {
