@@ -12,5 +12,11 @@ namespace Lisa.Breakpoint.WebApi.controllers
         {
             return new HttpOkObjectResult(Priorities.List);
         }
+
+        [HttpGet("project-roles")]
+        public IActionResult ProjectRoles()
+        {
+            return new HttpOkObjectResult(new { manager = "Project manager", developer = "Developer", tester = "Tester" });
+        }
     }
 }
