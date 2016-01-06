@@ -70,6 +70,4 @@ namespace Lisa.Breakpoint.WebApi
             app.UseMvcWithDefaultRoute();
         }
     }
-
-    
 }

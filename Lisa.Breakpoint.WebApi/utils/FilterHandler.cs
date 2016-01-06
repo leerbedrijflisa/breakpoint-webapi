@@ -11,109 +11,153 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public static IQueryable<Report> ApplyFilters(this IQueryable<Report> reports, params Filter[] filters)
         {
-            bool UseOr = false;
-            // The AND clauses for the filtering. The default expression will always default to true (number is never empty)
-            Expression<Func<Report, bool>> outerPredicate = r => r.Number != string.Empty;
-            // The OR clauses for the filtering. The default expression will always default to false (number is never -1)
-            Expression<Func<Report, bool>> innerPredicate = r => r.Number == "-1";
+            Expression<Func<Report, bool>> filterPredicate = null;
 
             foreach (Filter filter in filters)
             {
                 if (filter.Type == FilterTypes.Title)
                 {
-                    if (string.IsNullOrWhiteSpace(filter.Value))
-                    {
-                        outerPredicate = outerPredicate.And(r => r.Title.StartsWith(filter.Value));
-                    }
+                    // Add onto the existing expression, or create a new expression if the expression is not created yet
+                    Expression<Func<Report, bool>> expression = r => r.Title.StartsWith(filter.Value);
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Version)
                 {
                     if (filter.Value.Contains(","))
                     {
                         var versions = filter.Value.Split(',');
-                        Expression<Func<Report, bool>> predicate = r => r.Number == "-1";
+
+                        // Create a new lambda expression which will contain all versions to allow
+                        Expression<Func<Report, bool>> versionpredicate = null;
+
+                        // Add the versions to filter on to the lambda expression
                         foreach (var version in versions)
                         {
-                            predicate = predicate.Or(r => r.Version == version);
+                            Expression<Func<Report, bool>> expression = r => r.Version == version;
+                            versionpredicate = versionpredicate != null ? versionpredicate.Or(expression) : expression;
                         }
-                        outerPredicate = outerPredicate.And(predicate);
+
+                        // Add the built version filter expression to the main expression
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(versionpredicate) : versionpredicate;
                     }
                     else
                     {
-                        outerPredicate = outerPredicate.And(r => r.Version == filter.Value);
+                        Expression<Func<Report, bool>> expression = r => r.Version == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                 }
                 else if (filter.Type == FilterTypes.Priority)
                 {
-                    if (filter.Value != "all")
+                    if (!Priorities.List.Contains(filter.Value))
                     {
-                        // Parse filter value to corresponding enum value to filter with
-                        var priority = (Priority)Enum.Parse(typeof(Priority), filter.Value);
-                        outerPredicate = outerPredicate.And(r => r.Priority == priority);
+                        ErrorHandler.Add(Priorities.InvalidValueError);
+                        return reports;
                     }
+                    
+                    Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Status)
                 {
-                    if (filter.Value != "all")
+                    if (!Statuses.List.Contains(filter.Value))
                     {
-                        outerPredicate = outerPredicate.And(r => r.Status == filter.Value.Replace("%20", " "));
+                        ErrorHandler.Add(Statuses.InvalidValueError);
+                        return reports;
                     }
-                }
-                else if (filter.Type == FilterTypes.Group)
-                {
-                    if (filter.Value == "none")
+
+                    if (filter.Value.Contains(","))
                     {
-                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "group");
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "group");
-                        UseOr = true;
-                    }
-                    else
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "group");
-                        UseOr = true;
-                    }
-                }
-                else if (filter.Type == FilterTypes.Member)
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(r => r.AssignedTo.Type != "person");
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Type == "person");
-                        UseOr = true;
+                        var values = filter.Value.Split(',');
+                        Expression<Func<Report, bool>> statuspredicate = null;
+                        foreach (var value in values)
+                        {
+                            Expression<Func<Report, bool>> expression = r => r.Status == value;
+                            statuspredicate = statuspredicate != null ? statuspredicate.Or(expression) : expression;
+                        }
+                        filterPredicate = filterPredicate.And(statuspredicate);
                     }
                     else
                     {
-                        innerPredicate = innerPredicate.Or(r => r.AssignedTo.Value == filter.Value && r.AssignedTo.Type == "person");
-                        UseOr = true;
+                        Expression<Func<Report, bool>> expression = r => r.Status == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    }
+                }
+                else if (filter.Type == FilterTypes.AssignedTo)
+                {
+                    // Filter to all reports that are assigned to a group
+                    if (filter.Value == "group")
+                    {
+                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "group");
+                    }
+                    // Filter to all reports that are assigned to a person
+                    else if (filter.Value == "member")
+                    {
+                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "person");
+                    }
+                    // Use multiple filter values
+                    else if (filter.Value.Contains(','))
+                    {
+                        var values = filter.Value.Split(',');
+                        Expression<Func<Report, bool>> assigneepredicate = null;
+
+                        foreach (var value in values)
+                        {
+                            Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == value;
+                            assigneepredicate = assigneepredicate != null ? assigneepredicate.Or(expression) : expression;
+                        }
+
+                        filterPredicate = filterPredicate.And(assigneepredicate);
+                    }
+                    else
+                    {
+                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                 }
                 else if (filter.Type == FilterTypes.Reporter)
                 {
-                    if (filter.Value != "all")
+                    Expression<Func<Report, bool>> expression = r => r.Reporter == filter.Value;
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                }
+                else if (filter.Type == FilterTypes.Reported)
+                {
+                    // Translate filter string to first and last datetime
+                    var dateTimes = _CheckReported(filter.Value);
+
+                    // Check datetime range validity
+                    if (dateTimes[0] == DateTime.MinValue.AddDays(1))
                     {
-                        outerPredicate = outerPredicate.And(r => r.Reporter == filter.Value);
+                        ErrorHandler.Add(new Error(1207, new { field = "reported", value = filter.Value }));
                     }
+
+                    // Add filter to predicate
+                    Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
             }
 
             // Apply filters
-            reports = UseOr ? reports.Where(outerPredicate.And(innerPredicate)) : reports.Where(outerPredicate);
+            reports = reports.Where(filterPredicate);
 
             return reports;
         }
 
-        public static IList<DateTime> CheckReported(string reported)
+        /// <summary>
+        /// Converts the textual representation to a start and end date to filter between
+        /// </summary>
+        /// <param name="reported">The reported date filter value</param>
+        /// <returns>
+        /// A list of two dates, where the first is the start day to filter between,
+        /// and the second is the last day to filter between.
+        /// </returns>
+        private static IList<DateTime> _CheckReported(string reported)
         {
             reported = reported.ToLower();
+
+            // Contains either a year to be filtering reports for, or the amount of days to take reports from.
             int date = 0;
-            DateTime filterDay = DateTime.Today;
-            DateTime filterDayTwo = DateTime.Today.AddDays(1);
+            DateTime startFilterDay = DateTime.Today;
+            DateTime endFilterDay = DateTime.Today.AddDays(1);
 
             //Filters out all the characters and white spaces
             string unparsedDate = Regex.Match(reported, @"\d+").Value;
@@ -121,16 +165,15 @@ namespace Lisa.Breakpoint.WebApi.utils
             {
                 if (!int.TryParse(unparsedDate, out date))
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
-
             }
 
-            DateTime d1 = new DateTime(1970, 1, 1);
-            TimeSpan span = DateTime.Today - d1;
+            DateTime minValue = new DateTime(1970, 1, 1);
+            TimeSpan span = DateTime.Today - minValue;
             if (date > span.TotalDays)
             {
-                filterDay = DateTime.MinValue.AddDays(1);
+                startFilterDay = DateTime.MinValue.AddDays(1);
                 date = 0;
             }
 
@@ -141,32 +184,32 @@ namespace Lisa.Breakpoint.WebApi.utils
             else if (reported == "yesterday")
             {
                 //Subtracts 1 day to get the date of yesterday
-                filterDay = filterDay.AddDays(-1);
-                filterDayTwo = filterDayTwo.AddDays(-1);
+                startFilterDay = startFilterDay.AddDays(-1);
+                endFilterDay = endFilterDay.AddDays(-1);
             }
             else if (Regex.IsMatch(reported, @"^\d+\W+days\W+ago$"))
             {
                 //Subtracts the amount of days you entered on both so you get 1 day
-                filterDay = filterDay.AddDays(-date);
-                filterDayTwo = filterDayTwo.AddDays(-date);
+                startFilterDay = startFilterDay.AddDays(-date);
+                endFilterDay = endFilterDay.AddDays(-date);
             }
             else if (Regex.IsMatch(reported, @"^last\W+\d+\W+days$"))
             {
                 //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
-                filterDay = filterDay.AddDays(-date);
+                startFilterDay = startFilterDay.AddDays(-date);
             }
             else if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.Today.Year) //Gets the date of a certain year
             {
-                       //Replaces the numbers in the string so it won't give errors
+                //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (_monthNames.Contains(reported))
                 {
-                    filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
                 else
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
             }
             else if (date >= 1970 && date <= DateTime.Today.Year)
@@ -174,12 +217,12 @@ namespace Lisa.Breakpoint.WebApi.utils
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (reported != string.Empty)
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
                 else
                 {
-                    filterDay = new DateTime(date, 1, 1);
-                    filterDayTwo = filterDay.AddYears(1);
+                    startFilterDay = new DateTime(date, 1, 1);
+                    endFilterDay = startFilterDay.AddYears(1);
                 }
             }
             else if (_monthNames.Contains(reported))
@@ -187,35 +230,35 @@ namespace Lisa.Breakpoint.WebApi.utils
                 //If the month is below or equal to the current month, get the month of this year
                 if ((_monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
                 {
-                    filterDay = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(startFilterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
                 else
                 {
-                    filterDay = new DateTime(filterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(startFilterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
             }
             else
             {
-                filterDay = DateTime.MinValue.AddDays(1);
+                startFilterDay = DateTime.MinValue.AddDays(1);
             }
-            IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
+            IList<DateTime> dateTimes = new DateTime[2] { startFilterDay, endFilterDay };
             return dateTimes;
         }
 
-        private static DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
+        private static DateTime _calculateEndFilterDay(string reported, DateTime endFilterDay)
         {
             if (reported == _monthNames[11])
             {
-                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
+                endFilterDay = new DateTime(endFilterDay.AddYears(1).Year, 1, 1);
             }
             else
             {
-                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
+                endFilterDay = new DateTime(endFilterDay.Year, _monthNames.IndexOf(reported) + 2, 1);
             };
 
-            return filterDayTwo;
+            return endFilterDay;
         }
 
         private static readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
@@ -223,15 +266,15 @@ namespace Lisa.Breakpoint.WebApi.utils
 
     public static class PredicateBuilder
     {
-        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> originalExpression, Expression<Func<T, bool>> additionalExpression)
         {
             return Expression.Lambda<Func<T, bool>>
-                  (Expression.OrElse(expr1.Body, expr2.Body), expr1.Parameters);
+                  (Expression.OrElse(originalExpression.Body, additionalExpression.Body), originalExpression.Parameters);
         }
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
+        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> originalExpression, Expression<Func<T, bool>> additionalExpression)
         {
             return Expression.Lambda<Func<T, bool>>
-                  (Expression.AndAlso(expr1.Body, expr2.Body), expr1.Parameters);
+                  (Expression.AndAlso(originalExpression.Body, additionalExpression.Body), originalExpression.Parameters);
         }
     }
 
@@ -239,10 +282,12 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public const string Title = "title";
         public const string Reporter = "reporter";
+        public const string Reported = "reported";
         public const string Status = "status";
         public const string Priority = "priority";
         public const string Version = "version";
-        public const string Member = "member";
-        public const string Group = "group";
+        public const string Assignee = "member";
+        public const string AssignedGroup = "group";
+        public const string AssignedTo = "assignedto";
     }
 }

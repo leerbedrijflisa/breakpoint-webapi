@@ -45,6 +45,9 @@ namespace Lisa.Breakpoint.WebApi.utils
                 case 1207:
                     message = string.Format("The field '{0}' with value '{1}' is an invalid value.", obj.field, obj.value);
                     break;
+                case 1208:
+                    message = string.Format("The field {0} may only contains the values {1}", obj.field, obj.value);
+                    break;
                 case 1300:
                     message = string.Format("The field '{0}' with id '{1}' doesn't exists.", obj.field, obj.value);
                     break;

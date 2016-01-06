@@ -28,8 +28,7 @@ namespace Lisa.Breakpoint.WebApi
             [FromQuery] string status = null, 
             [FromQuery] string priority = null, 
             [FromQuery] string version = null,
-            [FromQuery] string member = null,
-            [FromQuery] string group = null)
+            [FromQuery] string assignedTo = null)
         {
             _user = HttpContext.User.Identity;
 
@@ -39,21 +38,7 @@ namespace Lisa.Breakpoint.WebApi
             }
             
             IList<Report> reports;
-            IList<DateTime> dateTimes = new DateTime[2];
             var filters = new List<Filter>();
-
-            if (reported != null)
-            {
-                //Calls a function to determine if reported has a correct specific value
-                dateTimes = FilterHandler.CheckReported(reported);
-
-                //When the specific value is invalid it will return a unprocessable entity status code
-                if (dateTimes[0] == DateTime.MinValue.AddDays(1))
-                {
-                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = reported }));
-                    return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-                }
-            }
 
             // Add all filters (yeah it's a lot)
             if (!string.IsNullOrWhiteSpace(title))
@@ -63,6 +48,10 @@ namespace Lisa.Breakpoint.WebApi
             if (!string.IsNullOrWhiteSpace(reporter))
             {
                 filters.Add(new Filter(FilterTypes.Reporter, reporter));
+            }
+            if (!string.IsNullOrWhiteSpace(reported))
+            {
+                filters.Add(new Filter(FilterTypes.Reported, reported));
             }
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -76,29 +65,18 @@ namespace Lisa.Breakpoint.WebApi
             {
                 filters.Add(new Filter(FilterTypes.Version, version));
             }
-            if (!string.IsNullOrWhiteSpace(member))
+            if (!string.IsNullOrWhiteSpace(assignedTo))
             {
-                filters.Add(new Filter(FilterTypes.Member, member));
+                filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
-            if (!string.IsNullOrWhiteSpace(group))
+            
+            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters);
+            
+            if (ErrorHandler.HasErrors)
             {
-                filters.Add(new Filter(FilterTypes.Group, group));
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            DateTime[] dateTimeObject = null;
-            if (dateTimes[0] != DateTime.MinValue)
-            {
-                dateTimeObject = new DateTime[2];
-                dateTimeObject[0] = dateTimes[0];
-                dateTimeObject[1] = dateTimes[1];
-            }
-            
-            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters, dateTimeObject);
-            
-            if (reports == null)
-            {
-                return new HttpNotFoundResult();
-            }
             return new HttpOkObjectResult(reports);
         }
 

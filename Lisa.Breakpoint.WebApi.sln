@@ -1,9 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Lisa.Breakpoint.WebApi", "Lisa.Breakpoint.WebApi\Lisa.Breakpoint.WebApi.xproj", "{DBD6B411-A38F-4320-BDAC-1AD21837C730}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F6148E00-7FBF-4B3C-89FE-55C6C8FB5BC9}"
+	ProjectSection(SolutionItems) = preProject
+		Lisa.Breakpoint.WebApi\global.json = Lisa.Breakpoint.WebApi\global.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
