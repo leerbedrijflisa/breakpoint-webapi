@@ -8,6 +8,7 @@ using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Authentication.JwtBearer;
 using Lisa.Breakpoint.WebApi.utils;
 using Lisa.Breakpoint.WebApi.TokenAuthentication;
+using Newtonsoft.Json;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -46,6 +47,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 opts.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
                 //opts.SerializerSettings.Converters.Add(new StringEnumConverter());
+                opts.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
+                opts.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Error;
             });
 
             // Add CORS policies

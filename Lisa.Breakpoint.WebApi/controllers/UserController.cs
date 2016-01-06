@@ -43,6 +43,16 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
+            if (!ModelState.IsValid)
+            {
+                if (ErrorHandler.FromModelState(ModelState))
+                {
+                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                }
+
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+            }
+
             if (user == null)
             {
                 return new BadRequestResult();

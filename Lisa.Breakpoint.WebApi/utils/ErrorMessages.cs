@@ -19,6 +19,9 @@ namespace Lisa.Breakpoint.WebApi.utils
                 case 1102:
                     message = string.Format("The {0} provided already exists, or shares it's {1} with another {0}.", obj.type, obj.value);
                     break;
+                case 1103:
+                    message = string.Format("Field '{0}' is not allowed in the request body.", obj.field);
+                    break;
                 case 1200:
                     message = string.Format("The field '{0}' with value '{1}' can only contain letters.", obj.field, obj.value);
                     break;
