@@ -165,13 +165,13 @@ namespace Lisa.Breakpoint.WebApi
             {
                 var statusPatch = patchList.Single(p => p.Field == "status");
 
-                if (!statusCheck.Contains(statusPatch.Value))
+                if (!Statuses.List.Contains(statusPatch.Value))
                 {
                     return new BadRequestResult();
                 }
 
                 // If the status is patching to Won't Fix (approved), require the user to be a project manager
-                if (statusPatch.Value.Equals(statusCheck[3]) && !checkProject.Members.Single(m => m.Username.Equals(_user.Name)).Role.Equals("manager"))
+                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.Username.Equals(_user.Name)).Role.Equals("manager"))
                 {
                     // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                     return new HttpStatusCodeResult(422);
@@ -180,7 +180,7 @@ namespace Lisa.Breakpoint.WebApi
                 // Is the status is patching to Closed, check if the user is either a manager, tester, or the developer who reported the problem.
                 // Effectively, you're only checking whether the user is a developer, and if that's the case, if the developer has created the report.
                 // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
-                if (statusPatch.Value.Equals(statusCheck[4]))
+                if (statusPatch.Value.ToString() == Statuses.Closed)
                 {
                     var member = checkProject.Members.Single(m => m.Username.Equals(_user.Name));
 
@@ -237,9 +237,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
-
-        private readonly IList<string> statusCheck = new string[5] { "Open", "Fixed", "Won't Fix", "Won't Fix (Approved)", "Closed" };
-        
+        private IIdentity _user;        
     }
 }

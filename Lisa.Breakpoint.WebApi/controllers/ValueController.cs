@@ -1,6 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Microsoft.AspNet.Mvc;
-using System.Collections.Generic;
+﻿using Microsoft.AspNet.Mvc;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
@@ -10,7 +8,12 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("priorities")]
         public IActionResult Get()
         {
-            return new HttpOkObjectResult(Priorities.List);
+            return new HttpOkObjectResult(new {
+                immediately = "Fix Immediately",
+                beforeRelease = "Fix Before Release",
+                nextRelease = "Fix For Next Release",
+                whenever = "Fix Whenever"
+            });
         }
 
         [HttpGet("project-roles")]

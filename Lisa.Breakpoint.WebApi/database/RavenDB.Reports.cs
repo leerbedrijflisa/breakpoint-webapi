@@ -67,6 +67,17 @@ namespace Lisa.Breakpoint.WebApi.database
                 ErrorHandler.Add(Priorities.InvalidValueError);
             }
 
+            if (!Statuses.List.Contains(report.Status))
+            {
+                ErrorHandler.Add(Statuses.InvalidValueError);
+            }
+
+
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
+
             var reportEntity = new Report()
             {
                 Title = report.Title,
@@ -80,14 +91,9 @@ namespace Lisa.Breakpoint.WebApi.database
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms,
+                Platforms = report.Platforms ?? new List<string>(),
                 Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
-
-            if (ErrorHandler.HasErrors)
-            {
-                return null;
-            }
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {

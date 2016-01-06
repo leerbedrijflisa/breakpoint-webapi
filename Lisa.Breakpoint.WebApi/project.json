@@ -24,6 +24,7 @@
     "RavenDB.Server": "3.0.3785",
     "System.Collections.Immutable": "1.1.36",
     "System.IdentityModel.Tokens": "5.0.0-beta8-210131116",
+    "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116",
     "System.Spatial": "5.6.4"
   },
   "exclude": [

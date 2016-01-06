@@ -1441,10 +1441,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -1462,10 +1462,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -1635,10 +1635,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -3270,10 +3270,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -3291,10 +3291,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -3433,10 +3433,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -4957,10 +4957,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -4978,10 +4978,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -5151,10 +5151,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -6789,10 +6789,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -6810,10 +6810,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -6983,10 +6983,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -8621,10 +8621,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -8642,10 +8642,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -8784,10 +8784,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -10308,10 +10308,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Logging.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens.Jwt": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -10329,10 +10329,10 @@
           "lib/dnx451/Microsoft.IdentityModel.Protocols.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+      "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-209291029"
+          "Microsoft.IdentityModel.Protocols": "2.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -10471,10 +10471,10 @@
           "lib/dnx451/System.IdentityModel.Tokens.dll": {}
         }
       },
-      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+      "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
         "type": "package",
         "dependencies": {
-          "System.IdentityModel.Tokens": "5.0.0-beta8-209291029"
+          "System.IdentityModel.Tokens": "5.0.0-beta8-210131116"
         },
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -11698,10 +11698,10 @@
         "Microsoft.IdentityModel.Logging.nuspec"
       ]
     },
-    "Microsoft.IdentityModel.Protocols/2.0.0-beta8-209291029": {
+    "Microsoft.IdentityModel.Protocols/2.0.0-beta8-210131116": {
       "type": "package",
       "serviceable": true,
-      "sha512": "t3/6PMLc/JcEHgOr8jHu4nCuMXjsEf2m9Ta1JsGRJ1iATyP02vKvYq2Q63MfNQUAZ5wAoVnoG47vIk4n92nOaA==",
+      "sha512": "Y34r7yq+noRpV4xltQIM1sf9pLki2Q1McvCHqhBeX7ag+86i2pKePJ4WRPJ0ZEHm6s5LiAjY67Upm9TrTauMUQ==",
       "files": [
         "lib/dnx451/Microsoft.IdentityModel.Protocols.dll",
         "lib/dnx451/Microsoft.IdentityModel.Protocols.xml",
@@ -11709,15 +11709,15 @@
         "lib/dnxcore50/Microsoft.IdentityModel.Protocols.xml",
         "lib/net451/Microsoft.IdentityModel.Protocols.dll",
         "lib/net451/Microsoft.IdentityModel.Protocols.xml",
-        "Microsoft.IdentityModel.Protocols.2.0.0-beta8-209291029.nupkg",
-        "Microsoft.IdentityModel.Protocols.2.0.0-beta8-209291029.nupkg.sha512",
+        "Microsoft.IdentityModel.Protocols.2.0.0-beta8-210131116.nupkg",
+        "Microsoft.IdentityModel.Protocols.2.0.0-beta8-210131116.nupkg.sha512",
         "Microsoft.IdentityModel.Protocols.nuspec"
       ]
     },
-    "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-209291029": {
+    "Microsoft.IdentityModel.Protocols.OpenIdConnect/2.0.0-beta8-210131116": {
       "type": "package",
       "serviceable": true,
-      "sha512": "yq5OuUK3+PCsuVTlH21hEjkUIyIar4q41RYII1YYZRCl6LwKtbuREHQZo1r08qpRZgMg7lRdmqQRbcC9NQFC7w==",
+      "sha512": "CU2yuU9eqo7vNit9SkLnXRPh87AwfEOZhpApv8nqsb9uXOBaSQnZP3/rLwu3xGSTmR2mdfYXWnJz2fmIRHf/hw==",
       "files": [
         "lib/dnx451/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
         "lib/dnx451/Microsoft.IdentityModel.Protocols.OpenIdConnect.xml",
@@ -11725,8 +11725,8 @@
         "lib/dnxcore50/Microsoft.IdentityModel.Protocols.OpenIdConnect.xml",
         "lib/net451/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll",
         "lib/net451/Microsoft.IdentityModel.Protocols.OpenIdConnect.xml",
-        "Microsoft.IdentityModel.Protocols.OpenIdConnect.2.0.0-beta8-209291029.nupkg",
-        "Microsoft.IdentityModel.Protocols.OpenIdConnect.2.0.0-beta8-209291029.nupkg.sha512",
+        "Microsoft.IdentityModel.Protocols.OpenIdConnect.2.0.0-beta8-210131116.nupkg",
+        "Microsoft.IdentityModel.Protocols.OpenIdConnect.2.0.0-beta8-210131116.nupkg.sha512",
         "Microsoft.IdentityModel.Protocols.OpenIdConnect.nuspec"
       ]
     },
@@ -11965,7 +11965,7 @@
     "System.Diagnostics.Tracing.Telemetry/4.0.0-beta-23409": {
       "type": "package",
       "serviceable": true,
-      "sha512": "0O46DsJ9FmqJY61oR8wUW15nA8bYHKS8t5SRhXUN594EnbOP7bWVjfFcMJCz6A4v5sizqAHH1Jz8g0ZioI8+8g==",
+      "sha512": "h4PaLgc6vGFYiufB6wYUgwnCgn97T414OiF1xJiumQh9rkahU1bOX6KrmRtRyfN/l0eg2CH9uMCz5FDrTo6NDQ==",
       "files": [
         "lib/dotnet/System.Diagnostics.Tracing.Telemetry.dll",
         "lib/dotnet/System.Diagnostics.Tracing.Telemetry.xml",
@@ -12040,10 +12040,10 @@
         "System.IdentityModel.Tokens.nuspec"
       ]
     },
-    "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-209291029": {
+    "System.IdentityModel.Tokens.Jwt/5.0.0-beta8-210131116": {
       "type": "package",
       "serviceable": true,
-      "sha512": "A8zWU+fqrlVeoC/JzZ9iGgTGRiKGjRHhhh8JiUBZqUdnc1S6u3IZTjRF5xa+JPbvKmHdsCDY5Z55PcbxV5PLlg==",
+      "sha512": "ao0p0qwAk0Rv7jv040Fkv8nfcSUpX/FoRAbodcMInZHiLiQjyRChF9HksJRPmj/YFTzubiWm7D8QcihFWRMgow==",
       "files": [
         "lib/dnx451/System.IdentityModel.Tokens.Jwt.dll",
         "lib/dnx451/System.IdentityModel.Tokens.Jwt.xml",
@@ -12051,8 +12051,8 @@
         "lib/dnxcore50/System.IdentityModel.Tokens.Jwt.xml",
         "lib/net451/System.IdentityModel.Tokens.Jwt.dll",
         "lib/net451/System.IdentityModel.Tokens.Jwt.xml",
-        "System.IdentityModel.Tokens.Jwt.5.0.0-beta8-209291029.nupkg",
-        "System.IdentityModel.Tokens.Jwt.5.0.0-beta8-209291029.nupkg.sha512",
+        "System.IdentityModel.Tokens.Jwt.5.0.0-beta8-210131116.nupkg",
+        "System.IdentityModel.Tokens.Jwt.5.0.0-beta8-210131116.nupkg.sha512",
         "System.IdentityModel.Tokens.Jwt.nuspec"
       ]
     },
@@ -12107,7 +12107,7 @@
     "System.Numerics.Vectors/4.1.1-beta-23409": {
       "type": "package",
       "serviceable": true,
-      "sha512": "gAFNcuF1KRHT3oKUfwr28nBoCK83GR0EWThOcSXZoW4lBhUNrKsNWwMoHrAQ4eT5QpI033rGyhx7G5s/jkoI8g==",
+      "sha512": "1YUeSImMm7Fr488B+fY0fNZUtaTqLE0pFp+edyoS4gh2gt/agudWeBuNJWJFRipKV0xTp/QzPiU2zMXk3XTzTw==",
       "files": [
         "lib/dotnet/System.Numerics.Vectors.dll",
         "lib/MonoAndroid10/_._",
@@ -12654,6 +12654,7 @@
       "RavenDB.Server >= 3.0.3785",
       "System.Collections.Immutable >= 1.1.36",
       "System.IdentityModel.Tokens >= 5.0.0-beta8-210131116",
+      "System.IdentityModel.Tokens.Jwt >= 5.0.0-beta8-210131116",
       "System.Spatial >= 5.6.4"
     ],
     "DNX,Version=v4.5.1": [],
