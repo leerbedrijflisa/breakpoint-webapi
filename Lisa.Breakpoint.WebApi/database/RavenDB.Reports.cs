@@ -13,19 +13,12 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters, DateTime[] filterDays = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
-
-                if (filterDays != null)
-                {
-                    DateTime dayOne = filterDays[0];
-                    DateTime dayTwo = filterDays[1];
-                    rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
-                }
 
                 if (filters.Any())
                 {

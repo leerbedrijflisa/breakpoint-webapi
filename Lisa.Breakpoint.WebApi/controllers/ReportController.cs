@@ -38,21 +38,7 @@ namespace Lisa.Breakpoint.WebApi
             }
             
             IList<Report> reports;
-            IList<DateTime> dateTimes = new DateTime[2];
             var filters = new List<Filter>();
-
-            if (reported != null)
-            {
-                //Calls a function to determine if reported has a correct specific value
-                dateTimes = FilterHandler.CheckReported(reported);
-
-                //When the specific value is invalid it will return a unprocessable entity status code
-                if (dateTimes[0] == DateTime.MinValue.AddDays(1))
-                {
-                    ErrorHandler.Add(new Error(1207, new { field = "reported", value = reported }));
-                    return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-                }
-            }
 
             // Add all filters (yeah it's a lot)
             if (!string.IsNullOrWhiteSpace(title))
@@ -62,6 +48,10 @@ namespace Lisa.Breakpoint.WebApi
             if (!string.IsNullOrWhiteSpace(reporter))
             {
                 filters.Add(new Filter(FilterTypes.Reporter, reporter));
+            }
+            if (!string.IsNullOrWhiteSpace(reported))
+            {
+                filters.Add(new Filter(FilterTypes.Reported, reported));
             }
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -79,16 +69,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
-
-            DateTime[] dateTimeObject = null;
-            if (dateTimes[0] != DateTime.MinValue)
-            {
-                dateTimeObject = new DateTime[2];
-                dateTimeObject[0] = dateTimes[0];
-                dateTimeObject[1] = dateTimes[1];
-            }
             
-            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters, dateTimeObject);
+            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters);
             
             if (ErrorHandler.HasErrors)
             {

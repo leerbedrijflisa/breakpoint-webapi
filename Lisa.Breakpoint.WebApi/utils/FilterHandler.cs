@@ -119,6 +119,21 @@ namespace Lisa.Breakpoint.WebApi.utils
                     Expression<Func<Report, bool>> expression = r => r.Reporter == filter.Value;
                     filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                 }
+                else if (filter.Type == FilterTypes.Reported)
+                {
+                    // Translate filter string to first and last datetime
+                    var dateTimes = _CheckReported(filter.Value);
+
+                    // Check datetime range validity
+                    if (dateTimes[0] == DateTime.MinValue.AddDays(1))
+                    {
+                        ErrorHandler.Add(new Error(1207, new { field = "reported", value = filter.Value }));
+                    }
+
+                    // Add filter to predicate
+                    Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
+                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                }
             }
 
             // Apply filters
@@ -127,12 +142,22 @@ namespace Lisa.Breakpoint.WebApi.utils
             return reports;
         }
 
-        public static IList<DateTime> CheckReported(string reported)
+        /// <summary>
+        /// Converts the textual representation to a start and end date to filter between
+        /// </summary>
+        /// <param name="reported">The reported date filter value</param>
+        /// <returns>
+        /// A list of two dates, where the first is the start day to filter between,
+        /// and the second is the last day to filter between.
+        /// </returns>
+        private static IList<DateTime> _CheckReported(string reported)
         {
             reported = reported.ToLower();
+
+            // Contains either a year to be filtering reports for, or the amount of days to take reports from.
             int date = 0;
-            DateTime filterDay = DateTime.Today;
-            DateTime filterDayTwo = DateTime.Today.AddDays(1);
+            DateTime startFilterDay = DateTime.Today;
+            DateTime endFilterDay = DateTime.Today.AddDays(1);
 
             //Filters out all the characters and white spaces
             string unparsedDate = Regex.Match(reported, @"\d+").Value;
@@ -140,15 +165,15 @@ namespace Lisa.Breakpoint.WebApi.utils
             {
                 if (!int.TryParse(unparsedDate, out date))
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
             }
 
-            DateTime d1 = new DateTime(1970, 1, 1);
-            TimeSpan span = DateTime.Today - d1;
+            DateTime minValue = new DateTime(1970, 1, 1);
+            TimeSpan span = DateTime.Today - minValue;
             if (date > span.TotalDays)
             {
-                filterDay = DateTime.MinValue.AddDays(1);
+                startFilterDay = DateTime.MinValue.AddDays(1);
                 date = 0;
             }
 
@@ -159,32 +184,32 @@ namespace Lisa.Breakpoint.WebApi.utils
             else if (reported == "yesterday")
             {
                 //Subtracts 1 day to get the date of yesterday
-                filterDay = filterDay.AddDays(-1);
-                filterDayTwo = filterDayTwo.AddDays(-1);
+                startFilterDay = startFilterDay.AddDays(-1);
+                endFilterDay = endFilterDay.AddDays(-1);
             }
             else if (Regex.IsMatch(reported, @"^\d+\W+days\W+ago$"))
             {
                 //Subtracts the amount of days you entered on both so you get 1 day
-                filterDay = filterDay.AddDays(-date);
-                filterDayTwo = filterDayTwo.AddDays(-date);
+                startFilterDay = startFilterDay.AddDays(-date);
+                endFilterDay = endFilterDay.AddDays(-date);
             }
             else if (Regex.IsMatch(reported, @"^last\W+\d+\W+days$"))
             {
                 //Sutracts the amount of days so you can filter between 25 days ago and tomorrow
-                filterDay = filterDay.AddDays(-date);
+                startFilterDay = startFilterDay.AddDays(-date);
             }
             else if (_monthNames.Any(reported.Contains) && date >= 1970 && date <= DateTime.Today.Year) //Gets the date of a certain year
             {
-                       //Replaces the numbers in the string so it won't give errors
+                //Replaces the numbers in the string so it won't give errors
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (_monthNames.Contains(reported))
                 {
-                    filterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
                 else
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
             }
             else if (date >= 1970 && date <= DateTime.Today.Year)
@@ -192,12 +217,12 @@ namespace Lisa.Breakpoint.WebApi.utils
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (reported != string.Empty)
                 {
-                    filterDay = DateTime.MinValue.AddDays(1);
+                    startFilterDay = DateTime.MinValue.AddDays(1);
                 }
                 else
                 {
-                    filterDay = new DateTime(date, 1, 1);
-                    filterDayTwo = filterDay.AddYears(1);
+                    startFilterDay = new DateTime(date, 1, 1);
+                    endFilterDay = startFilterDay.AddYears(1);
                 }
             }
             else if (_monthNames.Contains(reported))
@@ -205,35 +230,35 @@ namespace Lisa.Breakpoint.WebApi.utils
                 //If the month is below or equal to the current month, get the month of this year
                 if ((_monthNames.IndexOf(reported) + 1) <= DateTime.Today.Month)
                 {
-                    filterDay = new DateTime(filterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(startFilterDay.Year, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
                 else
                 {
-                    filterDay = new DateTime(filterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
-                    filterDayTwo = _calculateFilterDayTwo(reported, filterDay);
+                    startFilterDay = new DateTime(startFilterDay.AddYears(-1).Year, _monthNames.IndexOf(reported) + 1, 1);
+                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
                 }
             }
             else
             {
-                filterDay = DateTime.MinValue.AddDays(1);
+                startFilterDay = DateTime.MinValue.AddDays(1);
             }
-            IList<DateTime> dateTimes = new DateTime[2] { filterDay, filterDayTwo };
+            IList<DateTime> dateTimes = new DateTime[2] { startFilterDay, endFilterDay };
             return dateTimes;
         }
 
-        private static DateTime _calculateFilterDayTwo(string reported, DateTime filterDayTwo)
+        private static DateTime _calculateEndFilterDay(string reported, DateTime endFilterDay)
         {
             if (reported == _monthNames[11])
             {
-                filterDayTwo = new DateTime(filterDayTwo.AddYears(1).Year, 1, 1);
+                endFilterDay = new DateTime(endFilterDay.AddYears(1).Year, 1, 1);
             }
             else
             {
-                filterDayTwo = new DateTime(filterDayTwo.Year, _monthNames.IndexOf(reported) + 2, 1);
+                endFilterDay = new DateTime(endFilterDay.Year, _monthNames.IndexOf(reported) + 2, 1);
             };
 
-            return filterDayTwo;
+            return endFilterDay;
         }
 
         private static readonly IList<string> _monthNames = new string[12] { "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december" };
@@ -257,6 +282,7 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public const string Title = "title";
         public const string Reporter = "reporter";
+        public const string Reported = "reported";
         public const string Status = "status";
         public const string Priority = "priority";
         public const string Version = "version";
