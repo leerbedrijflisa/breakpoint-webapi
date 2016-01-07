@@ -16,6 +16,19 @@ namespace Lisa.Breakpoint.WebApi.controllers
             });
         }
 
+        [HttpGet("statuses")]
+        public IActionResult Statuses()
+        {
+            return new HttpOkObjectResult(new
+            {
+                open = "Open",
+                @fixed = "Fixed",
+                wontFix = "Won't Fix",
+                wontFixApproved = "Won't Fix (Approved)",
+                closed = "Closed"
+            });
+        }
+
         [HttpGet("project-roles")]
         public IActionResult ProjectRoles()
         {
@@ -23,18 +36,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 manager = "Project manager",
                 developer = "Developer",
                 tester = "Tester"
-            });
-        }
-
-        [HttpGet("statuses")]
-        public IActionResult Statuses()
-        {
-            return new HttpOkObjectResult(new {
-                open = "Open",
-                @fixed = "Fixed",
-                wontFix = "Won't Fix",
-                wontFixApproved = "Won't Fix (Approved)",
-                closed = "Closed"
             });
         }
 
