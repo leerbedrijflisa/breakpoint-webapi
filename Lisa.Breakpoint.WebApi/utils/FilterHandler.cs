@@ -48,14 +48,34 @@ namespace Lisa.Breakpoint.WebApi.utils
                 }
                 else if (filter.Type == FilterTypes.Priority)
                 {
-                    if (!Priorities.List.Contains(filter.Value))
+                    if (filter.Value.Contains(","))
                     {
-                        ErrorHandler.Add(Priorities.InvalidValueError);
-                        return reports;
+                        var priorities = filter.Value.Split(',');
+
+                        foreach (var priority in priorities)
+                        {
+                            if (!Priorities.List.Contains(priority))
+                            {
+                                ErrorHandler.Add(Priorities.InvalidValueError);
+                                return reports;
+                            }
+                            else
+                            {
+                                Expression<Func<Report, bool>> expression = r => r.Priority == priority;
+                                filterPredicate = filterPredicate != null ? filterPredicate.Or(expression) : expression;
+                            }
+                        }
                     }
-                    
-                    Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
-                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    else
+                    {
+                        if (!Priorities.List.Contains(filter.Value))
+                        {
+                            ErrorHandler.Add(Priorities.InvalidValueError);
+                            return reports;
+                        }
+                        Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    }
                 }
                 else if (filter.Type == FilterTypes.Status)
                 {
