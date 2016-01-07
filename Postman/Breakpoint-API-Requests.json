@@ -26,7 +26,8 @@
 				"ef5534d3-a682-2664-04c7-8212d10c3ef0",
 				"457b7d14-49b5-4c2f-aa79-6af3955025cc",
 				"53d56a46-e524-6ab4-5062-73773d3faad6",
-				"57c2f27d-77da-5e62-7b15-bafda8928e2d"
+				"57c2f27d-77da-5e62-7b15-bafda8928e2d",
+				"4d501c66-2d19-3e8e-c16c-b59d2cac6bdf"
 			],
 			"owner": 0,
 			"collectionId": "63af9379-af6a-d5ba-5629-166aefa922cd"
@@ -157,6 +158,27 @@
 			"description": "",
 			"collectionId": "479ca44e-0137-bcd6-a849-7951751a8e8c",
 			"responses": [],
+			"folder": "9d25a5f5-7881-3b16-889b-24dbddaf2555"
+		},
+		{
+			"id": "4d501c66-2d19-3e8e-c16c-b59d2cac6bdf",
+			"headers": "Authorization: {{Authkey}}\n",
+			"url": "{{url}}/reports/k/ak/?priority=immediately,beforerelease",
+			"pathVariables": {},
+			"preRequestScript": "",
+			"method": "GET",
+			"collectionId": "479ca44e-0137-bcd6-a849-7951751a8e8c",
+			"data": [],
+			"dataMode": "params",
+			"name": "Filter multiple Priorities",
+			"description": "",
+			"descriptionFormat": "html",
+			"time": 1452159097207,
+			"version": 2,
+			"responses": [],
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
 			"folder": "9d25a5f5-7881-3b16-889b-24dbddaf2555"
 		},
 		{
