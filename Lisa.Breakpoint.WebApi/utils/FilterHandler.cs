@@ -59,11 +59,9 @@ namespace Lisa.Breakpoint.WebApi.utils
                                 ErrorHandler.Add(Priorities.InvalidValueError);
                                 return reports;
                             }
-                            else
-                            {
-                                Expression<Func<Report, bool>> expression = r => r.Priority == priority;
-                                filterPredicate = filterPredicate != null ? filterPredicate.Or(expression) : expression;
-                            }
+
+                            Expression<Func<Report, bool>> expression = r => r.Priority == priority;
+                            filterPredicate = filterPredicate != null ? filterPredicate.Or(expression) : expression;
                         }
                     }
                     else
@@ -73,31 +71,39 @@ namespace Lisa.Breakpoint.WebApi.utils
                             ErrorHandler.Add(Priorities.InvalidValueError);
                             return reports;
                         }
+
                         Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
                         filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                 }
                 else if (filter.Type == FilterTypes.Status)
                 {
-                    if (!Statuses.List.Contains(filter.Value))
-                    {
-                        ErrorHandler.Add(Statuses.InvalidValueError);
-                        return reports;
-                    }
-
                     if (filter.Value.Contains(","))
                     {
                         var values = filter.Value.Split(',');
                         Expression<Func<Report, bool>> statuspredicate = null;
                         foreach (var value in values)
                         {
+                            if (!Statuses.List.Contains(value))
+                            {
+                                ErrorHandler.Add(Statuses.InvalidValueError);
+                                return reports;
+                            }
+
                             Expression<Func<Report, bool>> expression = r => r.Status == value;
                             statuspredicate = statuspredicate != null ? statuspredicate.Or(expression) : expression;
                         }
-                        filterPredicate = filterPredicate.And(statuspredicate);
+
+                        filterPredicate = filterPredicate != null ? filterPredicate.Or(statuspredicate) : statuspredicate;
                     }
                     else
                     {
+                        if (!Statuses.List.Contains(filter.Value))
+                        {
+                            ErrorHandler.Add(Statuses.InvalidValueError);
+                            return reports;
+                        }
+
                         Expression<Func<Report, bool>> expression = r => r.Status == filter.Value;
                         filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
