@@ -230,8 +230,15 @@ namespace Lisa.Breakpoint.WebApi.utils
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (_monthNames.Contains(reported))
                 {
-                    startFilterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
-                    endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
+                    if (_monthNames.IndexOf(reported) + 1 > DateTime.Today.Month && date == DateTime.Today.Year)
+                    {
+                        startFilterDay = DateTime.MinValue.AddDays(1);
+                    }
+                    else
+                    {
+                        startFilterDay = new DateTime(date, _monthNames.IndexOf(reported) + 1, 1);
+                        endFilterDay = _calculateEndFilterDay(reported, startFilterDay);
+                    }
                 }
                 else
                 {
