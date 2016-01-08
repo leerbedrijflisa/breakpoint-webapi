@@ -113,12 +113,14 @@ namespace Lisa.Breakpoint.WebApi.utils
                     // Filter to all reports that are assigned to a group
                     if (filter.Value == "group")
                     {
-                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "group");
+                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Type == "group";
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                     // Filter to all reports that are assigned to a person
                     else if (filter.Value == "member")
                     {
-                        filterPredicate = filterPredicate.And(r => r.AssignedTo.Type == "person");
+                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Type == "person";
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
                     }
                     // Use multiple filter values
                     else if (filter.Value.Contains(','))
@@ -132,7 +134,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                             assigneepredicate = assigneepredicate != null ? assigneepredicate.Or(expression) : expression;
                         }
 
-                        filterPredicate = filterPredicate.And(assigneepredicate);
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(assigneepredicate) : assigneepredicate;
                     }
                     else
                     {
