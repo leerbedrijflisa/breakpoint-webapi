@@ -90,7 +90,7 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 Name = project.Name,
                 ProjectManager = project.ProjectManager,
-                Version = project.Version,
+                CurrentVersion = project.CurrentVersion,
                 Browsers = project.Browsers,
                 Groups = project.Groups,
                 Members = project.Members,
@@ -150,7 +150,7 @@ namespace Lisa.Breakpoint.WebApi.database
                             Type = PatchCommandType.Add,
                             Value = newVal.ToString()
                         };
-                        documentStore.DatabaseCommands.Patch("Projects/" + id, new[] { patchRequest });
+                        documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
                     }
                 }
 
