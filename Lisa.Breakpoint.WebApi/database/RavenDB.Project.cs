@@ -89,7 +89,6 @@ namespace Lisa.Breakpoint.WebApi.database
             var projectEntity = new Project()
             {
                 Name = project.Name,
-                ProjectManager = project.ProjectManager,
                 CurrentVersion = project.CurrentVersion,
                 Browsers = project.Browsers,
                 Groups = project.Groups,
