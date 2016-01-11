@@ -90,11 +90,10 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 Name = project.Name,
                 CurrentVersion = project.CurrentVersion,
-                Browsers = project.Browsers,
                 Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
-                Slug = _toUrlSlug(project.Name),
+                Slug = _toUrlSlug(project.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
