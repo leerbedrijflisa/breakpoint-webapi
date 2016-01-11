@@ -54,16 +54,16 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             Project projectVersion = GetProject(organization, project, report.Reporter);
 
-            var patches = new Patch[] {
-                new Patch() {
-                    Action = "replace",
-                    Field = "CurrentVersion",
-                    Value = report.Version
-                }
-            };
-
             if (projectVersion.CurrentVersion != report.Version)
             {
+                var patches = new Patch[] {
+                    new Patch() {
+                        Action = "replace",
+                        Field = "CurrentVersion",
+                        Value = report.Version
+                    }
+                };
+
                 Patch<Project>(int.Parse(projectVersion.Number), patches);
             }
 
