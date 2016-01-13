@@ -1,69 +1,42 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
-using Raven.Abstractions.Extensions;
 using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, DateTime[] filterDays = null, Filter filter = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
 
-                if (filterDays != null)
+                if (filters.Any())
                 {
-                    DateTime dayOne = filterDays[0];
-                    DateTime dayTwo = filterDays[1];
-                    rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
+                    rList = rList.ApplyFilters(filters.ToArray());
                 }
 
-                if (filter != null)
+                if (ErrorHandler.HasErrors)
                 {
-                    string[] types = { };
-                    string[] values = { };
-                    bool multipleFilters = false;
-
-                    if (filter.Type.IndexOf('&') != -1 && filter.Value.IndexOf('&') != -1)
-                    {
-                        types = filter.Type.Split('&');
-                        values = filter.Value.Split('&');
-
-                        multipleFilters = true;
-                    }
-
-                    if (!multipleFilters)
-                    {
-                        rList = rList.ApplyFilters(filter);
-                    }
-                    else if (multipleFilters)
-                    {
-                        int filterCount = types.Count();
-                        Filter[] tempFilters = new Filter[filterCount];
-                        for (int i = 0; i < types.Length; i++)
-                        {
-                            tempFilters[i] = new Filter(types[i], values[i]);
-                        }
-                        rList = rList.ApplyFilters(tempFilters);
-                    }
+                    return null;
                 }
-                reports = rList.OrderBy(r => r.Priority)
-                        .ThenByDescending(r => r.Reported.Date)
-                        .ThenBy(r => r.Reported.TimeOfDay)
-                        .ToList();
 
-                reports.ForEach(r => r.PriorityString = r.Priority.ToString());
+                // First, cast the ravenDB queryable to a regular list,
+                // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
+                reports = rList.ToList().AsQueryable()
+                    .OrderBy(x => x, new ReportComparer())
+                    .ThenByDescending(r => r.Reported.Date)
+                    .ThenBy(r => r.Reported.TimeOfDay)
+                    .ToList();
 
                 return reports;
             }
@@ -89,6 +62,22 @@ namespace Lisa.Breakpoint.WebApi.database
                 report.Platforms.Add("Not specified");
             }
 
+            if (!Priorities.List.Contains(report.Priority))
+            {
+                ErrorHandler.Add(Priorities.InvalidValueError);
+            }
+
+            if (!Statuses.List.Contains(report.Status))
+            {
+                ErrorHandler.Add(Statuses.InvalidValueError);
+            }
+
+
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
+
             var reportEntity = new Report()
             {
                 Title = report.Title,
@@ -102,16 +91,12 @@ namespace Lisa.Breakpoint.WebApi.database
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms
+                Platforms = report.Platforms ?? new List<string>(),
+                Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (ErrorHandler.HasErrors)
-                {
-                    return null;
-                }
-
                 session.Store(reportEntity);
 
                 string reportId = session.Advanced.GetDocumentId(reportEntity);
@@ -185,165 +170,6 @@ namespace Lisa.Breakpoint.WebApi.database
                 session.Delete(report);
                 session.SaveChanges();
             }
-        }
-    }
-
-    public static class FilterHandler
-    {
-        private static Expression<Func<Report, bool>> WhereVersion(string term)
-        {
-            return r => r.Version == term;
-        }
-        private static Expression<Func<Report, bool>> WhereTitleStartsWith(string term)
-        {
-            return r => r.Title.StartsWith(term.ToString());
-        }
-        private static Expression<Func<Report, bool>> WhereGroup(string term)
-        {
-            return r => r.AssignedTo.Value == term && r.AssignedTo.Type == "group";
-        }
-        private static Expression<Func<Report, bool>> WhereMember(string term)
-        {
-            return r => r.AssignedTo.Value == term && r.AssignedTo.Type == "person";
-        }
-        private static Expression<Func<Report, bool>> WhereReporter(string term)
-        {
-            return r => r.Reporter == term;
-        }
-        private static Expression<Func<Report, bool>> WhereStatus(string term)
-        {
-            return r => r.Status == term.Replace("%20", " ");
-        }
-        private static Expression<Func<Report, bool>> WhereNoGroups()
-        {
-            return r => r.AssignedTo.Type != "group";
-        }
-        private static Expression<Func<Report, bool>> WhereNoMembers()
-        {
-            return r => r.AssignedTo.Type != "person";
-        }
-        private static Expression<Func<Report, bool>> WhereAllGroups()
-        {
-            return r => r.AssignedTo.Type == "group";
-        }
-        private static Expression<Func<Report, bool>> WhereAllMembers()
-        {
-            return r => r.AssignedTo.Type == "person";
-        }
-        private static Expression<Func<Report, bool>> WherePriority(Priority priority)
-        {
-            return r => r.Priority == priority;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedAfter(DateTime dateTime)
-        {
-            return r => r.Reported > dateTime;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedBefore(DateTime dateTime)
-        {
-            return r => r.Reported < dateTime;
-        }
-        private static Expression<Func<Report, bool>> WhereReportedOn(DateTime dateTime)
-        {
-            return r => r.Reported == dateTime;
-        }
-
-        public static IQueryable<Report> ApplyFilters(this IQueryable<Report> reports, params Filter[] filters)
-        {
-            Expression<Func<Report, bool>> outerPredicate = r => r.Number != string.Empty;
-            Expression<Func<Report, bool>> innerPredicate = r => r.Number == "-1"; 
-
-            foreach (Filter filter in filters)
-            {
-                filter.Type = filter.Type.Replace("Filter", "").ToLower();
-
-                if (filter.Type == "version")
-                {
-                    if (filter.Value != "all")
-                    {
-                        if (filter.Value == "none")
-                        {
-                            filter.Value = "";
-                        }
-                        outerPredicate = outerPredicate.And(WhereVersion(filter.Value));
-                    }
-                }
-                else if (filter.Type == "title")
-                {
-                    if (filter.Value != "")
-                    {
-                        outerPredicate = outerPredicate.And(WhereTitleStartsWith(filter.Value));
-                    }
-                }
-                else if (filter.Type == "priority")
-                {
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(WherePriority((Priority)Enum.Parse(typeof(Priority), filter.Value)));
-                    }
-                }
-                else if (filter.Type == "status")
-                {
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(WhereStatus(filter.Value));
-                    }
-                }
-                else if (filter.Type == "group")
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(WhereNoGroups());
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(WhereAllGroups());
-                    }
-                    else
-                    {
-                        innerPredicate = innerPredicate.Or(WhereGroup(filter.Value));
-                    }
-                }
-                else if (filter.Type == "member")
-                {
-                    if (filter.Value == "none")
-                    {
-                        outerPredicate = outerPredicate.And(WhereNoMembers());
-                    }
-                    else if (filter.Value == "all")
-                    {
-                        innerPredicate = innerPredicate.Or(WhereAllMembers());
-                    }
-                    else
-                    {
-                        innerPredicate = innerPredicate.Or(WhereMember(filter.Value));
-                    }
-                }
-                else if (filter.Type == "reporter")
-                {
-                    if (filter.Value != "all")
-                    {
-                        outerPredicate = outerPredicate.And(WhereReporter(filter.Value));
-                    }
-                }
-            }
-
-            reports = reports.Where(outerPredicate.And(innerPredicate));
-
-            return reports;
-        }
-    }
-
-    public static class PredicateBuilder
-    {
-        public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
-        {
-            return Expression.Lambda<Func<T, bool>>
-                  (Expression.OrElse(expr1.Body, expr2.Body), expr1.Parameters);
-        }
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> expr1, Expression<Func<T, bool>> expr2)
-        {
-            return Expression.Lambda<Func<T, bool>>
-                  (Expression.AndAlso(expr1.Body, expr2.Body), expr1.Parameters);
         }
     }
 }

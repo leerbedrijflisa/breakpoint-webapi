@@ -1426,7 +1426,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -1614,10 +1614,10 @@
           "lib/net45/_._": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -3255,7 +3255,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -3412,10 +3412,10 @@
           "lib/portable-net45+win8+wp8+wpa81/System.Diagnostics.Tracing.Telemetry.dll": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -4942,7 +4942,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -5130,10 +5130,10 @@
           "lib/net45/_._": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -6774,7 +6774,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -6962,10 +6962,10 @@
           "lib/net45/_._": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -8606,7 +8606,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -8763,10 +8763,10 @@
           "lib/portable-net45+win8+wp8+wpa81/System.Diagnostics.Tracing.Telemetry.dll": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -10293,7 +10293,7 @@
           "lib/dnx451/Microsoft.Framework.WebEncoders.Core.dll": {}
         }
       },
-      "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+      "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
         "type": "package",
         "frameworkAssemblies": [
           "Microsoft.CSharp",
@@ -10450,10 +10450,10 @@
           "lib/portable-net45+win8+wp8+wpa81/System.Diagnostics.Tracing.Telemetry.dll": {}
         }
       },
-      "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+      "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
         "type": "package",
         "dependencies": {
-          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-210131116",
+          "Microsoft.IdentityModel.Logging": "1.0.0-beta8-209291029",
           "Newtonsoft.Json": "6.0.6"
         },
         "frameworkAssemblies": [
@@ -11682,10 +11682,10 @@
         "Microsoft.Framework.WebEncoders.Core.nuspec"
       ]
     },
-    "Microsoft.IdentityModel.Logging/1.0.0-beta8-210131116": {
+    "Microsoft.IdentityModel.Logging/1.0.0-beta8-209291029": {
       "type": "package",
       "serviceable": true,
-      "sha512": "qOHxNjWV7Qp0nSnebpKjRqwn9PWMWoqgleehTAvHG51wiOy93HoXbPF/7b2kmQPVoWJ7uWUuY/Mkslx0DRMbnQ==",
+      "sha512": "uGaS2CVRFeXuBuqoosyUn2ju6GvUxUIEKlYCkb29Plr6LBx7IDss3hx5IgWx1gaq7gQEdMARI81sVrZNH9t3LA==",
       "files": [
         "lib/dnx451/Microsoft.IdentityModel.Logging.dll",
         "lib/dnx451/Microsoft.IdentityModel.Logging.xml",
@@ -11693,8 +11693,8 @@
         "lib/dnxcore50/Microsoft.IdentityModel.Logging.xml",
         "lib/net451/Microsoft.IdentityModel.Logging.dll",
         "lib/net451/Microsoft.IdentityModel.Logging.xml",
-        "Microsoft.IdentityModel.Logging.1.0.0-beta8-210131116.nupkg",
-        "Microsoft.IdentityModel.Logging.1.0.0-beta8-210131116.nupkg.sha512",
+        "Microsoft.IdentityModel.Logging.1.0.0-beta8-209291029.nupkg",
+        "Microsoft.IdentityModel.Logging.1.0.0-beta8-209291029.nupkg.sha512",
         "Microsoft.IdentityModel.Logging.nuspec"
       ]
     },
@@ -12024,10 +12024,10 @@
         "System.Globalization.nuspec"
       ]
     },
-    "System.IdentityModel.Tokens/5.0.0-beta8-210131116": {
+    "System.IdentityModel.Tokens/5.0.0-beta8-209291029": {
       "type": "package",
       "serviceable": true,
-      "sha512": "TMDa85yh/+XuOhQX/EU+A++hgkTUCeOHmlEsVFr+nrec7EJZTIBvJMgAmpcMwOH/qW3zPWJkvBlW6tt0Wp4vGw==",
+      "sha512": "xnw8LseJ/nn+4+HYryvXYzcKcy+F/eZ6Sz83242MouGtFxbvMtwmyADzhWgqdO3HgOkC+ra4fXJO14PsUMaeEw==",
       "files": [
         "lib/dnx451/System.IdentityModel.Tokens.dll",
         "lib/dnx451/System.IdentityModel.Tokens.xml",
@@ -12035,8 +12035,8 @@
         "lib/dnxcore50/System.IdentityModel.Tokens.xml",
         "lib/net451/System.IdentityModel.Tokens.dll",
         "lib/net451/System.IdentityModel.Tokens.xml",
-        "System.IdentityModel.Tokens.5.0.0-beta8-210131116.nupkg",
-        "System.IdentityModel.Tokens.5.0.0-beta8-210131116.nupkg.sha512",
+        "System.IdentityModel.Tokens.5.0.0-beta8-209291029.nupkg",
+        "System.IdentityModel.Tokens.5.0.0-beta8-209291029.nupkg.sha512",
         "System.IdentityModel.Tokens.nuspec"
       ]
     },
@@ -12653,7 +12653,8 @@
       "RavenDB.Client >= 3.0.3785",
       "RavenDB.Server >= 3.0.3785",
       "System.Collections.Immutable >= 1.1.36",
-      "System.IdentityModel.Tokens >= 5.0.0-beta8-210131116",
+      "System.IdentityModel.Tokens >= 5.0.0-beta8-209291029",
+      "System.IdentityModel.Tokens.Jwt >= 5.0.0-beta8-209291029",
       "System.Spatial >= 5.6.4"
     ],
     "DNX,Version=v4.5.1": [],

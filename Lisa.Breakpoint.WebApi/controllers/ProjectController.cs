@@ -63,6 +63,16 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
+            if (!ModelState.IsValid)
+            {
+                if (ErrorHandler.FromModelState(ModelState))
+                {
+                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                }
+
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+            }
+
             if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 return new BadRequestResult();
@@ -71,11 +81,6 @@ namespace Lisa.Breakpoint.WebApi
             if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return (ErrorHandler.FromModelState(ModelState)) ? new BadRequestObjectResult(ErrorHandler.FatalError) : new BadRequestObjectResult(ErrorHandler.Errors);
             }
 
             var postedProject = _db.PostProject(project, organizationSlug);
