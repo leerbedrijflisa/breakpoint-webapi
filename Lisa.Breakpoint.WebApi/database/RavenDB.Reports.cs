@@ -1,7 +1,6 @@
 ﻿using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Raven.Abstractions.Data;
-using Raven.Abstractions.Extensions;
 using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
@@ -14,55 +13,30 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, DateTime[] filterDays = null, Filter filter = null)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
                 IList<Report> reports;
 
-                if (filterDays != null)
+                if (filters.Any())
                 {
-                    DateTime dayOne = filterDays[0];
-                    DateTime dayTwo = filterDays[1];
-                    rList = rList.Where(r => r.Reported.Date >= dayOne && r.Reported.Date < dayTwo);
+                    rList = rList.ApplyFilters(filters.ToArray());
                 }
 
-                if (filter != null)
+                if (ErrorHandler.HasErrors)
                 {
-                    string[] types = { };
-                    string[] values = { };
-                    bool multipleFilters = false;
-
-                    if (filter.Type.IndexOf('&') != -1 && filter.Value.IndexOf('&') != -1)
-                    {
-                        types = filter.Type.Split('&');
-                        values = filter.Value.Split('&');
-
-                        multipleFilters = true;
-                    }
-
-                    if (!multipleFilters)
-                    {
-                        rList = rList.ApplyFilters(filter);
-                    }
-                    else if (multipleFilters)
-                    {
-                        int filterCount = types.Count();
-                        Filter[] tempFilters = new Filter[filterCount];
-                        for (int i = 0; i < types.Length; i++)
-                        {
-                            tempFilters[i] = new Filter(types[i], values[i]);
-                        }
-                        rList = rList.ApplyFilters(tempFilters);
-                    }
+                    return null;
                 }
-                reports = rList.OrderBy(r => r.Priority)
-                        .ThenByDescending(r => r.Reported.Date)
-                        .ThenBy(r => r.Reported.TimeOfDay)
-                        .ToList();
 
-                reports.ForEach(r => r.PriorityString = r.Priority.ToString());
+                // First, cast the ravenDB queryable to a regular list,
+                // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
+                reports = rList.ToList().AsQueryable()
+                    .OrderBy(x => x, new ReportComparer())
+                    .ThenByDescending(r => r.Reported.Date)
+                    .ThenBy(r => r.Reported.TimeOfDay)
+                    .ToList();
 
                 return reports;
             }
@@ -88,6 +62,22 @@ namespace Lisa.Breakpoint.WebApi.database
                 report.Platforms.Add("Not specified");
             }
 
+            if (!Priorities.List.Contains(report.Priority))
+            {
+                ErrorHandler.Add(Priorities.InvalidValueError);
+            }
+
+            if (!Statuses.List.Contains(report.Status))
+            {
+                ErrorHandler.Add(Statuses.InvalidValueError);
+            }
+
+
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
+
             var reportEntity = new Report()
             {
                 Title = report.Title,
@@ -101,16 +91,12 @@ namespace Lisa.Breakpoint.WebApi.database
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms
+                Platforms = report.Platforms ?? new List<string>(),
+                Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (ErrorHandler.HasErrors)
-                {
-                    return null;
-                }
-
                 session.Store(reportEntity);
 
                 string reportId = session.Advanced.GetDocumentId(reportEntity);

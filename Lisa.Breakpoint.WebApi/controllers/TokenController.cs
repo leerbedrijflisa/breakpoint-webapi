@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Principal;
-using System.Threading.Tasks;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using Lisa.Breakpoint.TokenAuthentication;
@@ -70,7 +69,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] AuthRequest req)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || req == null)
             {
                 return new HttpStatusCodeResult(422);
             }

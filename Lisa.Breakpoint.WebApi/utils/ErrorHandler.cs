@@ -46,15 +46,14 @@ namespace Lisa.Breakpoint.WebApi.utils
             bool fatalError = false;
             _errors = new List<Error>();
             string fatalErrorMessage = string.Empty;
-            var modelStateErrors = modelState.Select(M => M).Where(X => X.Value.Errors.Count > 0);
+            var modelStateErrors = modelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
             foreach (var property in modelStateErrors)
             {
-                var propertyName = property.Key;
                 foreach (var error in property.Value.Errors)
                 {
                     if (error.Exception == null)
                     {
-                        _errors.Add(new Error(1101, new { field = propertyName }));
+                        _errors.Add(new Error(1101, new { field = property.Key }));
                     }
                     else
                     {

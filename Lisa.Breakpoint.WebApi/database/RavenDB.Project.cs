@@ -89,13 +89,11 @@ namespace Lisa.Breakpoint.WebApi.database
             var projectEntity = new Project()
             {
                 Name = project.Name,
-                ProjectManager = project.ProjectManager,
-                Version = project.Version,
-                Browsers = project.Browsers,
+                CurrentVersion = project.CurrentVersion,
                 Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
-                Slug = _toUrlSlug(project.Name),
+                Slug = _toUrlSlug(project.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -150,7 +148,7 @@ namespace Lisa.Breakpoint.WebApi.database
                             Type = PatchCommandType.Add,
                             Value = newVal.ToString()
                         };
-                        documentStore.DatabaseCommands.Patch("Projects/" + id, new[] { patchRequest });
+                        documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
                     }
                 }
 

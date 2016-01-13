@@ -9,9 +9,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string Slug { get; set; }
         public string Name { get; set; }
         public string Organization  { get; set; }
-        public string ProjectManager  { get; set; }
-        public IList<string> Version  { get; set; }
-        public IList<string> Browsers { get; set; }
+        public string CurrentVersion { get; set; }
         public IList<Group>  Groups   { get; set; }
         public IList<Member> Members  { get; set; }
     }
@@ -22,9 +20,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string Name { get; set; }
 
         [Required]
-        public string ProjectManager { get; set; }
-        public IList<string> Version { get; set; }
-        public IList<string> Browsers { get; set; }
+        public string CurrentVersion { get; set; }
 
         [Required]
         public IList<Group> Groups { get; set; }

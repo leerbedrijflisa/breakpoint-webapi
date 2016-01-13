@@ -11,8 +11,6 @@ namespace Lisa.Breakpoint.WebApi.database
     {
         public void AddPlatforms(string organizationSlug, IEnumerable<string> platforms)
         {
-            // todo: Have this method patch the platforms field in organizations through the standard patching system
-
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var organization = session.Query<Organization>().SingleOrDefault(m => m.Slug.Equals(organizationSlug));
