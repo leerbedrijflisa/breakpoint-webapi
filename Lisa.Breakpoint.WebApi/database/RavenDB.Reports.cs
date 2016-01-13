@@ -52,21 +52,6 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Report PostReport(ReportPost report, string organization, string project)
         {
-            Project projectVersion = GetProject(organization, project, report.Reporter);
-
-            if (projectVersion.CurrentVersion != report.Version)
-            {
-                var patches = new Patch[] {
-                    new Patch() {
-                        Action = "replace",
-                        Field = "CurrentVersion",
-                        Value = report.Version
-                    }
-                };
-
-                Patch<Project>(int.Parse(projectVersion.Number), patches);
-            }
-
             if (report.Platforms == null)
             {
                 report.Platforms = new List<string>();
