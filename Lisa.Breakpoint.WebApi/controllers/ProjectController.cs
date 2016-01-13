@@ -3,6 +3,7 @@ using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Security.Principal;
@@ -98,6 +99,8 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
+            _user = HttpContext.User.Identity;
+
             if (patches == null)
             {
                 return new BadRequestResult();
@@ -116,10 +119,10 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpStatusCodeResult(500);
             }
 
-            // Patch Report to database
+            // Patch Project to database
             try
             {
-                if (_db.Patch<Organization>(projectNumber, patches))
+                if (_db.Patch<Project>(projectNumber, patches))
                 {
                     return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
                 }

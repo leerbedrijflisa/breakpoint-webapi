@@ -14,8 +14,8 @@ namespace Lisa.Breakpoint.WebApi.controllers
             _db = db;
         }
 
-        [HttpGet("", Name = "users")]
-        public IActionResult Get()
+        [HttpGet]
+        public IActionResult GetAll()
         {
             var users = _db.GetAllUsers();
 
