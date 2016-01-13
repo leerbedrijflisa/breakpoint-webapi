@@ -30,6 +30,7 @@ namespace Lisa.Breakpoint.WebApi
             }
 
             var projects = _db.GetAllProjects(organizationSlug, _user.Name);
+            // REVIEW: Does GetAllProjects() ever return null? Doesn't it just return an empty list? What would a return value of null mean?
             if (projects == null)
             {
                 return new HttpNotFoundResult();
@@ -40,10 +41,12 @@ namespace Lisa.Breakpoint.WebApi
 
         [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
         [Authorize("Bearer")]
+        // REVIEW: What does includeAllGroups do? Is it still relevant now that we have default groups?
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
             _user = HttpContext.User.Identity;
 
+            // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
             if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
@@ -75,6 +78,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
+                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
                 return new BadRequestResult();
             }
 
@@ -103,6 +107,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
+            // TODO: Initialize _user before using it.
             var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
 
             if (project == null)
@@ -113,23 +118,27 @@ namespace Lisa.Breakpoint.WebApi
             int projectNumber;
             if (!int.TryParse(project.Number, out projectNumber))
             {
+                // TODO: Return a 422 with an error message.
                 return new HttpStatusCodeResult(500);
             }
 
             // Patch Report to database
             try
             {
+                // REVIEW: Shouldn't this be _db.Patch<Project>? Why patch the organization?
                 if (_db.Patch<Organization>(projectNumber, patches))
                 {
                     return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
                 }
                 else
                 {
+                    // TODO: Add error message.
                     return new HttpStatusCodeResult(422);
                 }
             }
             catch (Exception)
             {
+                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
                 // Internal server error if RavenDB throws exceptions
                 return new HttpStatusCodeResult(500);
             }
@@ -154,6 +163,7 @@ namespace Lisa.Breakpoint.WebApi
             }
             else
             {
+                // TODO: Return the correct status code. Depending on what went wrong, it could be a 401 or a 422.
                 return new NoContentResult();
             }
         }
@@ -175,6 +185,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
+        // REVIEW: Why is this an instance variable if every method initializes it separately? Either make it a local variable of each method or initialize the instance variable in a central spot.
         private IIdentity _user;
     }
 }

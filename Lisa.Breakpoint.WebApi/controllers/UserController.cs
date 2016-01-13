@@ -19,8 +19,10 @@ namespace Lisa.Breakpoint.WebApi.controllers
         {
             var users = _db.GetAllUsers();
 
+            // REVIEW: GetAllUsers() never returns null, so what's this check for?
             if (users == null)
             {
+                // REVIEW: GET /users should never return 404. If there are no users (which also should never happen), just return an empty list.
                 return new HttpNotFoundResult();
             }
 
@@ -53,6 +55,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
+            // TODO: Check for 400 before checking for 422.
             if (user == null)
             {
                 return new BadRequestResult();
@@ -66,6 +69,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 return new CreatedResult(location, postedUser);
             }
 
+            // TODO: Return a 422 in this case.
             return new DuplicateEntityResult();
         }
 

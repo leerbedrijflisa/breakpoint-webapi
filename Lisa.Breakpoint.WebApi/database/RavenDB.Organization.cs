@@ -22,6 +22,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 }
             }
 
+            // REVIEW: Why does requesting an organization for an empty user name return a different result (null) than for a non-existing user name (empty list)?
             return null;
         }
 

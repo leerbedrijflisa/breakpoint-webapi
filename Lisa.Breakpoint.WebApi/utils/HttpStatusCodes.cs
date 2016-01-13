@@ -26,6 +26,7 @@ namespace Lisa.Breakpoint.WebApi.utils
         }
     }
 
+    // TODO: Remove this class. 409 does not mean duplicate entity.
     public class DuplicateEntityResult : HttpStatusCodeResult
     {
         public DuplicateEntityResult() : base(409)

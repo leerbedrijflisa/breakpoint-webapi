@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi.utils
 {
+    // TODO: Make the class non-static
     public static class ErrorHandler
     {
         public static IEnumerable<Error> Errors
@@ -16,6 +17,7 @@ namespace Lisa.Breakpoint.WebApi.utils
             }
         }
 
+        // REVIEW: What's the purpose of FatalError? When would you use it?
         public static string FatalError
         {
             get
@@ -46,6 +48,9 @@ namespace Lisa.Breakpoint.WebApi.utils
             bool fatalError = false;
             _errors = new List<Error>();
             string fatalErrorMessage = string.Empty;
+
+            // REVIEW: What's the purpose of Select(m => m)? Doesn't that effectively do nothing?
+            // REVIEW: Is it necessary to filter the model state errors? Doesn't the second foreach loop below take care of that?
             var modelStateErrors = modelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
             foreach (var property in modelStateErrors)
             {
@@ -63,6 +68,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                         }
                         else
                         {
+                            // REVIEW: What if there are multiple fatal errors? Shouldn't _fatalError be a list?
                             fatalError = true;
                             _fatalError = JsonConvert.SerializeObject(error.Exception.Message);
                         }
@@ -75,6 +81,7 @@ namespace Lisa.Breakpoint.WebApi.utils
         /// <summary>
         /// Clears the error list.
         /// </summary>
+        // REVIEW: Is this still necessary if the class is non-static?
         public static void Clear()
         {
             _errors = new List<Error>();

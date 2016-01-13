@@ -22,6 +22,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}/{projectSlug}/")]
         [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug,
+            // REVIEW: Isn't null the default value whether you specify it or not?
             [FromQuery] string title = null, 
             [FromQuery] string reporter = null, 
             [FromQuery] string reported = null, 
@@ -110,6 +111,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
+                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't ProjectExists (line 118) take care of that check?
                 return new BadRequestResult();
             }
 
@@ -197,6 +199,7 @@ namespace Lisa.Breakpoint.WebApi
             }
 
             // Do not patch the date it was reported
+            // REVIEW: Shouldn't this return an error?
             if (patchFields.Contains("Reported"))
             {
                 patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
@@ -212,11 +215,13 @@ namespace Lisa.Breakpoint.WebApi
                 }
                 else
                 {
+                    // TODO: Add error message.
                     return new HttpStatusCodeResult(422);
                 }
             }
             catch(Exception)
             {
+                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
                 // Internal server error if RavenDB throws exceptions
                 return new HttpStatusCodeResult(500);
             }

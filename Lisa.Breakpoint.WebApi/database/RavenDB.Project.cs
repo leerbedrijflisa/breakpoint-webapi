@@ -10,6 +10,8 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
+        // REVIEW: Why does this method only return projects for a specific user?
+        // REVIEW: Why return an IList instead of an IEnumerable?
         public IList<Project> GetAllProjects(string organizationName, string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -20,6 +22,8 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
+        // TODO: Make includeAllGroups a boolean.
+        // REVIEW: Why does this method need the user name?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -130,6 +134,7 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
+        // REVIEW: Why is this method never called? Is it obsolete or is there a bug somehere else?
         public Project PatchProject(int id, Project patchedProject)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())

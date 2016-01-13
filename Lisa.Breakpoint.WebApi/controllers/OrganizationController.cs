@@ -1,4 +1,5 @@
-﻿using Lisa.Breakpoint.WebApi.database;
+﻿// TODO: Fix all the namespace names. Should all just be Lisa.Breakpoint.WebApi without the folder name.
+using Lisa.Breakpoint.WebApi.database;
 using Lisa.Breakpoint.WebApi.Models;
 using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Authorization;
@@ -9,6 +10,7 @@ using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
+    // TODO: Apply Authorize-attribute to controller instead of each action separately.
     [Route("organizations")]
     public class OrganizationController : Controller
     {
@@ -26,6 +28,7 @@ namespace Lisa.Breakpoint.WebApi
 
             var organizations = _db.GetAllOrganizations(_user.Name);
 
+            // TODO: Return 404 if user name doesn't exist, return empty list if user has no organizations. (see also RavenDB.Organization.cs:25)
             if (organizations == null)
             {
                 return new HttpNotFoundResult();
@@ -48,6 +51,7 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organization);
         }
 
+        // REVIEW: Would it be better to create a separate MemberController?
         [HttpGet("members/{organizationSlug}")]
         [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
@@ -72,6 +76,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return new HttpNotFoundResult();
             }
+
+            // TODO: Return 404 when project doesn't exist.
 
             var members = _db.GetMembersNotInProject(organizationSlug, projectSlug);
 
@@ -139,11 +145,13 @@ namespace Lisa.Breakpoint.WebApi
                 }
                 else
                 {
+                    // TODO: Return an error message to indicate why validation failed.
                     return new HttpStatusCodeResult(422);
                 }
             }
             catch (Exception)
             {
+                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
                 // Internal server error if RavenDB throws exceptions
                 return new HttpStatusCodeResult(500);
             }

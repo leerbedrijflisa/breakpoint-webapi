@@ -38,6 +38,8 @@ namespace Lisa.Breakpoint.WebApi.database
             return true;
         }
 
+        // TODO: Make method non-static.
+        // TODO: Change name to abide by the code conventions.
         public static string _toUrlSlug(string s)
         {
             return Regex.Replace(s, @"[^a-z0-9]+", "-", RegexOptions.IgnoreCase)
@@ -45,6 +47,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 .ToLower();
         }
 
+        // TODO: Change name to abide by the code conventions.
         private PatchRequest[] _toRavenPatch(IEnumerable<Patch> patches)
         {
             var ravenPatches = new List<PatchRequest>();
@@ -70,6 +73,7 @@ namespace Lisa.Breakpoint.WebApi.database
                         break;
                     default:
                         throw new ArgumentException();
+                        // TODO: Remove break.
                         break;
                 }
 
