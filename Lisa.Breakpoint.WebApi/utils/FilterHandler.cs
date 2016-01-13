@@ -153,17 +153,22 @@ namespace Lisa.Breakpoint.WebApi.utils
                     var dateTimes = _CheckReported(filter.Value);
 
                     // Check datetime range validity
-                    if (dateTimes[0] == DateTime.MinValue.AddDays(1))
+                    if (dateTimes == null)
                     {
                         ErrorHandler.Add(new Error(1207, new { field = "reported", value = filter.Value }));
                     }
-
-                    // Add filter to predicate
-                    Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
-                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    else
+                    {
+                        // Add filter to predicate
+                        Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
+                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    }
                 }
             }
-
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
             // Apply filters
             reports = reports.Where(filterPredicate);
 
@@ -177,6 +182,7 @@ namespace Lisa.Breakpoint.WebApi.utils
         /// <returns>
         /// A list of two dates, where the first is the start day to filter between,
         /// and the second is the last day to filter between.
+        /// Returns null if an error occurred.
         /// </returns>
         private static IList<DateTime> _CheckReported(string reported)
         {
@@ -193,7 +199,7 @@ namespace Lisa.Breakpoint.WebApi.utils
             {
                 if (!int.TryParse(unparsedDate, out date))
                 {
-                    startFilterDay = DateTime.MinValue.AddDays(1);
+                    return null;
                 }
             }
 
@@ -201,8 +207,7 @@ namespace Lisa.Breakpoint.WebApi.utils
             TimeSpan span = DateTime.Today - minValue;
             if (date > span.TotalDays)
             {
-                startFilterDay = DateTime.MinValue.AddDays(1);
-                date = 0;
+                return null;
             }
 
             if (reported == "today")
@@ -234,7 +239,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                 {
                     if (_monthNames.IndexOf(reported) + 1 > DateTime.Today.Month && date == DateTime.Today.Year)
                     {
-                        startFilterDay = DateTime.MinValue.AddDays(1);
+                        return null;
                     }
                     else
                     {
@@ -244,7 +249,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                 }
                 else
                 {
-                    startFilterDay = DateTime.MinValue.AddDays(1);
+                    return null;
                 }
             }
             else if (date >= 1970 && date <= DateTime.Today.Year)
@@ -252,7 +257,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                 reported = Regex.Replace(reported, @"[\d+]|\s+", string.Empty);
                 if (reported != string.Empty)
                 {
-                    startFilterDay = DateTime.MinValue.AddDays(1);
+                    return null;
                 }
                 else
                 {
@@ -276,7 +281,7 @@ namespace Lisa.Breakpoint.WebApi.utils
             }
             else
             {
-                startFilterDay = DateTime.MinValue.AddDays(1);
+                return null;
             }
             IList<DateTime> dateTimes = new DateTime[2] { startFilterDay, endFilterDay };
             return dateTimes;
