@@ -38,9 +38,9 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(projects);
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
+        [HttpGet("{organizationSlug}/{projectSlug}")]
         [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
+        public IActionResult Get(string organizationSlug, string projectSlug)
         {
             _user = HttpContext.User.Identity;
 
@@ -49,7 +49,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name, includeAllGroups);
+            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
 
             if (project == null)
             {
@@ -136,27 +136,27 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         
-        [HttpPatch("{organizationSlug}/{projectSlug}/members")]
-        [Authorize("Bearer")]
-        public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
-        {
-            if (organizationSlug == null || projectSlug == null || patch == null)
-            {
-                return new BadRequestResult();
-            }
+        //[HttpPatch("{organizationSlug}/{projectSlug}/members")]
+        //[Authorize("Bearer")]
+        //public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
+        //{
+        //    if (organizationSlug == null || projectSlug == null || patch == null)
+        //    {
+        //        return new BadRequestResult();
+        //    }
 
-            var patchedProjectMembers = _db.PatchProjectMembers(organizationSlug, projectSlug, patch);
+        //    var patchedProjectMembers = _db.PatchProjectMembers(organizationSlug, projectSlug, patch);
 
-            if (patchedProjectMembers != null)
-            {
-                string location = Url.RouteUrl("project", new { organizationSlug = organizationSlug, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
-                return new CreatedResult(location, patchedProjectMembers);
-            }
-            else
-            {
-                return new NoContentResult();
-            }
-        }
+        //    if (patchedProjectMembers != null)
+        //    {
+        //        string location = Url.RouteUrl("project", new { organizationSlug = organizationSlug, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
+        //        return new CreatedResult(location, patchedProjectMembers);
+        //    }
+        //    else
+        //    {
+        //        return new NoContentResult();
+        //    }
+        //}
 
         [HttpDelete("{organizationSlug}/{project}/")]
         [Authorize("Bearer")]
