@@ -161,6 +161,7 @@ namespace Lisa.Breakpoint.WebApi
         [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug)
         {
+            //TODO: delete all the project and reports if the organization gets deleted.
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
