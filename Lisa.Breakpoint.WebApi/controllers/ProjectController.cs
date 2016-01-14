@@ -42,11 +42,13 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
         [Authorize("Bearer")]
         // REVIEW: What does includeAllGroups do? Is it still relevant now that we have default groups?
+        // REVIEWFEEDBACK: Already removed in the default groups branch.
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
             _user = HttpContext.User.Identity;
 
             // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
+            // REVIEWFEEDBACK: Won't this be a bad request instead of not found?
             if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
@@ -79,6 +81,7 @@ namespace Lisa.Breakpoint.WebApi
             if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
             {
                 // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
+                // REVIEWFEEDBACK: Shouldn't a missing required parameter trigger a bad request?
                 return new BadRequestResult();
             }
 
@@ -119,6 +122,7 @@ namespace Lisa.Breakpoint.WebApi
             if (!int.TryParse(project.Number, out projectNumber))
             {
                 // TODO: Return a 422 with an error message.
+                // REVIEWFEEDBACK: This error gets triggered when the automatically entered field 'number' is not a number in the DB. Should this be a 422 when there is an issue in automatic database values?
                 return new HttpStatusCodeResult(500);
             }
 
@@ -126,6 +130,7 @@ namespace Lisa.Breakpoint.WebApi
             try
             {
                 // REVIEW: Shouldn't this be _db.Patch<Project>? Why patch the organization?
+                // REVIEWFEEDBACK: Known and fixed, not merged.
                 if (_db.Patch<Organization>(projectNumber, patches))
                 {
                     return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
