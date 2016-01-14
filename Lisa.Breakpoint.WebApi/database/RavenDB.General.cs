@@ -39,6 +39,7 @@ namespace Lisa.Breakpoint.WebApi.database
         }
 
         // TODO: Make method non-static.
+        // REVIEWFEEDBACK: Why shouldn't it be static?
         // TODO: Change name to abide by the code conventions.
         public static string _toUrlSlug(string s)
         {
