@@ -1,16 +1,15 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Mvc;
-using Lisa.Breakpoint.WebApi.Models;
+﻿using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
-using Lisa.Breakpoint.WebApi.utils;
+using Microsoft.AspNet.Http;
 
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("reports")]
+    [Authorize("Bearer")]
     public class ReportController : Controller
     {
         public ReportController(RavenDB db)
@@ -20,18 +19,15 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/")]
-        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug,
-            // REVIEW: Isn't null the default value whether you specify it or not?
-            [FromQuery] string title = null, 
-            [FromQuery] string reporter = null, 
-            [FromQuery] string reported = null, 
-            [FromQuery] string status = null, 
-            [FromQuery] string priority = null, 
-            [FromQuery] string version = null,
-            [FromQuery] string assignedTo = null)
+            [FromQuery] string title, 
+            [FromQuery] string reporter, 
+            [FromQuery] string reported, 
+            [FromQuery] string status, 
+            [FromQuery] string priority, 
+            [FromQuery] string version,
+            [FromQuery] string assignedTo)
         {
-            _user = HttpContext.User.Identity;
 
             if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
@@ -71,7 +67,7 @@ namespace Lisa.Breakpoint.WebApi
                 filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
             
-            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters);
+            reports = _db.GetAllReports(organizationSlug, projectSlug, filters);
             
             if (ErrorHandler.HasErrors)
             {
@@ -82,7 +78,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{id}", Name = "report")]
-        [Authorize("Bearer")]
         public IActionResult Get(int id)
         {
             Report report = _db.GetReport(id);
@@ -96,7 +91,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] ReportPost report)
         {
             if (!ModelState.IsValid)
@@ -109,9 +103,8 @@ namespace Lisa.Breakpoint.WebApi
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            if (report == null)
             {
-                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't ProjectExists (line 118) take care of that check?
                 return new BadRequestResult();
             }
 
@@ -132,11 +125,8 @@ namespace Lisa.Breakpoint.WebApi
         }
             
         [HttpPatch("{id}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(int id, [FromBody] Patch[] patches)
         {
-            _user = HttpContext.User.Identity;
-
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (patches == null)
             {
@@ -202,7 +192,8 @@ namespace Lisa.Breakpoint.WebApi
             // REVIEW: Shouldn't this return an error?
             if (patchFields.Contains("Reported"))
             {
-                patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
+                ErrorHandler.Add(new Error(1205, new { field = "Reported" }));
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
             
             // Patch Report to database
@@ -228,7 +219,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpDelete("{id}")]
-        [Authorize("Bearer")]
         public IActionResult Delete(int id)
         {
             if (_db.GetReport(id) == null)
@@ -242,6 +232,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;        
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

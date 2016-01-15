@@ -1,10 +1,5 @@
-﻿// TODO: Fix all the namespace names. Should all just be Lisa.Breakpoint.WebApi without the folder name.
-using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Authorization;
+﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 
@@ -97,7 +92,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (organization == null)
             {
-                return new BadRequestResult();
+                return new HttpNotFoundResult();
             }
 
             var postedOrganization = _db.PostOrganization(organization);
@@ -148,7 +143,6 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{organizationSlug}")]
         public IActionResult Delete(string organizationSlug)
         {
-
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();

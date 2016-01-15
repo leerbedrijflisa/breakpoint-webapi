@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
     // TODO: Make the class non-static
     // REVIEWFEEDBACK: Needs to be discussed thoroughly, making it non-static requires either passing it to all DB methods, making the DB return response objects, or making the DB return dynamics (either an error list or a result).
@@ -83,7 +83,6 @@ namespace Lisa.Breakpoint.WebApi.utils
         /// Clears the error list.
         /// </summary>
         // REVIEW: Is this still necessary if the class is non-static?
-        // REVIEWFEEDBACK: No.
         public static void Clear()
         {
             _errors = new List<Error>();

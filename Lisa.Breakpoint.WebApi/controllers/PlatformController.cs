@@ -1,5 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNet.Mvc;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -17,7 +16,7 @@ namespace Lisa.Breakpoint.WebApi
             if (string.IsNullOrWhiteSpace(organizationSlug))
             {
                 // REVIEW: Shouldn't this be a 404?
-                return new BadRequestResult();
+                return new HttpNotFoundResult();
             }
 
             var organization = _db.GetOrganization(organizationSlug);

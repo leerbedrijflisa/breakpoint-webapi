@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNet.Mvc;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
     public class UnprocessableEntityObjectResult : ObjectResult
     {
@@ -13,23 +13,6 @@ namespace Lisa.Breakpoint.WebApi.utils
     public class UnprocessableEntityResult : HttpStatusCodeResult
     {
         public UnprocessableEntityResult() : base(422)
-        {
-
-        }
-    }
-
-    public class DuplicateEntityObjectResult : ObjectResult
-    {
-        public DuplicateEntityObjectResult(object error) : base(error)
-        {
-            StatusCode = 409;
-        }
-    }
-
-    // TODO: Remove this class. 409 does not mean duplicate entity.
-    public class DuplicateEntityResult : HttpStatusCodeResult
-    {
-        public DuplicateEntityResult() : base(409)
         {
 
         }
