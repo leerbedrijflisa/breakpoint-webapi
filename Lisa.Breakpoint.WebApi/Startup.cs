@@ -3,11 +3,8 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.Framework.DependencyInjection;
 using System.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
-using Lisa.Breakpoint.TokenAuthentication;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Authentication.JwtBearer;
-using Lisa.Breakpoint.WebApi.utils;
-using Lisa.Breakpoint.WebApi.TokenAuthentication;
 using Newtonsoft.Json;
 
 namespace Lisa.Breakpoint.WebApi

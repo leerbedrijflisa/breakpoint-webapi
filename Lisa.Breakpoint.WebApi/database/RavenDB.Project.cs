@@ -1,30 +1,25 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
-        // REVIEW: Why does this method only return projects for a specific user?
-        // REVIEW: Why return an IList instead of an IEnumerable?
-        public IList<Project> GetAllProjects(string organizationName, string userName)
+        public IEnumerable<Project> GetAllProjects(string organizationName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Members.Any(m => m.Username == userName) && p.Organization == organizationName)
+                    .Where(p => p.Organization == organizationName)
                     .ToList();
             }
         }
 
         // TODO: Make includeAllGroups a boolean.
         // REVIEW: Why does this method need the user name?
-        // REVIEWFEEDBACK: Remnants of includeAllGroups functionality. We're not sure either. Why would removeallgroups be needed?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -98,7 +93,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
-                Slug = _toUrlSlug(project.Name)
+                Slug = ToUrlSlug(project.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -132,34 +127,6 @@ namespace Lisa.Breakpoint.WebApi.database
                 session.SaveChanges();
 
                 return projectEntity;
-            }
-        }
-
-        // REVIEW: Why is this method never called? Is it obsolete or is there a bug somehere else?
-        // REVIEWFEEDBACK: Seems like abandoned code that's been replaced and overlooked.
-        public Project PatchProject(int id, Project patchedProject)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                Project project = session.Load<Project>(id);
-
-                foreach (PropertyInfo propertyInfo in project.GetType().GetProperties())
-                {
-                    var newVal = patchedProject.GetType().GetProperty(propertyInfo.Name).GetValue(patchedProject, null);
-
-                    if (newVal != null)
-                    {
-                        var patchRequest = new PatchRequest()
-                        {
-                            Name = propertyInfo.Name,
-                            Type = PatchCommandType.Add,
-                            Value = newVal.ToString()
-                        };
-                        documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
-                    }
-                }
-
-                return project;
             }
         }
 

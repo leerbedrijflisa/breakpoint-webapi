@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens;
 
-namespace Lisa.Breakpoint.WebApi.TokenAuthentication
+namespace Lisa.Breakpoint.WebApi
 {
     public class RSAKeyUtils
     {

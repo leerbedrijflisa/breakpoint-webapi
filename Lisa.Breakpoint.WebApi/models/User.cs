@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Lisa.Breakpoint.WebApi.Models
+namespace Lisa.Breakpoint.WebApi
 {
     public class User
     {

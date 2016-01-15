@@ -1,6 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
@@ -9,12 +7,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
         // TODO: Remove userName parameter; it's never used.
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters)
+        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, IEnumerable<Filter> filters)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {

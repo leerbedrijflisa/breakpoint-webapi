@@ -1,7 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNet.Mvc;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi.controllers
@@ -18,13 +15,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         public IActionResult Get()
         {
             var users = _db.GetAllUsers();
-
-            // REVIEW: GetAllUsers() never returns null, so what's this check for?
-            if (users == null)
-            {
-                // REVIEW: GET /users should never return 404. If there are no users (which also should never happen), just return an empty list.
-                return new HttpNotFoundResult();
-            }
 
             return new HttpOkObjectResult(users);
         }
@@ -45,6 +35,12 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
+            // TODO: Check for 400 before checking for 422.
+            if (user == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
@@ -53,12 +49,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-            }
-
-            // TODO: Check for 400 before checking for 422.
-            if (user == null)
-            {
-                return new BadRequestResult();
             }
 
             var postedUser = _db.PostUser(user);
@@ -70,7 +60,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
             }
 
             // TODO: Return a 422 in this case.
-            return new DuplicateEntityResult();
+            return new UnprocessableEntityResult();
         }
 
         [HttpGet("groups", Name = "groups")]

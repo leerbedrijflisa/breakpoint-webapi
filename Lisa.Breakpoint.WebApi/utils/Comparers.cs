@@ -1,8 +1,7 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
     public class ReportComparer : IComparer<Report>
     {

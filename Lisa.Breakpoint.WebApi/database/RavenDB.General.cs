@@ -1,13 +1,12 @@
 ﻿﻿using Raven.Client;
 using System.Text.RegularExpressions;
-﻿using Lisa.Breakpoint.WebApi.Models;
 using Raven.Abstractions.Data;
 using Raven.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB 
     {
@@ -33,7 +32,7 @@ namespace Lisa.Breakpoint.WebApi.database
 
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
-            documentStore.DatabaseCommands.Patch(ravenId, _toRavenPatch(patches));
+            documentStore.DatabaseCommands.Patch(ravenId, ToRavenPatch(patches));
 
             return true;
         }
@@ -41,7 +40,7 @@ namespace Lisa.Breakpoint.WebApi.database
         // TODO: Make method non-static.
         // REVIEWFEEDBACK: Why shouldn't it be static?
         // TODO: Change name to abide by the code conventions.
-        public static string _toUrlSlug(string s)
+        public static string ToUrlSlug(string s)
         {
             return Regex.Replace(s, @"[^a-z0-9]+", "-", RegexOptions.IgnoreCase)
                 .Trim(new char[] { '-' })
@@ -49,7 +48,7 @@ namespace Lisa.Breakpoint.WebApi.database
         }
 
         // TODO: Change name to abide by the code conventions.
-        private PatchRequest[] _toRavenPatch(IEnumerable<Patch> patches)
+        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
         {
             var ravenPatches = new List<PatchRequest>();
 
