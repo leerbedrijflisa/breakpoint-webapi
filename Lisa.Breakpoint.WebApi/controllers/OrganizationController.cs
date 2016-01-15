@@ -10,7 +10,7 @@ using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
-    // TODO: Apply Authorize-attribute to controller instead of each action separately.
+    [Authorize("Bearer")]
     [Route("organizations")]
     public class OrganizationController : Controller
     {
@@ -21,11 +21,8 @@ namespace Lisa.Breakpoint.WebApi
         }
         
         [HttpGet]
-        [Authorize("Bearer")]
         public IActionResult GetAll()
         {
-            _user = HttpContext.User.Identity;
-
             var organizations = _db.GetAllOrganizations(_user.Name);
 
             // TODO: Return 404 if user name doesn't exist, return empty list if user has no organizations. (see also RavenDB.Organization.cs:25)
@@ -39,7 +36,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}", Name = "organization")]
-        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -54,7 +50,6 @@ namespace Lisa.Breakpoint.WebApi
 
         // REVIEW: Would it be better to create a separate MemberController?
         [HttpGet("members/{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -70,7 +65,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("members/new/{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetMembersNotInProject(string organizationSlug, string projectSlug)
         {
             if (_db.GetOrganization(organizationSlug) == null)
@@ -78,7 +72,10 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            // TODO: Return 404 when project doesn't exist.
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            {
+                return new HttpNotFoundResult();
+            }
 
             var members = _db.GetMembersNotInProject(organizationSlug, projectSlug);
 
@@ -86,7 +83,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost]
-        [Authorize("Bearer")]
         public IActionResult Post([FromBody] OrganizationPost organization)
         {
             if (!ModelState.IsValid)
@@ -116,7 +112,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
         {
             if (patches == null)
@@ -138,35 +133,29 @@ namespace Lisa.Breakpoint.WebApi
             }
 
             // Patch Report to database
-            try
+            if (_db.Patch<Organization>(organizationNumber, patches))
             {
-                if (_db.Patch<Organization>(organizationNumber, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
-                }
-                else
-                {
-                    // TODO: Return an error message to indicate why validation failed.
-                    // REVIEWFEEDBACK: Known, needs patch validation to generate errors first.
-                    return new HttpStatusCodeResult(422);
-                }
+                return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
             }
-            catch (Exception)
+            else
             {
-                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
+                // TODO: Return an error message to indicate why validation failed.
+                // REVIEWFEEDBACK: Known, needs patch validation to generate errors first.
+                return new HttpStatusCodeResult(422);
             }
         }
 
         [HttpDelete("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug)
         {
+
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
+            _db.DeleteReportsFromProjectsByOrganization(organizationSlug);
+
+            _db.DeleteProjectsByOrganization(organizationSlug);
 
             _db.DeleteOrganization(organizationSlug);
 
@@ -174,6 +163,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

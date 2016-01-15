@@ -9,6 +9,7 @@ using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
+    [Authorize("Bearer")]
     [Route("projects")]
     public class ProjectController : Controller
     {
@@ -19,7 +20,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetAll(string organizationSlug)
         {
             _user = HttpContext.User.Identity;
@@ -29,7 +29,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            var projects = _db.GetAllProjects(organizationSlug, _user.Name);
+            var projects = _db.GetAllProjectsFromUser(organizationSlug, _user.Name);
             // REVIEW: Does GetAllProjects() ever return null? Doesn't it just return an empty list? What would a return value of null mean?
             if (projects == null)
             {
@@ -40,7 +40,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
-        [Authorize("Bearer")]
         // REVIEW: What does includeAllGroups do? Is it still relevant now that we have default groups?
         // REVIEWFEEDBACK: Already removed in the default groups branch.
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
@@ -65,7 +64,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
             if (!ModelState.IsValid)
@@ -102,7 +100,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
             if (patches == null)
@@ -151,7 +148,6 @@ namespace Lisa.Breakpoint.WebApi
 
         
         [HttpPatch("{organizationSlug}/{projectSlug}/members")]
-        [Authorize("Bearer")]
         public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
         {
             if (organizationSlug == null || projectSlug == null || patch == null)
@@ -173,18 +169,19 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        [HttpDelete("{organizationSlug}/{project}/")]
-        [Authorize("Bearer")]
-        public IActionResult Delete(string organizationSlug, string project)
+        [HttpDelete("{organizationSlug}/{projectSlug}")]
+        public IActionResult Delete(string organizationSlug, string projectSlug)
         {
             _user = HttpContext.User.Identity;
 
-            if (_db.GetProject(organizationSlug, project, _user.Name) == null)
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteProject(project);
+            _db.DeleteReportsFromProjectsByOrganization(organizationSlug, projectSlug);
+
+            _db.DeleteProject(organizationSlug, projectSlug);
 
             return new HttpStatusCodeResult(204);
         }

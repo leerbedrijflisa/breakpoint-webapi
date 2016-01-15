@@ -10,9 +10,19 @@ namespace Lisa.Breakpoint.WebApi.database
 {
     public partial class RavenDB
     {
+        public IEnumerable<Project> GetAllProjects(string organizationName)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Project>()
+                    .Where(p => p.Organization == organizationName)
+                    .ToList();
+            }
+        }
+
         // REVIEW: Why does this method only return projects for a specific user?
         // REVIEW: Why return an IList instead of an IEnumerable?
-        public IList<Project> GetAllProjects(string organizationName, string userName)
+        public IEnumerable<Project> GetAllProjectsFromUser(string organizationName, string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -262,12 +272,25 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public void DeleteProject(string projectSlug)
+        public void DeleteProject(string organizationSlug, string projectSlug)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
+                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
                 session.Delete(project);
+                session.SaveChanges();
+            }
+        }
+
+        public void DeleteProjectsByOrganization(string organizationSlug)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                var projects = session.Query<Project>().Where(p => p.Organization == organizationSlug).ToList();
+                foreach (var project in projects)
+                {
+                    session.Delete(project);
+                }
                 session.SaveChanges();
             }
         }
