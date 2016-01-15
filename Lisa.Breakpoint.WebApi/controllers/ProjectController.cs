@@ -12,7 +12,6 @@ namespace Lisa.Breakpoint.WebApi
         public ProjectController(RavenDB db)
         {
             _db = db;
-            _user = HttpContext.User.Identity;
             ErrorHandler.Clear();
         }
 
@@ -38,7 +37,7 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
             // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
-            // REVIEWFEEDBACK: Won't this be a bad request instead of not found?
+            // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
             if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
@@ -57,15 +56,10 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost("{organizationSlug}")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
+            if (project == null || string.IsNullOrWhiteSpace(organizationSlug) || !_db.OrganizationExists(organizationSlug))
             {
                 // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
-                // REVIEWFEEDBACK: Shouldn't a missing required parameter trigger a bad request?
-                return new BadRequestResult();
-            }
-
-            if (!_db.OrganizationExists(organizationSlug))
-            {
+                // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
                 return new HttpNotFoundResult();
             }
 
@@ -150,8 +144,6 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{organizationSlug}/{project}/")]
         public IActionResult Delete(string organizationSlug, string project)
         {
-            _user = HttpContext.User.Identity;
-
             if (_db.GetProject(organizationSlug, project, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
@@ -163,6 +155,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

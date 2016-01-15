@@ -83,7 +83,6 @@ namespace Lisa.Breakpoint.WebApi
         /// Clears the error list.
         /// </summary>
         // REVIEW: Is this still necessary if the class is non-static?
-        // REVIEWFEEDBACK: No.
         public static void Clear()
         {
             _errors = new List<Error>();

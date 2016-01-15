@@ -23,23 +23,18 @@ namespace Lisa.Breakpoint.WebApi
 
         private int PriorityToValue(string priority)
         {
-            switch(priority)
+            switch (priority)
             {
                 case Priorities.FixImmediately:
                     return 1;
-                    break;
                 case Priorities.FixBeforeRelease:
                     return 2;
-                    break;
                 case Priorities.FixForNextRelease:
                     return 3;
-                    break;
                 case Priorities.FixWhenever:
                     return 4;
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
-                    break;
             }
         }
     }

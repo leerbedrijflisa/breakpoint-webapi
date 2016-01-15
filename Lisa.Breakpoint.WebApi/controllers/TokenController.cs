@@ -9,7 +9,6 @@ using Microsoft.AspNet.Mvc;
 namespace Lisa.Breakpoint.WebApi.controllers
 {
     // TODO: Add a URL to the source of this code.
-    // REVIEWFEEDBACK: This will be changed with Auth0, still credit?
     [Route("token")]
     public class TokenController : Controller
     {

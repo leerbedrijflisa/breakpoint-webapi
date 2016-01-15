@@ -12,7 +12,6 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (string.IsNullOrWhiteSpace(userName))
             {
-                // REVIEW: Why does requesting an organization for an empty user name return a different result (null) than for a non-existing user name (empty list)?
                 return null;
             }
 

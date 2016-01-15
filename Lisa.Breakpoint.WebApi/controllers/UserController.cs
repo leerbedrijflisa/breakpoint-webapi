@@ -35,7 +35,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
-            // TODO: Check for 400 before checking for 422.
             if (user == null)
             {
                 return new BadRequestResult();
@@ -58,8 +57,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 string location = Url.RouteUrl("users", new { }, Request.Scheme);
                 return new CreatedResult(location, postedUser);
             }
-
-            // TODO: Return a 422 in this case.
+            
             return new UnprocessableEntityResult();
         }
 
@@ -93,11 +91,11 @@ namespace Lisa.Breakpoint.WebApi.controllers
             }
             else
             {
-                return new DuplicateEntityResult();
+                return new UnprocessableEntityResult();
             }
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
-    }
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
+    };
 }

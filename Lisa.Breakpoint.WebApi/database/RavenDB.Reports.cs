@@ -11,7 +11,6 @@ namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
-        // TODO: Remove userName parameter; it's never used.
         public IList<Report> GetAllReports(string organizationSlug, string projectSlug, IEnumerable<Filter> filters)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())

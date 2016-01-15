@@ -16,7 +16,7 @@ namespace Lisa.Breakpoint.WebApi
             if (string.IsNullOrWhiteSpace(organizationSlug))
             {
                 // REVIEW: Shouldn't this be a 404?
-                return new BadRequestResult();
+                return new HttpNotFoundResult();
             }
 
             var organization = _db.GetOrganization(organizationSlug);
