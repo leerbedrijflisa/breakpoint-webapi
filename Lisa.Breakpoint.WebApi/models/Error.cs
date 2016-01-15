@@ -1,6 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.utils;
-
-namespace Lisa.Breakpoint.WebApi
+﻿namespace Lisa.Breakpoint.WebApi
 {
     public class Error
     {

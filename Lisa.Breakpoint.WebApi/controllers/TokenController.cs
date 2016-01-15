@@ -5,13 +5,10 @@ using System.Security.Claims;
 using System.Security.Principal;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using Lisa.Breakpoint.TokenAuthentication;
-using Lisa.Breakpoint.WebApi.database;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
     // TODO: Add a URL to the source of this code.
-    // REVIEWFEEDBACK: This will be changed with Auth0, still credit?
     [Route("token")]
     public class TokenController : Controller
     {

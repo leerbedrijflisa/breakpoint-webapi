@@ -1,8 +1,4 @@
-﻿// TODO: Fix all the namespace names. Should all just be Lisa.Breakpoint.WebApi without the folder name.
-using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Authorization;
+﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System;
 using System.Collections.Generic;
@@ -101,7 +97,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (organization == null)
             {
-                return new BadRequestResult();
+                return new HttpNotFoundResult();
             }
 
             var postedOrganization = _db.PostOrganization(organization);

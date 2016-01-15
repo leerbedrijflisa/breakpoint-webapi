@@ -1,12 +1,9 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Mvc;
-using Lisa.Breakpoint.WebApi.Models;
+﻿using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
-using Lisa.Breakpoint.WebApi.utils;
 using Microsoft.AspNet.Http;
 
 namespace Lisa.Breakpoint.WebApi
@@ -70,7 +67,7 @@ namespace Lisa.Breakpoint.WebApi
                 filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
             
-            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters);
+            reports = _db.GetAllReports(organizationSlug, projectSlug, filters);
             
             if (ErrorHandler.HasErrors)
             {

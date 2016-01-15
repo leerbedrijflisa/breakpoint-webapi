@@ -1,15 +1,12 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Authorization;
+﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("projects")]
+    [Authorize("Bearer")]
     public class ProjectController : Controller
     {
         public ProjectController(RavenDB db)
@@ -19,17 +16,14 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetAll(string organizationSlug)
         {
-            _user = HttpContext.User.Identity;
-
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var projects = _db.GetAllProjects(organizationSlug, _user.Name);
+            var projects = _db.GetAllProjects(organizationSlug);
             // REVIEW: Does GetAllProjects() ever return null? Doesn't it just return an empty list? What would a return value of null mean?
             if (projects == null)
             {
@@ -40,15 +34,10 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
-        [Authorize("Bearer")]
-        // REVIEW: What does includeAllGroups do? Is it still relevant now that we have default groups?
-        // REVIEWFEEDBACK: Already removed in the default groups branch.
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
-            _user = HttpContext.User.Identity;
-
             // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
-            // REVIEWFEEDBACK: Won't this be a bad request instead of not found?
+            // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
             if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
@@ -65,9 +54,15 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
+            if (project == null || string.IsNullOrWhiteSpace(organizationSlug) || !_db.OrganizationExists(organizationSlug))
+            {
+                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
+                // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
+                return new HttpNotFoundResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
@@ -76,18 +71,6 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-            }
-
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
-            {
-                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
-                // REVIEWFEEDBACK: Shouldn't a missing required parameter trigger a bad request?
-                return new BadRequestResult();
-            }
-
-            if (!_db.OrganizationExists(organizationSlug))
-            {
-                return new HttpNotFoundResult();
             }
 
             var postedProject = _db.PostProject(project, organizationSlug);
@@ -102,7 +85,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
             if (patches == null)
@@ -110,7 +92,6 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            // TODO: Initialize _user before using it.
             var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
 
             if (project == null)
@@ -125,33 +106,21 @@ namespace Lisa.Breakpoint.WebApi
                 // REVIEWFEEDBACK: This error gets triggered when the automatically entered field 'number' is not a number in the DB. Should this be a 422 when there is an issue in automatic database values?
                 return new HttpStatusCodeResult(500);
             }
-
-            // Patch Report to database
-            try
+            
+            if (_db.Patch<Project>(projectNumber, patches))
             {
-                // REVIEW: Shouldn't this be _db.Patch<Project>? Why patch the organization?
-                // REVIEWFEEDBACK: Known and fixed, not merged.
-                if (_db.Patch<Organization>(projectNumber, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
-                }
-                else
-                {
-                    // TODO: Add error message.
-                    return new HttpStatusCodeResult(422);
-                }
+                return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
             }
-            catch (Exception)
+            else
             {
-                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
+                // TODO: Add error message.
+                // REVIEWFEEDBACK: Waiting for proper patch authorization / validation
+                return new HttpStatusCodeResult(422);
             }
         }
 
         
         [HttpPatch("{organizationSlug}/{projectSlug}/members")]
-        [Authorize("Bearer")]
         public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
         {
             if (organizationSlug == null || projectSlug == null || patch == null)
@@ -166,19 +135,15 @@ namespace Lisa.Breakpoint.WebApi
                 string location = Url.RouteUrl("project", new { organizationSlug = organizationSlug, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
                 return new CreatedResult(location, patchedProjectMembers);
             }
-            else
-            {
-                // TODO: Return the correct status code. Depending on what went wrong, it could be a 401 or a 422.
-                return new NoContentResult();
-            }
+
+            // TODO: Return the correct status code. Depending on what went wrong, it could be a 401 or a 422.
+            // Will be removed in the future in favor of regular patches.
+            return new UnprocessableEntityResult();
         }
 
         [HttpDelete("{organizationSlug}/{project}/")]
-        [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug, string project)
         {
-            _user = HttpContext.User.Identity;
-
             if (_db.GetProject(organizationSlug, project, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
@@ -190,7 +155,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        // REVIEW: Why is this an instance variable if every method initializes it separately? Either make it a local variable of each method or initialize the instance variable in a central spot.
-        private IIdentity _user;
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

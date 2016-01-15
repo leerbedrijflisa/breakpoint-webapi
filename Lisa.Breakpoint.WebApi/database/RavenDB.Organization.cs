@@ -1,29 +1,32 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
         public IList<Organization> GetAllOrganizations(string userName)
         {
-            if (!string.IsNullOrWhiteSpace(userName))
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                using (IDocumentSession session = documentStore.Initialize().OpenSession())
-                {
-                    return session.Query<Organization>()
-                        .Where(o => o.Members.Any(m => m == userName))
-                        .ToList();
-                }
+                return null;
             }
 
-            // REVIEW: Why does requesting an organization for an empty user name return a different result (null) than for a non-existing user name (empty list)?
-            return null;
+            // TODO: Add an error when error handler is fixed.
+            if (!UserExists(userName))
+            {
+                return null;
+            }
+            
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Organization>()
+                    .Where(o => o.Members.Any(m => m == userName))
+                    .ToList();
+            }
         }
 
         public Organization GetOrganization(string organization)
@@ -64,7 +67,7 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 Name = organization.Name,
                 Members = organization.Members,
-                Slug = _toUrlSlug(organization.Name)
+                Slug = ToUrlSlug(organization.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
