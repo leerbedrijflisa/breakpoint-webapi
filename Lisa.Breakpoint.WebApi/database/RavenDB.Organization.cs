@@ -141,6 +141,11 @@ namespace Lisa.Breakpoint.WebApi
 
         public bool OrganizationExists(string organizationSlug)
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug))
+            {
+                return false;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Organization>().Any(m => m.Slug == organizationSlug);

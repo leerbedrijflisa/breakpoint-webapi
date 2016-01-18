@@ -29,15 +29,10 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
+        // REVIEW: What does includeAllGroups do? Is it still relevant now that we have default groups?
+        // REVIEWFEEDBACK: Already removed in the default groups branch.
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
-            // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
-            // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
-            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
-            {
-                return new HttpNotFoundResult();
-            }
-
             var project = _db.GetProject(organizationSlug, projectSlug, _user.Name, includeAllGroups);
 
             if (project == null)
@@ -51,10 +46,8 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost("{organizationSlug}")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug) || !_db.OrganizationExists(organizationSlug))
+            if (!_db.OrganizationExists(organizationSlug))
             {
-                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
-                // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
                 return new HttpNotFoundResult();
             }
 
@@ -136,15 +129,17 @@ namespace Lisa.Breakpoint.WebApi
             return new UnprocessableEntityResult();
         }
 
-        [HttpDelete("{organizationSlug}/{project}/")]
-        public IActionResult Delete(string organizationSlug, string project)
+        [HttpDelete("{organizationSlug}/{projectSlug}")]
+        public IActionResult Delete(string organizationSlug, string projectSlug)
         {
-            if (_db.GetProject(organizationSlug, project, _user.Name) == null)
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteProject(project);
+            _db.DeleteReportsFromProjectsByOrganization(organizationSlug, projectSlug);
+
+            _db.DeleteProject(organizationSlug, projectSlug);
 
             return new HttpStatusCodeResult(204);
         }

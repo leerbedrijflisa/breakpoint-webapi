@@ -34,7 +34,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
             
-            IList<Report> reports;
+            IEnumerable<Report> reports;
             var filters = new List<Filter>();
 
             // Add all filters (yeah it's a lot)

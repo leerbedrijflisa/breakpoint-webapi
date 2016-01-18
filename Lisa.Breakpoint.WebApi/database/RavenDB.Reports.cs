@@ -173,5 +173,28 @@ namespace Lisa.Breakpoint.WebApi
                 session.SaveChanges();
             }
         }
+
+        public void DeleteReportsFromProjectsByOrganization(string organizationSlug, string projectSlug = null)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                List<Report> reports;
+                if (projectSlug != null)
+                {
+                    reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
+                }
+                else
+                {
+                    reports = session.Query<Report>().Where(r => r.Organization == organizationSlug).ToList();
+                }
+
+                foreach (var report in reports)
+                {
+                    session.Delete(report);
+                }
+
+                session.SaveChanges();
+            }
+        }
     }
 }

@@ -23,10 +23,26 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
+        // REVIEW: Why does this method only return projects for a specific user?
+        public IEnumerable<Project> GetAllProjectsFromUser(string organizationName, string userName)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Project>()
+                    .Where(p => p.Organization == organizationName)
+                    .ToList();
+            }
+        }
+
         // TODO: Make includeAllGroups a boolean.
         // REVIEW: Why does this method need the user name?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var filter = false;
@@ -234,12 +250,25 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        public void DeleteProject(string projectSlug)
+        public void DeleteProject(string organizationSlug, string projectSlug)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
+                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
                 session.Delete(project);
+                session.SaveChanges();
+            }
+        }
+
+        public void DeleteProjectsByOrganization(string organizationSlug)
+        {
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                var projects = session.Query<Project>().Where(p => p.Organization == organizationSlug).ToList();
+                foreach (var project in projects)
+                {
+                    session.Delete(project);
+                }
                 session.SaveChanges();
             }
         }
