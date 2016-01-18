@@ -23,13 +23,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            var projects = _db.GetAllProjectsFromUser(organizationSlug, _user.Name);
-
-            // REVIEW: Does GetAllProjects() ever return null? Doesn't it just return an empty list? What would a return value of null mean?
-            if (projects == null)
-            {
-                return new HttpNotFoundResult();
-            }
+            var projects = _db.GetAllProjects(organizationSlug);
 
             return new HttpOkObjectResult(projects);
         }
@@ -39,13 +33,6 @@ namespace Lisa.Breakpoint.WebApi
         // REVIEWFEEDBACK: Already removed in the default groups branch.
         public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
         {
-            // REVIEW: Is it necessary to check for this explicitly? Doesn't GetProject return null in these cases?
-            // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
-            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
-            {
-                return new HttpNotFoundResult();
-            }
-
             var project = _db.GetProject(organizationSlug, projectSlug, _user.Name, includeAllGroups);
 
             if (project == null)
@@ -59,10 +46,8 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost("{organizationSlug}")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug) || !_db.OrganizationExists(organizationSlug))
+            if (!_db.OrganizationExists(organizationSlug))
             {
-                // REVIEW: Shouldn't this be a 404 for the IsNullOrWhiteSpace case? Doesn't OrganizationExists (line 85) take care of that check?
-                // REVIEWFEEDBACK: Why would you make a database connection when you can also check right away?
                 return new HttpNotFoundResult();
             }
 

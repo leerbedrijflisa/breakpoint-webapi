@@ -10,6 +10,11 @@ namespace Lisa.Breakpoint.WebApi
     {
         public IEnumerable<Project> GetAllProjects(string organizationName)
         {
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                return new List<Project>();
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
@@ -19,7 +24,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         // REVIEW: Why does this method only return projects for a specific user?
-        // REVIEW: Why return an IList instead of an IEnumerable?
         public IEnumerable<Project> GetAllProjectsFromUser(string organizationName, string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -34,6 +38,11 @@ namespace Lisa.Breakpoint.WebApi
         // REVIEW: Why does this method need the user name?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var filter = false;

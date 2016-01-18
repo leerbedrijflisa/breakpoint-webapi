@@ -36,10 +36,8 @@ namespace Lisa.Breakpoint.WebApi
 
             return true;
         }
-
-        // TODO: Make method non-static.
-        // REVIEWFEEDBACK: Why shouldn't it be static?
-        public static string ToUrlSlug(string s)
+        
+        public string ToUrlSlug(string s)
         {
             return Regex.Replace(s, @"[^a-z0-9]+", "-", RegexOptions.IgnoreCase)
                 .Trim(new char[] { '-' })

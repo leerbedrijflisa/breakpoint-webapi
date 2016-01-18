@@ -18,10 +18,13 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet]
         public IActionResult GetAll()
         {
+            if (_db.UserExists(_user.Name))
+            {
+                return new HttpNotFoundResult();
+            }
+
             var organizations = _db.GetAllOrganizations(_user.Name);
 
-            // TODO: Return 404 if user name doesn't exist, return empty list if user has no organizations. (see also RavenDB.Organization.cs:25)
-            // REVIEWFEEDBACK: Authorize attribute implies the user exists.
             if (organizations == null)
             {
                 return new HttpNotFoundResult();
@@ -143,7 +146,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{organizationSlug}")]
         public IActionResult Delete(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
             }
