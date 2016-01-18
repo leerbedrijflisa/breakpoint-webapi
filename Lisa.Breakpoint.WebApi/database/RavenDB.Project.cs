@@ -23,18 +23,6 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        // REVIEW: Why does this method only return projects for a specific user?
-        public IEnumerable<Project> GetAllProjectsFromUser(string organizationName, string userName)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                return session.Query<Project>()
-                    .Where(p => p.Organization == organizationName 
-                        && p.Members.Select(m => m.Username).Contains(userName))
-                    .ToList();
-            }
-        }
-
         // TODO: Make includeAllGroups a boolean.
         // REVIEW: Why does this method need the user name?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")

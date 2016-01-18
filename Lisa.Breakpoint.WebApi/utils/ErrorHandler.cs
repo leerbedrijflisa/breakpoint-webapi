@@ -47,10 +47,8 @@ namespace Lisa.Breakpoint.WebApi
         {
             bool fatalError = false;
             _errors = new List<Error>();
-
-            // REVIEW: Is it necessary to filter the model state errors? Doesn't the second foreach loop below take care of that?
-            var modelStateErrors = modelState.Where(x => x.Value.Errors.Count > 0);
-            foreach (var property in modelStateErrors)
+            
+            foreach (var property in modelState)
             {
                 foreach (var error in property.Value.Errors)
                 {
