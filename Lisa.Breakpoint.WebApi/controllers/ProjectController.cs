@@ -152,8 +152,6 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteReportsFromProjectsByOrganization(organizationSlug, projectSlug);
-
             _db.DeleteProject(organizationSlug, projectSlug);
 
             return new HttpStatusCodeResult(204);
