@@ -87,7 +87,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
+                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
