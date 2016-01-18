@@ -10,6 +10,11 @@ namespace Lisa.Breakpoint.WebApi
     {
         public IEnumerable<Project> GetAllProjects(string organizationName)
         {
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                return new List<Project>();
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()

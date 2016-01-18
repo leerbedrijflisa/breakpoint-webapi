@@ -24,11 +24,6 @@ namespace Lisa.Breakpoint.WebApi
             }
 
             var projects = _db.GetAllProjects(organizationSlug);
-            // REVIEW: Does GetAllProjects() ever return null? Doesn't it just return an empty list? What would a return value of null mean?
-            if (projects == null)
-            {
-                return new HttpNotFoundResult();
-            }
 
             return new HttpOkObjectResult(projects);
         }

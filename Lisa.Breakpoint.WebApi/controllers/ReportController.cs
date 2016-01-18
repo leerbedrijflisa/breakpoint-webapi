@@ -197,25 +197,13 @@ namespace Lisa.Breakpoint.WebApi
             }
             
             // Patch Report to database
-            try
+            if (_db.Patch<Report>(id, patches))
             {
-                // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
-                if (_db.Patch<Report>(id, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetReport(id));
-                }
-                else
-                {
-                    // TODO: Add error message.
-                    return new HttpStatusCodeResult(422);
-                }
+                return new HttpOkObjectResult(_db.GetReport(id));
             }
-            catch(Exception)
-            {
-                // REVIEW: Isn't this what ASP.NET does automatically if you don't catch the exception?
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
-            }
+
+            // TODO: Add error message.
+            return new HttpStatusCodeResult(422);
         }
 
         [HttpDelete("{id}")]

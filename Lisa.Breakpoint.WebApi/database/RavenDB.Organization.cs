@@ -14,12 +14,6 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return null;
             }
-
-            // TODO: Add an error when error handler is fixed.
-            if (!UserExists(userName))
-            {
-                return null;
-            }
             
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
@@ -31,6 +25,11 @@ namespace Lisa.Breakpoint.WebApi
 
         public Organization GetOrganization(string organization)
         {
+            if (string.IsNullOrWhiteSpace(organization))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Organization>()
@@ -63,6 +62,11 @@ namespace Lisa.Breakpoint.WebApi
 
         public Organization PostOrganization(OrganizationPost organization)
         {
+            if (organization == null)
+            {
+                return null;
+            }
+
             var organizationEntity = new Organization()
             {
                 Name = organization.Name,
