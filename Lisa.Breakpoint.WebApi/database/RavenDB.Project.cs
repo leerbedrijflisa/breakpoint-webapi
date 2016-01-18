@@ -246,20 +246,14 @@ namespace Lisa.Breakpoint.WebApi
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
-                session.Delete(project);
-                session.SaveChanges();
-            }
-        }
 
-        public void DeleteProjectsByOrganization(string organizationSlug)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                var projects = session.Query<Project>().Where(p => p.Organization == organizationSlug).ToList();
-                foreach (var project in projects)
+                List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
+
+                foreach (var report in reports)
                 {
-                    session.Delete(project);
+                    session.Delete(report);
                 }
+                session.Delete(project);
                 session.SaveChanges();
             }
         }
