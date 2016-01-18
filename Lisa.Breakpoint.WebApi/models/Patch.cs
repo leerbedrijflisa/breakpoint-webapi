@@ -15,8 +15,6 @@ namespace Lisa.Breakpoint.WebApi
     }
 
     // temporary for patching the members in a project
-    // TODO: Make something that isn't temporary.
-    // REVIEWFEEDBACK: In progress.
     public class TempMemberPatch
     {
         public string Sender { get; set; }

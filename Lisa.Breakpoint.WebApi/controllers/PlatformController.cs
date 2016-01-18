@@ -13,12 +13,6 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}")]
         public IActionResult Get(string organizationSlug)
         {
-            if (string.IsNullOrWhiteSpace(organizationSlug))
-            {
-                // REVIEW: Shouldn't this be a 404?
-                return new HttpNotFoundResult();
-            }
-
             var organization = _db.GetOrganization(organizationSlug);
 
             if (organization == null)

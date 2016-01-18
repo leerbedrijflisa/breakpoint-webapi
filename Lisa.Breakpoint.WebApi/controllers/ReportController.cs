@@ -97,7 +97,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
@@ -189,7 +189,6 @@ namespace Lisa.Breakpoint.WebApi
             }
 
             // Do not patch the date it was reported
-            // REVIEW: Shouldn't this return an error?
             if (patchFields.Contains("Reported"))
             {
                 ErrorHandler.Add(new Error(1205, new { field = "Reported" }));
@@ -202,7 +201,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpOkObjectResult(_db.GetReport(id));
             }
 
-            // TODO: Add error message.
+            // TODO: Add error message once Patch Authorization / Validation is finished.
             return new HttpStatusCodeResult(422);
         }
 

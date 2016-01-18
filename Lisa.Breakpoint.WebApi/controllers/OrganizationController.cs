@@ -87,7 +87,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
@@ -124,23 +124,16 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            int organizationNumber;
-            if (!int.TryParse(organization.Number, out organizationNumber))
-            {
-                return new HttpStatusCodeResult(500);
-            }
+            var organizationNumber = int.Parse(organization.Number);
 
             // Patch Report to database
             if (_db.Patch<Organization>(organizationNumber, patches))
             {
                 return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
             }
-            else
-            {
-                // TODO: Return an error message to indicate why validation failed.
-                // REVIEWFEEDBACK: Known, needs patch validation to generate errors first.
-                return new HttpStatusCodeResult(422);
-            }
+
+            // TODO: Add error message once Patch Authorization / Validation is finished.
+            return new HttpStatusCodeResult(422);
         }
 
         [HttpDelete("{organizationSlug}")]

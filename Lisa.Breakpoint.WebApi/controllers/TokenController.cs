@@ -8,7 +8,7 @@ using Microsoft.AspNet.Mvc;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
-    // TODO: Add a URL to the source of this code.
+    // https://github.com/mrsheepuk/ASPNETSelfCreatedTokenAuthExample
     [Route("token")]
     public class TokenController : Controller
     {

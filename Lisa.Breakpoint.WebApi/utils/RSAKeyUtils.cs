@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens;
 
 namespace Lisa.Breakpoint.WebApi
 {
+    // https://github.com/mrsheepuk/ASPNETSelfCreatedTokenAuthExample
     public class RSAKeyUtils
     {
         public static RSAParameters GetRandomKey()

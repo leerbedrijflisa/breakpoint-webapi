@@ -6,8 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi
 {
-    // TODO: Make the class non-static
-    // REVIEWFEEDBACK: Needs to be discussed thoroughly, making it non-static requires either passing it to all DB methods, making the DB return response objects, or making the DB return dynamics (either an error list or a result).
+    // TODO: Make the class non-static once proper authorization / validation is implemented.
     public static class ErrorHandler
     {
         public static IEnumerable<Error> Errors
@@ -19,11 +18,11 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         // REVIEW: What's the purpose of FatalError? When would you use it?
-        public static string FatalError
+        public static IEnumerable<string> FatalErrors
         {
             get
             {
-                return _fatalError;
+                return _fatalErrors;
             }
         }
 
@@ -48,11 +47,9 @@ namespace Lisa.Breakpoint.WebApi
         {
             bool fatalError = false;
             _errors = new List<Error>();
-            string fatalErrorMessage = string.Empty;
 
-            // REVIEW: What's the purpose of Select(m => m)? Doesn't that effectively do nothing?
             // REVIEW: Is it necessary to filter the model state errors? Doesn't the second foreach loop below take care of that?
-            var modelStateErrors = modelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
+            var modelStateErrors = modelState.Where(x => x.Value.Errors.Count > 0);
             foreach (var property in modelStateErrors)
             {
                 foreach (var error in property.Value.Errors)
@@ -69,9 +66,8 @@ namespace Lisa.Breakpoint.WebApi
                         }
                         else
                         {
-                            // REVIEW: What if there are multiple fatal errors? Shouldn't _fatalError be a list?
                             fatalError = true;
-                            _fatalError = JsonConvert.SerializeObject(error.Exception.Message);
+                            _fatalErrors.Add(JsonConvert.SerializeObject(error.Exception.Message));
                         }
                     }
                 }
@@ -82,7 +78,7 @@ namespace Lisa.Breakpoint.WebApi
         /// <summary>
         /// Clears the error list.
         /// </summary>
-        // REVIEW: Is this still necessary if the class is non-static?
+        // TODO: Remove this once the class can be made non-static
         public static void Clear()
         {
             _errors = new List<Error>();
@@ -90,6 +86,6 @@ namespace Lisa.Breakpoint.WebApi
 
         private static List<Error> _errors { get; set; }
 
-        private static string _fatalError { get; set; }
+        private static List<string> _fatalErrors { get; set; }
     }
 }

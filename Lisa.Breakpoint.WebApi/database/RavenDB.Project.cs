@@ -29,7 +29,8 @@ namespace Lisa.Breakpoint.WebApi
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Organization == organizationName)
+                    .Where(p => p.Organization == organizationName 
+                        && p.Members.Select(m => m.Username).Contains(userName))
                     .ToList();
             }
         }

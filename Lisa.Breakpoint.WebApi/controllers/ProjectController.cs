@@ -55,7 +55,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
@@ -87,24 +87,15 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            int projectNumber;
-            if (!int.TryParse(project.Number, out projectNumber))
-            {
-                // TODO: Return a 422 with an error message.
-                // REVIEWFEEDBACK: This error gets triggered when the automatically entered field 'number' is not a number in the DB. Should this be a 422 when there is an issue in automatic database values?
-                return new HttpStatusCodeResult(500);
-            }
+            int projectNumber = int.Parse(project.Number);
             
             if (_db.Patch<Project>(projectNumber, patches))
             {
                 return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
             }
-            else
-            {
-                // TODO: Add error message.
-                // REVIEWFEEDBACK: Waiting for proper patch authorization / validation
-                return new HttpStatusCodeResult(422);
-            }
+
+            // TODO: Add error message once Patch Authorization / Validation is finished.
+            return new HttpStatusCodeResult(422);
         }
 
         
@@ -124,8 +115,6 @@ namespace Lisa.Breakpoint.WebApi
                 return new CreatedResult(location, patchedProjectMembers);
             }
 
-            // TODO: Return the correct status code. Depending on what went wrong, it could be a 401 or a 422.
-            // Will be removed in the future in favor of regular patches.
             return new UnprocessableEntityResult();
         }
 
