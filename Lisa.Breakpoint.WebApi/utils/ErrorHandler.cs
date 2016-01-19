@@ -80,10 +80,11 @@ namespace Lisa.Breakpoint.WebApi
         public static void Clear()
         {
             _errors = new List<Error>();
+            _fatalErrors = new List<string>();
         }
 
-        private static List<Error> _errors { get; set; }
+        private static List<Error> _errors;
 
-        private static List<string> _fatalErrors { get; set; }
+        private static List<string> _fatalErrors = new List<string>();
     }
 }
