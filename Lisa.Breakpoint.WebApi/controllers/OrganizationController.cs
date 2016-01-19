@@ -1,14 +1,11 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Authorization;
+﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
+    [Authorize("Bearer")]
     [Route("organizations")]
     public class OrganizationController : Controller
     {
@@ -19,10 +16,12 @@ namespace Lisa.Breakpoint.WebApi
         }
         
         [HttpGet]
-        [Authorize("Bearer")]
         public IActionResult GetAll()
         {
-            _user = HttpContext.User.Identity;
+            if (_db.UserExists(_user.Name))
+            {
+                return new HttpNotFoundResult();
+            }
 
             var organizations = _db.GetAllOrganizations(_user.Name);
 
@@ -35,7 +34,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}", Name = "organization")]
-        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -48,8 +46,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(organization);
         }
 
+        // REVIEW: Would it be better to create a separate MemberController?
         [HttpGet("members/{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetOrganizationMembers(string organizationSlug)
         {
             var organization = _db.GetOrganization(organizationSlug);
@@ -65,10 +63,14 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("members/new/{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetMembersNotInProject(string organizationSlug, string projectSlug)
         {
             if (_db.GetOrganization(organizationSlug) == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -79,14 +81,13 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost]
-        [Authorize("Bearer")]
         public IActionResult Post([FromBody] OrganizationPost organization)
         {
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
@@ -94,7 +95,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (organization == null)
             {
-                return new BadRequestResult();
+                return new HttpNotFoundResult();
             }
 
             var postedOrganization = _db.PostOrganization(organization);
@@ -109,7 +110,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
         {
             if (patches == null)
@@ -124,36 +124,22 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            int organizationNumber;
-            if (!int.TryParse(organization.Number, out organizationNumber))
-            {
-                return new HttpStatusCodeResult(500);
-            }
+            var organizationNumber = int.Parse(organization.Number);
 
             // Patch Report to database
-            try
+            if (_db.Patch<Organization>(organizationNumber, patches))
             {
-                if (_db.Patch<Organization>(organizationNumber, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
-                }
-                else
-                {
-                    return new HttpStatusCodeResult(422);
-                }
+                return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
             }
-            catch (Exception)
-            {
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
-            }
+
+            // TODO: Add error message once Patch Authorization / Validation is finished.
+            return new HttpStatusCodeResult(422);
         }
 
         [HttpDelete("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Delete(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
             }
@@ -164,6 +150,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

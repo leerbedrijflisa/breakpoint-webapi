@@ -2,7 +2,7 @@
 
 namespace Lisa.Breakpoint.WebApi
 {
-    [Route("versions")]
+    [Route("version")]
     public class VersionController : Controller
     {
         [HttpGet]

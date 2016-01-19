@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
     public class ErrorMessages
     {

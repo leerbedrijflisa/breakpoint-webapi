@@ -1,32 +1,35 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
         public IList<Organization> GetAllOrganizations(string userName)
         {
-            if (!string.IsNullOrWhiteSpace(userName))
+            if (string.IsNullOrWhiteSpace(userName))
             {
-                using (IDocumentSession session = documentStore.Initialize().OpenSession())
-                {
-                    return session.Query<Organization>()
-                        .Where(o => o.Members.Any(m => m == userName))
-                        .ToList();
-                }
+                return null;
             }
-
-            return null;
+            
+            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            {
+                return session.Query<Organization>()
+                    .Where(o => o.Members.Any(m => m == userName))
+                    .ToList();
+            }
         }
 
         public Organization GetOrganization(string organization)
         {
+            if (string.IsNullOrWhiteSpace(organization))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Organization>()
@@ -59,11 +62,16 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public Organization PostOrganization(OrganizationPost organization)
         {
+            if (organization == null)
+            {
+                return null;
+            }
+
             var organizationEntity = new Organization()
             {
                 Name = organization.Name,
                 Members = organization.Members,
-                Slug = _toUrlSlug(organization.Name)
+                Slug = ToUrlSlug(organization.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -126,6 +134,20 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 Organization organization = session.Query<Organization>().Where(o => o.Slug == organizationSlug).SingleOrDefault();
+
+                List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug).ToList();
+
+                List<Project> projects = session.Query<Project>().Where(p => p.Organization == organizationSlug).ToList();
+
+                foreach (var report in reports)
+                {
+                    session.Delete(report);
+                }
+                
+                foreach (var project in projects)
+                {
+                    session.Delete(project);
+                }
                 session.Delete(organization);
                 session.SaveChanges();
             }
@@ -133,6 +155,11 @@ namespace Lisa.Breakpoint.WebApi.database
 
         public bool OrganizationExists(string organizationSlug)
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug))
+            {
+                return false;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Organization>().Any(m => m.Slug == organizationSlug);

@@ -1,27 +1,37 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
-        public IList<Project> GetAllProjects(string organizationName, string userName)
+        public IEnumerable<Project> GetAllProjects(string organizationName)
         {
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                return new List<Project>();
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Members.Any(m => m.Username == userName) && p.Organization == organizationName)
+                    .Where(p => p.Organization == organizationName)
                     .ToList();
             }
         }
 
+        // TODO: Make includeAllGroups a boolean.
+        // REVIEW: Why does this method need the user name?
         public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var filter = false;
@@ -93,7 +103,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
-                Slug = _toUrlSlug(project.Name)
+                Slug = ToUrlSlug(project.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -127,32 +137,6 @@ namespace Lisa.Breakpoint.WebApi.database
                 session.SaveChanges();
 
                 return projectEntity;
-            }
-        }
-
-        public Project PatchProject(int id, Project patchedProject)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                Project project = session.Load<Project>(id);
-
-                foreach (PropertyInfo propertyInfo in project.GetType().GetProperties())
-                {
-                    var newVal = patchedProject.GetType().GetProperty(propertyInfo.Name).GetValue(patchedProject, null);
-
-                    if (newVal != null)
-                    {
-                        var patchRequest = new PatchRequest()
-                        {
-                            Name = propertyInfo.Name,
-                            Type = PatchCommandType.Add,
-                            Value = newVal.ToString()
-                        };
-                        documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
-                    }
-                }
-
-                return project;
             }
         }
 
@@ -255,11 +239,18 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public void DeleteProject(string projectSlug)
+        public void DeleteProject(string organizationSlug, string projectSlug)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
+                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
+
+                List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
+
+                foreach (var report in reports)
+                {
+                    session.Delete(report);
+                }
                 session.Delete(project);
                 session.SaveChanges();
             }

@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
+    // TODO: Make the class non-static once proper authorization / validation is implemented.
     public static class ErrorHandler
     {
         public static IEnumerable<Error> Errors
@@ -16,11 +17,12 @@ namespace Lisa.Breakpoint.WebApi.utils
             }
         }
 
-        public static string FatalError
+        // REVIEW: What's the purpose of FatalError? When would you use it?
+        public static IEnumerable<string> FatalErrors
         {
             get
             {
-                return _fatalError;
+                return _fatalErrors;
             }
         }
 
@@ -45,9 +47,8 @@ namespace Lisa.Breakpoint.WebApi.utils
         {
             bool fatalError = false;
             _errors = new List<Error>();
-            string fatalErrorMessage = string.Empty;
-            var modelStateErrors = modelState.Select(m => m).Where(x => x.Value.Errors.Count > 0);
-            foreach (var property in modelStateErrors)
+            
+            foreach (var property in modelState)
             {
                 foreach (var error in property.Value.Errors)
                 {
@@ -64,7 +65,7 @@ namespace Lisa.Breakpoint.WebApi.utils
                         else
                         {
                             fatalError = true;
-                            _fatalError = JsonConvert.SerializeObject(error.Exception.Message);
+                            _fatalErrors.Add(JsonConvert.SerializeObject(error.Exception.Message));
                         }
                     }
                 }
@@ -75,13 +76,15 @@ namespace Lisa.Breakpoint.WebApi.utils
         /// <summary>
         /// Clears the error list.
         /// </summary>
+        // TODO: Remove this once the class can be made non-static
         public static void Clear()
         {
             _errors = new List<Error>();
+            _fatalErrors = new List<string>();
         }
 
-        private static List<Error> _errors { get; set; }
+        private static List<Error> _errors;
 
-        private static string _fatalError { get; set; }
+        private static List<string> _fatalErrors = new List<string>();
     }
 }

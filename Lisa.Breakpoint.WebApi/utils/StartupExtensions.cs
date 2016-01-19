@@ -1,6 +1,4 @@
-﻿using Lisa.Breakpoint.TokenAuthentication;
-using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Builder;
+﻿using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Diagnostics;
 using Raven.Client;
 using Raven.Client.Document;
@@ -10,7 +8,7 @@ using Newtonsoft.Json;
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Lisa.Breakpoint.WebApi.utils
+namespace Lisa.Breakpoint.WebApi
 {
     public static class StartupExtensions
     {
