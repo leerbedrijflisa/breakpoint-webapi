@@ -43,6 +43,11 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            if (!organization.Members.Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
+            }
+
             return new HttpOkObjectResult(organization);
         }
 
@@ -55,6 +60,11 @@ namespace Lisa.Breakpoint.WebApi
             if (organization == null)
             {
                 return new HttpNotFoundResult();
+            }
+
+            if (!organization.Members.Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
             }
 
             var members = organization.Members;

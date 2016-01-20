@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -18,9 +19,14 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}")]
         public IActionResult GetAll(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
+            }
+
+            if (!_db.GetOrganization(organizationSlug).Members.Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
             }
 
             var projects = _db.GetAllProjects(organizationSlug);
@@ -40,6 +46,12 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            IList<Member> projectMembers = _db.GetProject(organizationSlug, projectSlug, _user.Name).Members;
+            if (!projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
+            }
+
             return new HttpOkObjectResult(project);
         }
 
@@ -49,6 +61,11 @@ namespace Lisa.Breakpoint.WebApi
             if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
+            }
+
+            if (!_db.GetOrganization(organizationSlug).Members.Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
             }
 
             if (!ModelState.IsValid)
@@ -87,6 +104,26 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            IList<Member> projectMembers = _db.GetProject(organizationSlug, projectSlug, _user.Name).Members;
+            if (!projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
+            }
+
+            foreach (Patch patch in patches)
+            {
+                if (patch.Field == "Members")
+                {
+                    var userRole = project.Members.AsQueryable().Where(m => m.Username == _user.Name).SingleOrDefault().Role;
+
+                    dynamic memberPatch = patch.Value;
+                    if (memberPatch.Role == "Manager")
+                    {
+                    }
+                }
+                System.Diagnostics.Debug.WriteLine(patch.Field);
+            }
+
             int projectNumber = int.Parse(project.Number);
             
             if (_db.Patch<Project>(projectNumber, patches))
@@ -121,9 +158,16 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{organizationSlug}/{projectSlug}")]
         public IActionResult Delete(string organizationSlug, string projectSlug)
         {
-            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            Project project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
+            if (project == null)
             {
                 return new HttpNotFoundResult();
+            }
+
+            IList<Member> projectMembers = project.Members;
+            if (!projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
+             {
+                return new HttpStatusCodeResult(403);
             }
 
             _db.DeleteProject(organizationSlug, projectSlug);

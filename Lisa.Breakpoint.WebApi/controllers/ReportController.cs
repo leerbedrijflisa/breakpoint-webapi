@@ -113,6 +113,12 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            IList<Member> projectMembers = _db.GetProject(organizationSlug, projectSlug, _user.Name).Members;
+            if (!projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
+            {
+                return new HttpStatusCodeResult(403);
+            }
+
             var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
 
             if (ErrorHandler.HasErrors)
@@ -148,8 +154,8 @@ namespace Lisa.Breakpoint.WebApi
             // Check if user is in project
             if (!checkProject.Members.Select(m => m.Username).Contains(_user.Name))
             {
-                // Not authenticated
-                return new HttpStatusCodeResult(401);
+                // Forbidden
+                return new HttpStatusCodeResult(403);
             }
 
             // If the status is attempted to be patched, run permission checks
@@ -208,9 +214,20 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (_db.GetReport(id) == null)
+            Report report = _db.GetReport(id);
+
+            if (report == null)
             {
                 return new HttpNotFoundResult();
+            }
+
+            Project checkProject = _db.GetProjectByReport(id, _user.Name);
+
+            // Check if user is in project
+            if (!checkProject.Members.Select(m => m.Username).Contains(_user.Name))
+            {
+                // Forbidden
+                return new HttpStatusCodeResult(403);
             }
 
             _db.DeleteReport(id);

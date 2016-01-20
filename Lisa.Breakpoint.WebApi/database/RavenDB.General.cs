@@ -53,7 +53,9 @@ namespace Lisa.Breakpoint.WebApi
                 var p = new PatchRequest()
                 {
                     Name = patch.Field,
-                    Value = patch.Value as string != null ? patch.Value as string : RavenJToken.FromObject(patch.Value)
+                    Value = patch.Value is string ? patch.Value as string : RavenJToken.Parse(patch.Value.ToString())
+
+
                 };
 
                 switch (patch.Action)
