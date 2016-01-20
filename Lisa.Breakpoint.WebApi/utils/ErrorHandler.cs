@@ -26,7 +26,10 @@ namespace Lisa.Breakpoint.WebApi.utils
 
         public static bool HasErrors
         {
-            get { return _errors.Any(); }
+            get
+            {
+                return _errors.Any();
+            }
         }
 
         public static void Add(Error item)

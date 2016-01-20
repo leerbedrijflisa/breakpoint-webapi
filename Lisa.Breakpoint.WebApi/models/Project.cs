@@ -10,7 +10,6 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string Name { get; set; }
         public string Organization  { get; set; }
         public string CurrentVersion { get; set; }
-        public IList<Group>  Groups   { get; set; }
         public IList<Member> Members  { get; set; }
     }
 
@@ -23,23 +22,6 @@ namespace Lisa.Breakpoint.WebApi.Models
         public string CurrentVersion { get; set; }
 
         [Required]
-        public IList<Group> Groups { get; set; }
-
-        [Required]
         public IList<Member> Members { get; set; }
-    }
-
-    public class Group
-    {
-        public Group()
-        {
-            Disabled = false;
-        }
-        [Required]
-        public int    Level { get; set; }
-
-        [Required]
-        public string Name  { get; set; }
-        public bool   Disabled { get; set; }
     }
 }

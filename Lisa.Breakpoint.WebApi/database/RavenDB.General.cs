@@ -1,11 +1,13 @@
-﻿﻿using Raven.Client;
+﻿using Raven.Client;
 using System.Text.RegularExpressions;
-﻿using Lisa.Breakpoint.WebApi.Models;
+using Lisa.Breakpoint.WebApi.Models;
 using Raven.Abstractions.Data;
 using Raven.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Lisa.Breakpoint.WebApi.database
 {
@@ -54,7 +56,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 var p = new PatchRequest()
                 {
                     Name = patch.Field,
-                    Value = patch.Value as string != null ? patch.Value as string : RavenJToken.FromObject(patch.Value)
+                    Value = patch.Value as string != null ? patch.Value as string : RavenJToken.Parse(JsonConvert.SerializeObject(patch.Value))
                 };
 
                 switch (patch.Action)

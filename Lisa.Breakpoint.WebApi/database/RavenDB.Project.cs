@@ -20,11 +20,10 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
+        public Project GetProject(string organizationSlug, string projectSlug, string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                var filter = false;
                 var project = session.Query<Project>()
                     .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
                     .SingleOrDefault();
@@ -34,53 +33,7 @@ namespace Lisa.Breakpoint.WebApi.database
                     return null;
                 }
 
-                // check the role (level) of the userName
-                // manager = 3; developer = 2; tester = 1;
-                // remove the roles you may not use
-                if (includeAllGroups == "false")
-                {
-                    foreach (Member member in project.Members)
-                    {
-                        if (member.Username == userName)
-                        {
-                            var role  = member.Role;
-                            if (!string.IsNullOrWhiteSpace(role))
-                            {
-                                int level = project.Groups
-                                    .Where(g => g.Name == role)
-                                    .Select(g => g.Level)
-                                    .SingleOrDefault();
-
-                                var groups = project.Groups.ToList();
-
-                                groups.RemoveAll(g => g.Level > level);
-
-                                project.Groups = groups;
-
-                                filter = true;
-                            }
-                        }
-                    }
-                    if (!filter)
-                    {
-                        project.Groups = null;
-                    }
-                }
-
                 return project;
-            }
-        }
-
-        public IList<Group> GetGroupsFromProject(string organization, string projectSlug)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                var groups = session.Query<Project>()
-                    .Where(p => p.Organization == organization && p.Slug == projectSlug)
-                    .Select(p => p.Groups)
-                    .SingleOrDefault();
-                
-                return groups;
             }
         }
 
@@ -90,7 +43,6 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 Name = project.Name,
                 CurrentVersion = project.CurrentVersion,
-                Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
                 Slug = _toUrlSlug(project.Name)
@@ -156,104 +108,104 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                Project project = session.Query<Project>()
-                    .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
-                    .SingleOrDefault();
+        //public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
+        //{
+        //    using (IDocumentSession session = documentStore.Initialize().OpenSession())
+        //    {
+        //        Project project = session.Query<Project>()
+        //            .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
+        //            .SingleOrDefault();
 
-                bool roleExist = false;
+        //        bool roleExist = false;
 
-                string sender      = patch.Sender;
-                string senderRole  = GetGroupFromUser(project.Organization, project.Slug, sender);
-                int    senderLevel = 0;
+        //        string sender      = patch.Sender;
+        //        string senderRole  = GetGroupFromUser(project.Organization, project.Slug, sender);
+        //        int    senderLevel = 0;
 
-                string type      = patch.Type;
-                string role      = patch.Role;
-                string member    = patch.Member;
-                int    roleLevel = 0;
+        //        string type      = patch.Type;
+        //        string role      = patch.Role;
+        //        string member    = patch.Member;
+        //        int    roleLevel = 0;
 
-                IList<Group> groups = GetGroupsFromProject(project.Organization, project.Slug);
+        //        IList<Group> groups = GetGroupsFromProject(project.Organization, project.Slug);
 
-                foreach (Group group in groups)
-                {
-                    if (group.Name == senderRole)
-                    {
-                        senderLevel = group.Level;
-                    }
-                    if (group.Name == role)
-                    {
-                        roleLevel = group.Level;
-                        roleExist = true;
-                    }
-                }
+        //        foreach (Group group in groups)
+        //        {
+        //            if (group.Name == senderRole)
+        //            {
+        //                senderLevel = group.Level;
+        //            }
+        //            if (group.Name == role)
+        //            {
+        //                roleLevel = group.Level;
+        //                roleExist = true;
+        //            }
+        //        }
 
-                if (!roleExist)
-                {
-                    return null;
-                }
+        //        if (!roleExist)
+        //        {
+        //            return null;
+        //        }
 
-                if (senderLevel >= roleLevel)
-                {
-                    IList<Member> members = project.Members;
-                    if (type == "add")
-                    {
-                        bool isInProject = false;
-                        Member newMember = new Member();
+        //        if (senderLevel >= roleLevel)
+        //        {
+        //            IList<Member> members = project.Members;
+        //            if (type == "add")
+        //            {
+        //                bool isInProject = false;
+        //                Member newMember = new Member();
 
-                        newMember.Username = member;
-                        newMember.Role = role;
+        //                newMember.Username = member;
+        //                newMember.Role = role;
 
-                        foreach (var m in members)
-                        {
-                            if (m.Username == newMember.Username)
-                            {
-                                isInProject = true;
-                                break;
-                            }
-                        }
+        //                foreach (var m in members)
+        //                {
+        //                    if (m.Username == newMember.Username)
+        //                    {
+        //                        isInProject = true;
+        //                        break;
+        //                    }
+        //                }
 
-                        if (!isInProject)
-                        {
-                            members.Add(newMember);
-                        }
-                    }
-                    else if (type == "remove")
-                    {
-                        Member newMember = new Member();
+        //                if (!isInProject)
+        //                {
+        //                    members.Add(newMember);
+        //                }
+        //            }
+        //            else if (type == "remove")
+        //            {
+        //                Member newMember = new Member();
 
-                        for (int i = 0; i < members.Count; i++)
-                        {
-                            if (members[i].Username == member)
-                            {
-                                members.RemoveAt(i);
-                                break;
-                            }
-                        }
-                    }
-                    else if (type == "update")
-                    {
-                        foreach (var m in members)
-                        {
-                            if (m.Username == member)
-                            {
-                                m.Role = role;
-                                break;
-                            }
-                        }
-                    }
-                    project.Members = members;
+        //                for (int i = 0; i < members.Count; i++)
+        //                {
+        //                    if (members[i].Username == member)
+        //                    {
+        //                        members.RemoveAt(i);
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            else if (type == "update")
+        //            {
+        //                foreach (var m in members)
+        //                {
+        //                    if (m.Username == member)
+        //                    {
+        //                        m.Role = role;
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            project.Members = members;
 
-                    session.SaveChanges();
-                    return project;
-                } else
-                {
-                    return null;
-                }
-            }
-        }
+        //            session.SaveChanges();
+        //            return project;
+        //        } else
+        //        {
+        //            return null;
+        //        }
+        //    }
+        //}
 
         public void DeleteProject(string projectSlug)
         {

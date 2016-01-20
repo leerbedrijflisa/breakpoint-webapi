@@ -80,7 +80,7 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(reports);
         }
 
-        [HttpGet("{id}", Name = "report")]
+        [HttpGet("{id}", Name = "SingleReport")]
         [Authorize("Bearer")]
         public IActionResult Get(int id)
         {
@@ -125,7 +125,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
+            string location = Url.RouteUrl("SingleReport", new { id = postedReport.Number }, Request.Scheme);
             return new CreatedResult(location, postedReport);
         }
             
