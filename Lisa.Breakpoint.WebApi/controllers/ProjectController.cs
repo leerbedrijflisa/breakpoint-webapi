@@ -142,11 +142,18 @@ namespace Lisa.Breakpoint.WebApi
                     {
                         ErrorHandler.Add(new Error(1208, new { field = "Role", value = "manager, developer, tester" }));
                     }
+
                     string userName = memberPatch.Username;
-                    User henk = _db.GetUser(userName);
-                    if (henk == null)
+                    User patchUser = _db.GetUser(userName);
+
+                    if (patchUser == null)
                     {
                         ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
+                    }
+
+                    if (!_db.GetOrganization(organizationSlug).Members.Contains(userName))
+                    {
+                        ErrorHandler.Add(new Error(1306, new { value = userName }));
                     }
                 }
             }
