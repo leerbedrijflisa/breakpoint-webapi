@@ -28,12 +28,12 @@ namespace Lisa.Breakpoint.WebApi.utils
 
                     if (filter.Value.Contains(","))
                     {
-                        var versions = filter.Value.Split(',');
+                        var values = filter.Value.Split(',');
                         
                         // Add the versions to filter on to the lambda expression
-                        foreach (var version in versions)
+                        foreach (var value in values)
                         {
-                            Expression<Func<Report, bool>> e = r => r.Version == version;
+                            Expression<Func<Report, bool>> e = r => r.Version == value;
                             expression = expression != null ? expression.Or(e) : e;
                         }
                     }
