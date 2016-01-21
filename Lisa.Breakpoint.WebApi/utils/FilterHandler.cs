@@ -11,7 +11,7 @@ namespace Lisa.Breakpoint.WebApi.utils
     {
         public static IQueryable<Report> ApplyFilters(this IQueryable<Report> reports, params Filter[] filters)
         {
-            Expression<Func<Report, bool>> filterPredicate = null;
+            Expression<Func<Report, bool>> filterExpression = null;
 
             foreach (Filter filter in filters)
             {
@@ -19,49 +19,50 @@ namespace Lisa.Breakpoint.WebApi.utils
                 {
                     // Add onto the existing expression, or create a new expression if the expression is not created yet
                     Expression<Func<Report, bool>> expression = r => r.Title.StartsWith(filter.Value);
-                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Version)
                 {
+                    // Create an expression which will contain the Version part of the filter.
+                    Expression<Func<Report, bool>> expression = null;
+
                     if (filter.Value.Contains(","))
                     {
-                        var versions = filter.Value.Split(',');
-
-                        // Create a new lambda expression which will contain all versions to allow
-                        Expression<Func<Report, bool>> versionpredicate = null;
-
+                        var values = filter.Value.Split(',');
+                        
                         // Add the versions to filter on to the lambda expression
-                        foreach (var version in versions)
+                        foreach (var value in values)
                         {
-                            Expression<Func<Report, bool>> expression = r => r.Version == version;
-                            versionpredicate = versionpredicate != null ? versionpredicate.Or(expression) : expression;
+                            Expression<Func<Report, bool>> e = r => r.Version == value;
+                            expression = expression != null ? expression.Or(e) : e;
                         }
-
-                        // Add the built version filter expression to the main expression
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(versionpredicate) : versionpredicate;
                     }
                     else
                     {
-                        Expression<Func<Report, bool>> expression = r => r.Version == filter.Value;
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.Version == filter.Value;
                     }
+
+                    // Add the built version filter expression to the main expression
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Priority)
-                {
+                {                    
+                    Expression<Func<Report, bool>> expression = null;
+
                     if (filter.Value.Contains(","))
                     {
-                        var priorities = filter.Value.Split(',');
-
-                        foreach (var priority in priorities)
+                        var values = filter.Value.Split(',');
+                        
+                        foreach (var value in values)
                         {
-                            if (!Priorities.List.Contains(priority))
+                            if (!Priorities.List.Contains(value))
                             {
                                 ErrorHandler.Add(Priorities.InvalidValueError);
                                 return reports;
                             }
 
-                            Expression<Func<Report, bool>> expression = r => r.Priority == priority;
-                            filterPredicate = filterPredicate != null ? filterPredicate.Or(expression) : expression;
+                            Expression<Func<Report, bool>> e = r => r.Priority == value;
+                            expression = expression != null ? expression.Or(e) : e;
                         }
                     }
                     else
@@ -72,29 +73,30 @@ namespace Lisa.Breakpoint.WebApi.utils
                             return reports;
                         }
 
-                        Expression<Func<Report, bool>> expression = r => r.Priority == filter.Value;
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.Priority == filter.Value;
                     }
+
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Status)
                 {
+                    Expression<Func<Report, bool>> expression = null;
+
                     if (filter.Value.Contains(","))
                     {
                         var values = filter.Value.Split(',');
-                        Expression<Func<Report, bool>> statuspredicate = null;
+
                         foreach (var value in values)
                         {
-                            if (!Statuses.List.Contains(value))
+                            if (!Statuses.List.Contains(filter.Value))
                             {
                                 ErrorHandler.Add(Statuses.InvalidValueError);
                                 return reports;
                             }
 
-                            Expression<Func<Report, bool>> expression = r => r.Status == value;
-                            statuspredicate = statuspredicate != null ? statuspredicate.Or(expression) : expression;
+                            Expression<Func<Report, bool>> e = r => r.Status == value;
+                            expression = expression != null ? expression.Or(e) : e;
                         }
-
-                        filterPredicate = filterPredicate != null ? filterPredicate.Or(statuspredicate) : statuspredicate;
                     }
                     else
                     {
@@ -104,48 +106,63 @@ namespace Lisa.Breakpoint.WebApi.utils
                             return reports;
                         }
 
-                        Expression<Func<Report, bool>> expression = r => r.Status == filter.Value;
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.Status == filter.Value;
                     }
+
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.AssignedTo)
                 {
+                    Expression<Func<Report, bool>> expression = null;
+
                     // Filter to all reports that are assigned to a group
                     if (filter.Value == "group")
                     {
-                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Type == "group";
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.AssignedTo.Type == "group";
                     }
                     // Filter to all reports that are assigned to a person
                     else if (filter.Value == "member")
                     {
-                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Type == "person";
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.AssignedTo.Type == "person";
                     }
                     // Use multiple filter values
                     else if (filter.Value.Contains(','))
                     {
                         var values = filter.Value.Split(',');
-                        Expression<Func<Report, bool>> assigneepredicate = null;
 
                         foreach (var value in values)
                         {
-                            Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == value;
-                            assigneepredicate = assigneepredicate != null ? assigneepredicate.Or(expression) : expression;
+                            Expression<Func<Report, bool>> e = r => r.AssignedTo.Value == value;
+                            expression = expression != null ? expression.Or(e) : e;
                         }
-
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(assigneepredicate) : assigneepredicate;
                     }
                     else
                     {
-                        Expression<Func<Report, bool>> expression = r => r.AssignedTo.Value == filter.Value;
-                        filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                        expression = r => r.AssignedTo.Value == filter.Value;
                     }
+
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Reporter)
                 {
-                    Expression<Func<Report, bool>> expression = r => r.Reporter == filter.Value;
-                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    Expression<Func<Report, bool>> expression = null;
+
+                    if (filter.Value.Contains(","))
+                    {
+                        var values = filter.Value.Split(',');
+                        
+                        foreach (var value in values)
+                        {
+                            Expression<Func<Report, bool>> e = r => r.Reporter == value;
+                            expression = expression != null ? expression.Or(e) : e;
+                        }
+                    }
+                    else
+                    {
+                        expression = r => r.Reporter == filter.Value;
+                    }
+
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
                 else if (filter.Type == FilterTypes.Reported)
                 {
@@ -160,12 +177,12 @@ namespace Lisa.Breakpoint.WebApi.utils
 
                     // Add filter to predicate
                     Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
-                    filterPredicate = filterPredicate != null ? filterPredicate.And(expression) : expression;
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
             }
 
             // Apply filters
-            reports = reports.Where(filterPredicate);
+            reports = reports.Where(filterExpression);
 
             return reports;
         }
