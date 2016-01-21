@@ -17,32 +17,6 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public IList<Group> GetAllGroups()
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                return session.Query<Group>().ToList();
-            }
-        }
-
-        public Group PostGroup(Group group)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                if (!session.Query<Group>().Where(g => g.Name == group.Name).Any())
-                {
-                    session.Store(group);
-                    session.SaveChanges();
-
-                    return group;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
         public User GetUser(string userName)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())

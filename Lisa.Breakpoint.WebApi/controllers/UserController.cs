@@ -14,8 +14,8 @@ namespace Lisa.Breakpoint.WebApi.controllers
             _db = db;
         }
 
-        [HttpGet("", Name = "users")]
-        public IActionResult Get()
+        [HttpGet]
+        public IActionResult GetAll()
         {
             var users = _db.GetAllUsers();
 
@@ -67,40 +67,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
             }
 
             return new DuplicateEntityResult();
-        }
-
-        [HttpGet("groups", Name = "groups")]
-        public IActionResult GetGroups()
-        {
-            var groups = _db.GetAllGroups();
-
-            if (groups == null)
-            {
-                return new HttpNotFoundResult();
-            }
-
-            return new HttpOkObjectResult(groups);
-        }
-
-        [HttpPost("groups")]
-        public IActionResult PostGroup([FromBody] Group group)
-        {
-            if (group == null)
-            {
-                return new BadRequestResult();
-            }
-
-            var postedGroup = _db.PostGroup(group);
-
-            if (postedGroup != null)
-            {
-                string location = Url.RouteUrl("groups", new { }, Request.Scheme);
-                return new CreatedResult(location, postedGroup);
-            }
-            else
-            {
-                return new DuplicateEntityResult();
-            }
         }
 
         private readonly RavenDB _db;
