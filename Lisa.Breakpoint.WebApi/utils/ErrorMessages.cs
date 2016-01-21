@@ -72,6 +72,9 @@ namespace Lisa.Breakpoint.WebApi
                 case 1306:
                     message = string.Format("The specified user {0} is not a member of this organization.", obj.value);
                     break;
+                case 1307:
+                    message = string.Format("The {0} functionality of {1} is not supported as of yet.", obj.field, obj.value);
+                    break;
             }
             return message;
         }

@@ -115,13 +115,45 @@ namespace Lisa.Breakpoint.WebApi
                 if (patch.Field == "Members")
                 {
                     var userRole = project.Members.AsQueryable().Where(m => m.Username == _user.Name).SingleOrDefault().Role;
-
                     dynamic memberPatch = patch.Value;
-                    if (memberPatch.Role == "Manager")
+                    string memberRole = memberPatch.Role;
+
+                    if (projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
                     {
+                        if (patch.Action == "add")
+                        {
+                            ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
+                        }
+                        if (patch.Action == "replace")
+                        {
+                            ErrorHandler.Add(new Error(1307, new { field = "Member patch", value = "replace" }));
+                        }
+                    }
+
+                    if (ProjectGroups.List.Contains(memberRole))
+                    {
+                        var projectlist = ProjectGroups.List.ToList();
+                        if (projectlist.IndexOf(userRole) > projectlist.IndexOf(memberRole))
+                        {
+                            return new HttpStatusCodeResult(403);
+                        }
+                    }
+                    else
+                    {
+                        ErrorHandler.Add(new Error(1208, new { field = "Role", value = "manager, developer, tester" }));
+                    }
+                    string userName = memberPatch.Username;
+                    User henk = _db.GetUser(userName);
+                    if (henk == null)
+                    {
+                        ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
                     }
                 }
-                System.Diagnostics.Debug.WriteLine(patch.Field);
+            }
+
+            if (ErrorHandler.HasErrors)
+            {
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
             int projectNumber = int.Parse(project.Number);

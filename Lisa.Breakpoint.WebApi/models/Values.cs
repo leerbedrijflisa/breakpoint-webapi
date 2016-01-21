@@ -27,12 +27,20 @@ namespace Lisa.Breakpoint.WebApi
         public static readonly IEnumerable<string> List = new string[] { Open, Fixed, WontFix, WontFixApproved, Closed };
     }
 
-    public static class Groups
+    public static class ProjectGroups
     {
         public const string Developers = "developer";
         public const string Testers = "tester";
         public const string Managers = "manager";
 
         public static readonly IEnumerable<string> List = new[] { Managers, Developers, Testers };
+    }
+
+    public static class OrganizationGroups
+    {
+        public const string Managers = "manager";
+        public const string Member = "member";
+
+        public static readonly IEnumerable<string> List = new[] { Managers, Member };
     }
 }
