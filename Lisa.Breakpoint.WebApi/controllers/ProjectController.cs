@@ -150,8 +150,7 @@ namespace Lisa.Breakpoint.WebApi
                     {
                         ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
                     }
-
-                    if (!_db.GetOrganization(organizationSlug).Members.Contains(userName))
+                    else if (!_db.GetOrganization(organizationSlug).Members.Contains(userName))
                     {
                         ErrorHandler.Add(new Error(1306, new { value = userName }));
                     }
