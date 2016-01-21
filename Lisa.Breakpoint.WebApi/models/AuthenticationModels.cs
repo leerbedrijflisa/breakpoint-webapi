@@ -19,8 +19,8 @@ namespace Lisa.Breakpoint.TokenAuthentication
 
     public class TokenResponse
     {
-        public string user { get; set; }
-        public string token { get; set; }
-        public DateTime? tokenExpires { get; set; }
+        public string User { get; set; }
+        public string Token { get; set; }
+        public DateTime? TokenExpires { get; set; }
     }
 }

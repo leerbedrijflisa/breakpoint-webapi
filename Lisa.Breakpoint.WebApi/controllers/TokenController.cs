@@ -53,9 +53,9 @@ namespace Lisa.Breakpoint.WebApi.controllers
             }
             var tokenResponse = new TokenResponse
             {
-                user = username,
-                token = token,
-                tokenExpires = tokenExpires
+                User = username,
+                Token = token,
+                TokenExpires = tokenExpires
             };
 
             return new HttpOkObjectResult(tokenResponse);
@@ -84,9 +84,9 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
             var tokenResponse = new TokenResponse
             {
-                user = req.username,
-                token = token,
-                tokenExpires = expires
+                User = req.username,
+                Token = token,
+                TokenExpires = expires
             };
 
             return new HttpOkObjectResult(tokenResponse);
@@ -107,7 +107,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
             var claims = new List<Claim>();
             claims.Add(new Claim(ClaimTypes.Name, user.FullName, ClaimValueTypes.String));
 
-            var identity = new ClaimsIdentity(new GenericIdentity(user.Username, "TokenAuth"), claims);
+            var identity = new ClaimsIdentity(new GenericIdentity(user.UserName, "TokenAuth"), claims);
 
             var securityToken = handler.CreateToken(
                 audience: tokenOptions.Audience,

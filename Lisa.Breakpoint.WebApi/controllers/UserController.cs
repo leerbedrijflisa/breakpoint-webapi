@@ -27,6 +27,19 @@ namespace Lisa.Breakpoint.WebApi.controllers
             return new HttpOkObjectResult(users);
         }
 
+        [HttpGet("{userName}", Name = "SingleUser")]
+        public IActionResult Get(string userName)
+        {
+            var user = _db.GetUser(userName);
+
+            if (user == null)
+            {
+                return new HttpNotFoundResult();
+            }
+
+            return new HttpOkObjectResult(user);
+        }
+
         [HttpGet("{organizationslug}/{projectslug}/{userName}")]
         public IActionResult GetGroupFromUser(string organizationSlug, string projectSlug, string userName)
         {
@@ -62,7 +75,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
             if (postedUser != null)
             {
-                string location = Url.RouteUrl("users", new { }, Request.Scheme);
+                string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
                 return new CreatedResult(location, postedUser);
             }
 

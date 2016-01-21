@@ -22,7 +22,7 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<User>()
-                    .Where(u => u.Username == userName)
+                    .Where(u => u.UserName == userName)
                     .SingleOrDefault();
             }
         }
@@ -32,13 +32,13 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 var project = session.Query<Project>()
-                    .Where(p => p.Organization == organization && p.Slug == projectslug && p.Members.Any(m => m.Username == userName))
+                    .Where(p => p.Organization == organization && p.Slug == projectslug && p.Members.Any(m => m.UserName == userName))
                     .SingleOrDefault();
 
                 if (project != null)
                 {
                     return project.Members
-                        .Where(m => m.Username == userName)
+                        .Where(m => m.UserName == userName)
                         .SingleOrDefault().Role;
                 }
                 else
@@ -52,7 +52,7 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                return session.Query<User>().Any(u => u.Username.Equals(userName));
+                return session.Query<User>().Any(u => u.UserName.Equals(userName));
             }
         }
 
@@ -60,13 +60,13 @@ namespace Lisa.Breakpoint.WebApi.database
         {
             var userEntity = new User()
             {
-                Username = user.Username,
+                UserName = user.UserName,
                 FullName = user.FullName
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                if (!session.Query<User>().Where(u => u.Username == userEntity.Username).Any())
+                if (!session.Query<User>().Where(u => u.UserName == userEntity.UserName).Any())
                 {
                     session.Store(userEntity);
                     session.SaveChanges();

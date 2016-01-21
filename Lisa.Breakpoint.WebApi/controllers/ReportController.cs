@@ -154,7 +154,7 @@ namespace Lisa.Breakpoint.WebApi
             Project checkProject = _db.GetProjectByReport(id, _user.Name);
 
             // Check if user is in project
-            if (!checkProject.Members.Select(m => m.Username).Contains(_user.Name))
+            if (!checkProject.Members.Select(m => m.UserName).Contains(_user.Name))
             {
                 // Not authenticated
                 return new HttpStatusCodeResult(401);
@@ -171,7 +171,7 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 // If the status is patching to Won't Fix (approved), require the user to be a project manager
-                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.Username.Equals(_user.Name)).Role.Equals("manager"))
+                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.UserName.Equals(_user.Name)).Role.Equals("manager"))
                 {
                     // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                     return new HttpStatusCodeResult(422);
@@ -182,13 +182,13 @@ namespace Lisa.Breakpoint.WebApi
                 // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
                 if (statusPatch.Value.ToString() == Statuses.Closed)
                 {
-                    var member = checkProject.Members.Single(m => m.Username.Equals(_user.Name));
+                    var member = checkProject.Members.Single(m => m.UserName.Equals(_user.Name));
 
                     checkProject.Members
-                            .Single(m => m.Username.Equals(_user.Name))
+                            .Single(m => m.UserName.Equals(_user.Name))
                             .Role.Equals("developer");
 
-                    if (!report.Reporter.Equals(member.Username))
+                    if (!report.Reporter.Equals(member.UserName))
                     {
                         // Not authenticated
                         return new HttpStatusCodeResult(401);

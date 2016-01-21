@@ -50,7 +50,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 // Filter organization members by checking if the project contains the member
                 var x = members
                     .Where(name => !projectMembers
-                        .Select(pm => pm.Username)
+                        .Select(pm => pm.UserName)
                         .Contains(name));
 
                 return x.ToList();
@@ -70,7 +70,7 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 foreach(var user in organization.Members)
                 {
-                    if (!session.Query<User>().Any(u => u.Username == user))
+                    if (!session.Query<User>().Any(u => u.UserName == user))
                     {
                         ErrorHandler.Add(new Error(1305, new { value = user }));
                     }

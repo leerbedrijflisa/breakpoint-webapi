@@ -15,7 +15,7 @@ namespace Lisa.Breakpoint.WebApi.database
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Members.Any(m => m.Username == userName) && p.Organization == organizationName)
+                    .Where(p => p.Members.Any(m => m.UserName == userName) && p.Organization == organizationName)
                     .ToList();
             }
         }
@@ -61,9 +61,9 @@ namespace Lisa.Breakpoint.WebApi.database
                 // Check if all project members are part of the organization
                 foreach (var user in projectEntity.Members)
                 {
-                    if (!organizationMembers.Any(m => m == user.Username))
+                    if (!organizationMembers.Any(m => m == user.UserName))
                     {
-                        ErrorHandler.Add(new Error(1305, new { value = user.Username }));
+                        ErrorHandler.Add(new Error(1305, new { value = user.UserName }));
                     }
                 }
 
