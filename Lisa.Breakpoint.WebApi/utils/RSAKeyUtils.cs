@@ -4,8 +4,9 @@ using System.Security.Cryptography;
 using Newtonsoft.Json;
 using System.IdentityModel.Tokens;
 
-namespace Lisa.Breakpoint.WebApi.TokenAuthentication
+namespace Lisa.Breakpoint.WebApi
 {
+    // https://github.com/mrsheepuk/ASPNETSelfCreatedTokenAuthExample
     public class RSAKeyUtils
     {
         public static RSAParameters GetRandomKey()

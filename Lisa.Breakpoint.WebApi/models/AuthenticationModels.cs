@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens;
 
-namespace Lisa.Breakpoint.TokenAuthentication
+namespace Lisa.Breakpoint
 {
     public class TokenAuthOptions
     {

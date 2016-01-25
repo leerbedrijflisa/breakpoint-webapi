@@ -2,10 +2,9 @@
 using System.Linq;
 using Raven.Abstractions.Data;
 using Raven.Client;
-using Lisa.Breakpoint.WebApi.Models;
 using Raven.Json.Linq;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {

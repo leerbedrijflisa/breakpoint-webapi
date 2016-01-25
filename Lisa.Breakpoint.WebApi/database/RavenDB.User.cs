@@ -1,11 +1,10 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {

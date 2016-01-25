@@ -1,7 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNet.Mvc;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi.controllers
@@ -18,11 +15,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
         public IActionResult GetAll()
         {
             var users = _db.GetAllUsers();
-
-            if (users == null)
-            {
-                return new HttpNotFoundResult();
-            }
 
             return new HttpOkObjectResult(users);
         }
@@ -56,19 +48,19 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
+            if (user == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-            }
-
-            if (user == null)
-            {
-                return new BadRequestResult();
             }
 
             var postedUser = _db.PostUser(user);
@@ -78,11 +70,11 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
                 return new CreatedResult(location, postedUser);
             }
-
-            return new DuplicateEntityResult();
+            
+            return new UnprocessableEntityResult();
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
-    }
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
+    };
 }
