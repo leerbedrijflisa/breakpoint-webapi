@@ -114,25 +114,28 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (patch.Field == "Members")
                 {
-                    var userRole = project.Members.AsQueryable().Where(m => m.Username == _user.Name).SingleOrDefault().Role;
+
+                    var userRole = project.Members.SingleOrDefault(m => m.Username == _user.Name).Role;
                     dynamic memberPatch = patch.Value;
                     string memberRole = memberPatch.Role;
+                    string memberUser = memberPatch.Username;
 
-                    if (projectMembers.AsQueryable().Select(m => m.Username).Contains(_user.Name))
+                    //Replace isn't supported by the patch function yet
+                    if (patch.Action == "replace")
                     {
-                        if (patch.Action == "add")
-                        {
-                            ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
-                        }
-                        if (patch.Action == "replace")
-                        {
-                            ErrorHandler.Add(new Error(1307, new { field = "Member patch", value = "replace" }));
-                        }
+                        ErrorHandler.Add(new Error(1307, new { field = "Member patch", value = "replace" }));
                     }
+                    //fix
+                    if (patch.Action == "add" && projectMembers.AsQueryable().Select(m => m.Username).Contains(memberUser))
+                    {
+                        ErrorHandler.Add(new Error(1305, new { value = memberUser }));
 
+                    }
+                    //check if the Role that is given is an allowed value
                     if (ProjectGroups.List.Contains(memberRole))
                     {
                         var projectlist = ProjectGroups.List.ToList();
+                        //check if the user is allowed to give another user the role that he gives
                         if (projectlist.IndexOf(userRole) > projectlist.IndexOf(memberRole))
                         {
                             return new HttpStatusCodeResult(403);
@@ -142,17 +145,16 @@ namespace Lisa.Breakpoint.WebApi
                     {
                         ErrorHandler.Add(new Error(1208, new { field = "Role", value = "manager, developer, tester" }));
                     }
-
-                    string userName = memberPatch.Username;
-                    User patchUser = _db.GetUser(userName);
+                    
+                    User patchUser = _db.GetUser(memberUser);
 
                     if (patchUser == null)
                     {
-                        ErrorHandler.Add(new Error(1305, new { value = memberPatch.Username }));
+                        ErrorHandler.Add(new Error(1305, new { value = memberUser }));
                     }
-                    else if (!_db.GetOrganization(organizationSlug).Members.Contains(userName))
+                    else if (!_db.GetOrganization(organizationSlug).Members.Contains(memberUser))
                     {
-                        ErrorHandler.Add(new Error(1306, new { value = userName }));
+                        ErrorHandler.Add(new Error(1306, new { value = memberUser }));
                     }
                 }
             }
