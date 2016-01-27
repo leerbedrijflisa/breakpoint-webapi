@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -83,6 +84,9 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost]
         public IActionResult Post([FromBody] OrganizationPost organization)
         {
+            OrganizationValidator validator = new OrganizationValidator(_db);
+            List<Error> errors = new List<Error>();
+
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
@@ -98,11 +102,13 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            errors.AddRange(validator.ValidatePost(organization));
+
             var postedOrganization = _db.PostOrganization(organization);
 
-            if (ErrorHandler.HasErrors)
+            if (errors.Any())
             {
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(errors);
             }
 
             string location = Url.RouteUrl("SingleOrganization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
@@ -110,8 +116,11 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPatch("{organizationSlug}")]
-        public IActionResult Patch(string organizationSlug, IEnumerable<Patch> patches)
+        public IActionResult Patch(string organizationSlug, [FromBody] IEnumerable<Patch> patches)
         {
+            OrganizationValidator validator = new OrganizationValidator(_db);
+            List<Error> errors = new List<Error>();
+
             if (patches == null)
             {
                 return new BadRequestResult();
@@ -124,16 +133,24 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            var resource = new ResourceParameters
+            {
+                OrganizationSlug = organizationSlug
+            };
+
+            errors.AddRange(validator.ValidatePatches(resource, patches));
+
             var organizationNumber = int.Parse(organization.Number);
 
             // Patch Report to database
-            if (_db.Patch<Organization>(organizationNumber, patches))
+            if (!errors.Any())
             {
+                _db.Patch<Organization>(organizationNumber, patches);
                 return new HttpOkObjectResult(_db.GetOrganization(organizationSlug));
             }
 
             // TODO: Add error message once Patch Authorization / Validation is finished.
-            return new HttpStatusCodeResult(422);
+            return new UnprocessableEntityObjectResult(errors);
         }
 
         [HttpDelete("{organizationSlug}")]

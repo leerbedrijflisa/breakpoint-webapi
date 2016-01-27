@@ -26,10 +26,10 @@ namespace Lisa.Breakpoint.WebApi
             // Fail if patch contains fields not in object that's getting patched
             var properties = typeof(T).GetProperties();
             if (patchFields.Where(f => !properties
-                    .Select(p => p.Name)
-                    .Contains(f)).Count() > 0)
+                    .Select(p => p.Name.ToLower())
+                    .Contains(f.ToLower())).Count() > 0)
             {
-                return false;
+                throw new ArgumentException();
             }
 
             // Patch to RavenDB, use type name + id as RavenDB id
