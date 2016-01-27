@@ -71,7 +71,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 Name = organization.Name,
                 Members = organization.Members,
-                Slug = ToUrlSlug(organization.Name)
+                Slug = ToUrlSlug(organization.Name),
+                Platforms = new string[] { }
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
