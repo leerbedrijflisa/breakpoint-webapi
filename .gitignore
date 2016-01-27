@@ -197,3 +197,4 @@ FakesAssemblies/
 
 Lisa.Breakpoint.WebApi/wwwroot/rsa.json
 Lisa.Breakpoint.WebApi/rsa.json
+Lisa.Breakpoint.WebApi/project.lock.json

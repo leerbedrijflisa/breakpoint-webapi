@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
-using Microsoft.Framework.DependencyInjection;
 using System.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
-using Lisa.Breakpoint.TokenAuthentication;
 using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Authentication.JwtBearer;
-using Lisa.Breakpoint.WebApi.utils;
-using Lisa.Breakpoint.WebApi.TokenAuthentication;
 using Newtonsoft.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -28,7 +25,7 @@ namespace Lisa.Breakpoint.WebApi
                 Issuer = TokenIssuer,
                 Audience = TokenAudience,
                 SigningCredentials = new SigningCredentials(key,
-                    SecurityAlgorithms.RsaSha256Signature, SecurityAlgorithms.Sha256Digest)
+                    SecurityAlgorithms.RsaSha256Signature)
             };
 
             // Save the token options into an instance so they're accessible to the 

@@ -1,6 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
@@ -9,16 +7,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
-        public IList<Report> GetAllReports(string organizationSlug, string projectSlug, string userName, IEnumerable<Filter> filters)
+        public IEnumerable<Report> GetAllReports(string organizationSlug, string projectSlug, IEnumerable<Filter> filters)
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return new List<Report>();
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
-                IList<Report> reports;
+                IEnumerable<Report> reports;
 
                 if (filters.Any())
                 {
@@ -72,7 +75,6 @@ namespace Lisa.Breakpoint.WebApi.database
                 ErrorHandler.Add(Statuses.InvalidValueError);
             }
 
-
             if (ErrorHandler.HasErrors)
             {
                 return null;
@@ -91,7 +93,7 @@ namespace Lisa.Breakpoint.WebApi.database
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms ?? new List<string>(),
+                Platforms = report.Platforms,
                 Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
 

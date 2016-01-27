@@ -43,7 +43,7 @@
 				"46da97a6-af36-76ec-a8ce-3d3b0898755f",
 				"3aba8edd-fb87-fc82-fc3c-d4d6d48b0443",
 				"7718bd2a-4d9d-f2b3-2776-a9dde1d65978",
-				"0e161875-e1c6-ff6a-ada4-d785d1b96b92",
+				"1c624aca-1b6d-e5d2-289a-e1614c10bb46",
 				"36ea14cd-35ff-6db4-3300-829798218db2",
 				"6c151a2b-3568-ed1a-c30f-a2df4845753e"
 			],
@@ -58,7 +58,7 @@
 				"94ee567d-20af-342f-db34-39ea60712f4a",
 				"6f154869-5744-cb23-9643-0ea853eb0f6b",
 				"02bd0b6f-7945-0002-ae39-bb4cc0fa0c8e",
-				"2ea0248a-cdbb-2403-8f11-2936cef45365"
+				"e1231e73-caf1-a1ee-174b-bf2b5e7eb6b7"
 			],
 			"owner": "241986",
 			"collectionId": "63af9379-af6a-d5ba-5629-166aefa922cd"
@@ -82,13 +82,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1451995478906,
+			"time": 1453379520411,
 			"name": "Project",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
 			"responses": [],
-			"rawModeData": "{\n    \"Name\": \"Windows\",\n    \"ProjectManager\": \"bill\",\n    \"Version\": [],\n    \"Browsers\": [],\n    \"Groups\": [\n        {\n            \"Level\": 0,\n            \"Name\": \"tester\",\n            \"Disabled\": false\n        },\n        {\n            \"Level\": 1,\n            \"Name\": \"developer\",\n            \"Disabled\": false\n        },\n        {\n            \"Level\": 2,\n            \"Name\": \"manager\",\n            \"Disabled\": false\n        }\n    ],\n    \"Members\": [\n        {\n            \"Role\": \"manager\",\n            \"UserName\": \"bill\",\n            \"FullName\": \"Bill Gates\"\n        }\n    ]\n}",
-			"folder": "6c93db68-7d5c-21e4-64de-ef205b80fdf7"
+			"rawModeData": "{\n    \"Name\": \"Windows\",\n    \"CurrentVersion\": \"1\",\n    \"Members\": [\n        {\n            \"Role\": \"manager\",\n            \"UserName\": \"bill\",\n            \"FullName\": \"Bill Gates\"\n        }\n    ]\n}"
 		},
 		{
 			"id": "0aab9958-285b-8013-3c76-c1f085c2a04d",
@@ -111,26 +110,6 @@
 			"folder": "a1234da3-abfa-a863-dbda-d0648aa1c7b5"
 		},
 		{
-			"id": "0e161875-e1c6-ff6a-ada4-d785d1b96b92",
-			"headers": "",
-			"url": "{{url}}/values/statuses",
-			"preRequestScript": "",
-			"pathVariables": {},
-			"method": "GET",
-			"data": [],
-			"dataMode": "params",
-			"version": 2,
-			"tests": "",
-			"currentHelper": "normal",
-			"helperAttributes": {},
-			"time": 1452155408591,
-			"name": "Available Statuses",
-			"description": "",
-			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
-			"responses": [],
-			"folder": "d9803a55-ea5c-c5fd-f862-795d9514d0c9"
-		},
-		{
 			"id": "1561e570-2806-3b4a-20ce-f1a62b28da74",
 			"headers": "Authorization: {{Authkey}}\n",
 			"url": "{{url}}/reports/microsoft/windows/?reporter=bill",
@@ -143,12 +122,30 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1451997037433,
+			"time": 1453454267993,
 			"name": "Filter Reporter",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
-			"responses": [],
-			"folder": "a1234da3-abfa-a863-dbda-d0648aa1c7b5"
+			"responses": []
+		},
+		{
+			"id": "1c624aca-1b6d-e5d2-289a-e1614c10bb46",
+			"headers": "",
+			"url": "{{url}}/values/statuses",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1453454349120,
+			"name": "Available report statuses",
+			"description": "",
+			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
+			"responses": []
 		},
 		{
 			"id": "1c983197-23f7-42f9-5e15-dd723015d7ed",
@@ -163,34 +160,12 @@
 			"tests": "var data = JSON.parse(responseBody);\n\nif (responseCode.code === 200)\n{\n    var AuthKey = \"Bearer \" + data.token;\n\n    postman.setEnvironmentVariable(\"Authkey\", AuthKey);\n    \n    tests[\"Token Set\"] = true;\n}\nelse\n{\n    tests[\"Token Set\"] = false;\n}",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1451932590352,
+			"time": 1453454256246,
 			"name": "Request user token",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
 			"responses": [],
-			"folder": "f26a08ba-de9d-40aa-f0af-2e2edc5f838b",
-			"isFromCollection": true,
 			"rawModeData": "{\n    \"username\": \"bill\"\n}"
-		},
-		{
-			"id": "2ea0248a-cdbb-2403-8f11-2936cef45365",
-			"headers": "Content-Type: application/json\nAuthorization: {{Authkey}}\n",
-			"url": "{{url}}/reports/microsoft/windows",
-			"preRequestScript": "",
-			"pathVariables": {},
-			"method": "POST",
-			"data": [],
-			"dataMode": "raw",
-			"version": 2,
-			"tests": "",
-			"currentHelper": "normal",
-			"helperAttributes": {},
-			"time": 1452168022056,
-			"name": "Report",
-			"description": "",
-			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
-			"responses": [],
-			"rawModeData": "{\n    \"Title\": \"Home page not found\",\n    \"StepByStep\": \"Open the home page\",\n    \"Expectation\": \"The home page opens\",\n    \"WhatHappened\": \"The 404 page opens\",\n    \"Reporter\": \"bill\",\n    \"Status\": \"open\",\n    \"Priority\": \"immediately\",\n    \"Version\": \"1\",\n    \"AssignedTo\": {\n        \"Type\": \"group\",\n        \"Value\": \"developer\"\n    },\n    \"Platforms\": [\n        \"AMD x64\",\n        \"Intel x86\",\n        \"Intel x64\"\n    ]\n}"
 		},
 		{
 			"id": "36ea14cd-35ff-6db4-3300-829798218db2",
@@ -365,13 +340,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1451932967199,
+			"time": 1453379506011,
 			"name": "Organization",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
 			"responses": [],
-			"rawModeData": "{\n    \"Name\": \"Microsoft\",\n    \"Members\": [\n            \"bill\"\n        ]\n}",
-			"folder": "6c93db68-7d5c-21e4-64de-ef205b80fdf7"
+			"rawModeData": "{\n    \"members\": [\n        \"bill\"\n    ],\n    \"name\": \"microsoft\"\n}"
 		},
 		{
 			"id": "7718bd2a-4d9d-f2b3-2776-a9dde1d65978",
@@ -386,12 +360,11 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1451932642891,
-			"name": "Available priorities",
+			"time": 1453454405284,
+			"name": "Available report priorities",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
-			"responses": [],
-			"folder": "d9803a55-ea5c-c5fd-f862-795d9514d0c9"
+			"responses": []
 		},
 		{
 			"id": "77345f07-6564-ba4f-096d-0e17867e76d7",
@@ -416,7 +389,7 @@
 		{
 			"id": "8625fdac-2739-c175-d515-ff08bcd8aef5",
 			"headers": "Authorization: {{Authkey}}\n",
-			"url": "{{url}}/reports/microsoft/windows/?status=open,fixed",
+			"url": "{{url}}/reports/microsoft/windows/?status=open,closed",
 			"preRequestScript": "",
 			"pathVariables": {},
 			"method": "GET",
@@ -426,7 +399,7 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1452167803784,
+			"time": 1452171300765,
 			"name": "Filter multiple Statuses",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
@@ -465,12 +438,12 @@
 			"tests": "",
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1452168009785,
+			"time": 1453379491306,
 			"name": "User",
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
 			"responses": [],
-			"rawModeData": "{\n    \"Username\": \"Bill\",\n    \"FullName\": \"Bill Gates\"\n}"
+			"rawModeData": "{\n    \"userName\": \"Bill\",\n    \"fullName\": \"Bill Gates\"\n}"
 		},
 		{
 			"id": "9544ee29-5177-63d9-36de-dd45c3f5d3bc",
@@ -530,6 +503,26 @@
 			"description": "",
 			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
 			"responses": []
+		},
+		{
+			"id": "e1231e73-caf1-a1ee-174b-bf2b5e7eb6b7",
+			"headers": "Content-Type: application/json\nAuthorization: {{Authkey}}\n",
+			"url": "{{url}}/reports/microsoft/windows",
+			"preRequestScript": "",
+			"pathVariables": {},
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1453454306627,
+			"name": "Report",
+			"description": "",
+			"collectionId": "b04d30a9-af1e-ec4c-14d0-3262e9711cd3",
+			"responses": [],
+			"rawModeData": "{\n    \"Title\": \"Home page not found\",\n    \"StepByStep\": \"Open the home page\",\n    \"Expectation\": \"The home page opens\",\n    \"WhatHappened\": \"The 404 page opens\",\n    \"Reporter\": \"bill\",\n    \"Status\": \"open\",\n    \"Priority\": \"immediately\",\n    \"Version\": \"1\",\n    \"AssignedTo\": {\n        \"Type\": \"group\",\n        \"Value\": \"developer\"\n    },\n    \"Platforms\": [\n        \"AMD x64\",\n        \"Intel x86\",\n        \"Intel x64\"\n    ]\n}"
 		}
 	]
 }

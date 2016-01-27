@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lisa.Breakpoint.WebApi.Models
+namespace Lisa.Breakpoint.WebApi
 {
     public static class Priorities
     {
@@ -27,7 +27,7 @@ namespace Lisa.Breakpoint.WebApi.Models
         public static readonly IEnumerable<string> List = new string[] { Open, Fixed, WontFix, WontFixApproved, Closed };
     }
 
-    public static class Groups
+    public static class ProjectGroups
     {
         public const string Developers = "developer";
         public const string Testers = "tester";
