@@ -1,30 +1,37 @@
-﻿using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Raven.Abstractions.Data;
+﻿using Raven.Abstractions.Data;
 using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Lisa.Breakpoint.WebApi.database
+namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB
     {
-        public IList<Project> GetAllProjects(string organizationName, string userName)
+        public IEnumerable<Project> GetAllProjects(string organizationName)
         {
+            if (string.IsNullOrWhiteSpace(organizationName))
+            {
+                return new List<Project>();
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
                 return session.Query<Project>()
-                    .Where(p => p.Members.Any(m => m.Username == userName) && p.Organization == organizationName)
+                    .Where(p => p.Organization == organizationName)
                     .ToList();
             }
         }
 
-        public Project GetProject(string organizationSlug, string projectSlug, string userName, string includeAllGroups = "false")
+        public Project GetProject(string organizationSlug, string projectSlug, string userName)
         {
+            if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            {
+                return null;
+            }
+
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                var filter = false;
                 var project = session.Query<Project>()
                     .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
                     .SingleOrDefault();
@@ -34,53 +41,7 @@ namespace Lisa.Breakpoint.WebApi.database
                     return null;
                 }
 
-                // check the role (level) of the userName
-                // manager = 3; developer = 2; tester = 1;
-                // remove the roles you may not use
-                if (includeAllGroups == "false")
-                {
-                    foreach (Member member in project.Members)
-                    {
-                        if (member.Username == userName)
-                        {
-                            var role  = member.Role;
-                            if (!string.IsNullOrWhiteSpace(role))
-                            {
-                                int level = project.Groups
-                                    .Where(g => g.Name == role)
-                                    .Select(g => g.Level)
-                                    .SingleOrDefault();
-
-                                var groups = project.Groups.ToList();
-
-                                groups.RemoveAll(g => g.Level > level);
-
-                                project.Groups = groups;
-
-                                filter = true;
-                            }
-                        }
-                    }
-                    if (!filter)
-                    {
-                        project.Groups = null;
-                    }
-                }
-
                 return project;
-            }
-        }
-
-        public IList<Group> GetGroupsFromProject(string organization, string projectSlug)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                var groups = session.Query<Project>()
-                    .Where(p => p.Organization == organization && p.Slug == projectSlug)
-                    .Select(p => p.Groups)
-                    .SingleOrDefault();
-                
-                return groups;
             }
         }
 
@@ -90,10 +51,9 @@ namespace Lisa.Breakpoint.WebApi.database
             {
                 Name = project.Name,
                 CurrentVersion = project.CurrentVersion,
-                Groups = project.Groups,
                 Members = project.Members,
                 Organization = organizationSlug,
-                Slug = _toUrlSlug(project.Name)
+                Slug = ToUrlSlug(project.Name)
             };
 
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
@@ -109,9 +69,9 @@ namespace Lisa.Breakpoint.WebApi.database
                 // Check if all project members are part of the organization
                 foreach (var user in projectEntity.Members)
                 {
-                    if (!organizationMembers.Any(m => m == user.Username))
+                    if (!organizationMembers.Any(m => m == user.UserName))
                     {
-                        ErrorHandler.Add(new Error(1305, new { value = user.Username }));
+                        ErrorHandler.Add(new Error(1305, new { value = user.UserName }));
                     }
                 }
 
@@ -156,110 +116,118 @@ namespace Lisa.Breakpoint.WebApi.database
             }
         }
 
-        public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
+        //public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
+        //{
+        //    using (IDocumentSession session = documentStore.Initialize().OpenSession())
+        //    {
+        //        Project project = session.Query<Project>()
+        //            .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
+        //            .SingleOrDefault();
+
+        //        bool roleExist = false;
+
+        //        string sender      = patch.Sender;
+        //        string senderRole  = GetGroupFromUser(project.Organization, project.Slug, sender);
+        //        int    senderLevel = 0;
+
+        //        string type      = patch.Type;
+        //        string role      = patch.Role;
+        //        string member    = patch.Member;
+        //        int    roleLevel = 0;
+
+        //        IList<Group> groups = GetGroupsFromProject(project.Organization, project.Slug);
+
+        //        foreach (Group group in groups)
+        //        {
+        //            if (group.Name == senderRole)
+        //            {
+        //                senderLevel = group.Level;
+        //            }
+        //            if (group.Name == role)
+        //            {
+        //                roleLevel = group.Level;
+        //                roleExist = true;
+        //            }
+        //        }
+
+        //        if (!roleExist)
+        //        {
+        //            return null;
+        //        }
+
+        //        if (senderLevel >= roleLevel)
+        //        {
+        //            IList<Member> members = project.Members;
+        //            if (type == "add")
+        //            {
+        //                bool isInProject = false;
+        //                Member newMember = new Member();
+
+        //                newMember.Username = member;
+        //                newMember.Role = role;
+
+        //                foreach (var m in members)
+        //                {
+        //                    if (m.Username == newMember.Username)
+        //                    {
+        //                        isInProject = true;
+        //                        break;
+        //                    }
+        //                }
+
+        //                if (!isInProject)
+        //                {
+        //                    members.Add(newMember);
+        //                }
+        //            }
+        //            else if (type == "remove")
+        //            {
+        //                Member newMember = new Member();
+
+        //                for (int i = 0; i < members.Count; i++)
+        //                {
+        //                    if (members[i].Username == member)
+        //                    {
+        //                        members.RemoveAt(i);
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            else if (type == "update")
+        //            {
+        //                foreach (var m in members)
+        //                {
+        //                    if (m.Username == member)
+        //                    {
+        //                        m.Role = role;
+        //                        break;
+        //                    }
+        //                }
+        //            }
+        //            project.Members = members;
+
+        //            session.SaveChanges();
+        //            return project;
+        //        } else
+        //        {
+        //            return null;
+        //        }
+        //    }
+        //}
+
+
+        public void DeleteProject(string organizationSlug, string projectSlug)
         {
             using (IDocumentSession session = documentStore.Initialize().OpenSession())
             {
-                Project project = session.Query<Project>()
-                    .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
-                    .SingleOrDefault();
+                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
 
-                bool roleExist = false;
+                List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
 
-                string sender      = patch.Sender;
-                string senderRole  = GetGroupFromUser(project.Organization, project.Slug, sender);
-                int    senderLevel = 0;
-
-                string type      = patch.Type;
-                string role      = patch.Role;
-                string member    = patch.Member;
-                int    roleLevel = 0;
-
-                IList<Group> groups = GetGroupsFromProject(project.Organization, project.Slug);
-
-                foreach (Group group in groups)
+                foreach (var report in reports)
                 {
-                    if (group.Name == senderRole)
-                    {
-                        senderLevel = group.Level;
-                    }
-                    if (group.Name == role)
-                    {
-                        roleLevel = group.Level;
-                        roleExist = true;
-                    }
+                    session.Delete(report);
                 }
-
-                if (!roleExist)
-                {
-                    return null;
-                }
-
-                if (senderLevel >= roleLevel)
-                {
-                    IList<Member> members = project.Members;
-                    if (type == "add")
-                    {
-                        bool isInProject = false;
-                        Member newMember = new Member();
-
-                        newMember.Username = member;
-                        newMember.Role = role;
-
-                        foreach (var m in members)
-                        {
-                            if (m.Username == newMember.Username)
-                            {
-                                isInProject = true;
-                                break;
-                            }
-                        }
-
-                        if (!isInProject)
-                        {
-                            members.Add(newMember);
-                        }
-                    }
-                    else if (type == "remove")
-                    {
-                        Member newMember = new Member();
-
-                        for (int i = 0; i < members.Count; i++)
-                        {
-                            if (members[i].Username == member)
-                            {
-                                members.RemoveAt(i);
-                                break;
-                            }
-                        }
-                    }
-                    else if (type == "update")
-                    {
-                        foreach (var m in members)
-                        {
-                            if (m.Username == member)
-                            {
-                                m.Role = role;
-                                break;
-                            }
-                        }
-                    }
-                    project.Members = members;
-
-                    session.SaveChanges();
-                    return project;
-                } else
-                {
-                    return null;
-                }
-            }
-        }
-
-        public void DeleteProject(string projectSlug)
-        {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug).SingleOrDefault();
                 session.Delete(project);
                 session.SaveChanges();
             }

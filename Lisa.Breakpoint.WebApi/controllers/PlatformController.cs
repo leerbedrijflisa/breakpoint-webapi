@@ -1,5 +1,4 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNet.Mvc;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -14,11 +13,6 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{organizationSlug}")]
         public IActionResult Get(string organizationSlug)
         {
-            if (string.IsNullOrWhiteSpace(organizationSlug))
-            {
-                return new BadRequestResult();
-            }
-
             var organization = _db.GetOrganization(organizationSlug);
 
             if (organization == null)

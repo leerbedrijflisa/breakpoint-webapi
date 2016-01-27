@@ -1,16 +1,15 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Microsoft.AspNet.Mvc;
-using Lisa.Breakpoint.WebApi.Models;
+﻿using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
-using Lisa.Breakpoint.WebApi.utils;
+using Microsoft.AspNet.Http;
 
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("reports")]
+    [Authorize("Bearer")]
     public class ReportController : Controller
     {
         public ReportController(RavenDB db)
@@ -20,24 +19,22 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/")]
-        [Authorize("Bearer")]
         public IActionResult Get(string organizationSlug, string projectSlug,
-            [FromQuery] string title = null, 
-            [FromQuery] string reporter = null, 
-            [FromQuery] string reported = null, 
-            [FromQuery] string status = null, 
-            [FromQuery] string priority = null, 
-            [FromQuery] string version = null,
-            [FromQuery] string assignedTo = null)
+            [FromQuery] string title, 
+            [FromQuery] string reporter, 
+            [FromQuery] string reported, 
+            [FromQuery] string status, 
+            [FromQuery] string priority, 
+            [FromQuery] string version,
+            [FromQuery] string assignedTo)
         {
-            _user = HttpContext.User.Identity;
 
             if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
             
-            IList<Report> reports;
+            IEnumerable<Report> reports;
             var filters = new List<Filter>();
 
             // Add all filters (yeah it's a lot)
@@ -70,7 +67,7 @@ namespace Lisa.Breakpoint.WebApi
                 filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
             
-            reports = _db.GetAllReports(organizationSlug, projectSlug, _user.Name, filters);
+            reports = _db.GetAllReports(organizationSlug, projectSlug, filters);
             
             if (ErrorHandler.HasErrors)
             {
@@ -80,8 +77,8 @@ namespace Lisa.Breakpoint.WebApi
             return new HttpOkObjectResult(reports);
         }
 
-        [HttpGet("{id}", Name = "report")]
-        [Authorize("Bearer")]
+
+        [HttpGet("{id}", Name = "SingleReport")]
         public IActionResult Get(int id)
         {
             Report report = _db.GetReport(id);
@@ -95,20 +92,19 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, string projectSlug, [FromBody] ReportPost report)
         {
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            if (report == null || string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
+            if (report == null)
             {
                 return new BadRequestResult();
             }
@@ -125,16 +121,13 @@ namespace Lisa.Breakpoint.WebApi
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            string location = Url.RouteUrl("report", new { id = postedReport.Number }, Request.Scheme);
+            string location = Url.RouteUrl("SingleReport", new { id = postedReport.Number }, Request.Scheme);
             return new CreatedResult(location, postedReport);
         }
             
         [HttpPatch("{id}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(int id, [FromBody] Patch[] patches)
         {
-            _user = HttpContext.User.Identity;
-
             // use statuscheck.ContainKey(report.Status) when it is put in the general value file
             if (patches == null)
             {
@@ -154,7 +147,7 @@ namespace Lisa.Breakpoint.WebApi
             Project checkProject = _db.GetProjectByReport(id, _user.Name);
 
             // Check if user is in project
-            if (!checkProject.Members.Select(m => m.Username).Contains(_user.Name))
+            if (!checkProject.Members.Select(m => m.UserName).Contains(_user.Name))
             {
                 // Not authenticated
                 return new HttpStatusCodeResult(401);
@@ -171,7 +164,7 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 // If the status is patching to Won't Fix (approved), require the user to be a project manager
-                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.Username.Equals(_user.Name)).Role.Equals("manager"))
+                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.UserName.Equals(_user.Name)).Role.Equals("manager"))
                 {
                     // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                     return new HttpStatusCodeResult(422);
@@ -182,13 +175,13 @@ namespace Lisa.Breakpoint.WebApi
                 // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
                 if (statusPatch.Value.ToString() == Statuses.Closed)
                 {
-                    var member = checkProject.Members.Single(m => m.Username.Equals(_user.Name));
+                    var member = checkProject.Members.Single(m => m.UserName.Equals(_user.Name));
 
                     checkProject.Members
-                            .Single(m => m.Username.Equals(_user.Name))
+                            .Single(m => m.UserName.Equals(_user.Name))
                             .Role.Equals("developer");
 
-                    if (!report.Reporter.Equals(member.Username))
+                    if (!report.Reporter.Equals(member.UserName))
                     {
                         // Not authenticated
                         return new HttpStatusCodeResult(401);
@@ -199,31 +192,21 @@ namespace Lisa.Breakpoint.WebApi
             // Do not patch the date it was reported
             if (patchFields.Contains("Reported"))
             {
-                patchList.Remove(patchList.Single(p => p.Field.Equals("Reported")));
+                ErrorHandler.Add(new Error(1205, new { field = "Reported" }));
+                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
             
             // Patch Report to database
-            try
+            if (_db.Patch<Report>(id, patches))
             {
-                // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
-                if (_db.Patch<Report>(id, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetReport(id));
-                }
-                else
-                {
-                    return new HttpStatusCodeResult(422);
-                }
+                return new HttpOkObjectResult(_db.GetReport(id));
             }
-            catch(Exception)
-            {
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
-            }
+
+            // TODO: Add error message once Patch Authorization / Validation is finished.
+            return new HttpStatusCodeResult(422);
         }
 
         [HttpDelete("{id}")]
-        [Authorize("Bearer")]
         public IActionResult Delete(int id)
         {
             if (_db.GetReport(id) == null)
@@ -237,6 +220,6 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;        
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

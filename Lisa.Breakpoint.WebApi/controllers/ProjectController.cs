@@ -1,15 +1,12 @@
-﻿using Lisa.Breakpoint.WebApi.database;
-using Lisa.Breakpoint.WebApi.Models;
-using Lisa.Breakpoint.WebApi.utils;
-using Microsoft.AspNet.Authorization;
+﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("projects")]
+    [Authorize("Bearer")]
     public class ProjectController : Controller
     {
         public ProjectController(RavenDB db)
@@ -19,37 +16,27 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpGet("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult GetAll(string organizationSlug)
         {
-            _user = HttpContext.User.Identity;
-
             if (_db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var projects = _db.GetAllProjects(organizationSlug, _user.Name);
-            if (projects == null)
-            {
-                return new HttpNotFoundResult();
-            }
+            var projects = _db.GetAllProjects(organizationSlug);
 
             return new HttpOkObjectResult(projects);
         }
 
-        [HttpGet("{organizationSlug}/{projectSlug}/{includeAllGroups?}", Name = "project")]
-        [Authorize("Bearer")]
-        public IActionResult Get(string organizationSlug, string projectSlug, string includeAllGroups = "false")
+        [HttpGet("{organizationSlug}/{projectSlug}", Name = "SingleProject")]
+        public IActionResult Get(string organizationSlug, string projectSlug)
         {
-            _user = HttpContext.User.Identity;
-
             if (string.IsNullOrWhiteSpace(organizationSlug) || string.IsNullOrWhiteSpace(projectSlug))
             {
                 return new HttpNotFoundResult();
             }
 
-            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name, includeAllGroups);
+            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
 
             if (project == null)
             {
@@ -60,27 +47,21 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         [HttpPost("{organizationSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
+            if (!_db.OrganizationExists(organizationSlug))
+            {
+                return new HttpNotFoundResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 if (ErrorHandler.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalError);
+                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
-            }
-
-            if (project == null || string.IsNullOrWhiteSpace(organizationSlug))
-            {
-                return new BadRequestResult();
-            }
-
-            if (!_db.OrganizationExists(organizationSlug))
-            {
-                return new HttpNotFoundResult();
             }
 
             var postedProject = _db.PostProject(project, organizationSlug);
@@ -90,12 +71,11 @@ namespace Lisa.Breakpoint.WebApi
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            string location = Url.RouteUrl("project", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
+            string location = Url.RouteUrl("SingleProject", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
             return new CreatedResult(location, postedProject);
         }
 
         [HttpPatch("{organizationSlug}/{projectSlug}")]
-        [Authorize("Bearer")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
             if (patches == null)
@@ -110,71 +90,30 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            int projectNumber;
-            if (!int.TryParse(project.Number, out projectNumber))
+            int projectNumber = int.Parse(project.Number);
+            
+            if (_db.Patch<Project>(projectNumber, patches))
             {
-                return new HttpStatusCodeResult(500);
+                return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
             }
-
-            // Patch Report to database
-            try
-            {
-                if (_db.Patch<Organization>(projectNumber, patches))
-                {
-                    return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
-                }
-                else
-                {
-                    return new HttpStatusCodeResult(422);
-                }
-            }
-            catch (Exception)
-            {
-                // Internal server error if RavenDB throws exceptions
-                return new HttpStatusCodeResult(500);
-            }
+            // TODO: Add error message once Patch Authorization / Validation is finished.
+            return new HttpStatusCodeResult(422);
         }
 
-        
-        [HttpPatch("{organizationSlug}/{projectSlug}/members")]
-        [Authorize("Bearer")]
-        public IActionResult PatchMembers(string organizationSlug, string projectSlug, [FromBody] TempMemberPatch patch)
+        [HttpDelete("{organizationSlug}/{projectSlug}")]
+        public IActionResult Delete(string organizationSlug, string projectSlug)
         {
-            if (organizationSlug == null || projectSlug == null || patch == null)
-            {
-                return new BadRequestResult();
-            }
-
-            var patchedProjectMembers = _db.PatchProjectMembers(organizationSlug, projectSlug, patch);
-
-            if (patchedProjectMembers != null)
-            {
-                string location = Url.RouteUrl("project", new { organizationSlug = organizationSlug, projectSlug = projectSlug, userName = patch.Sender }, Request.Scheme);
-                return new CreatedResult(location, patchedProjectMembers);
-            }
-            else
-            {
-                return new NoContentResult();
-            }
-        }
-
-        [HttpDelete("{organizationSlug}/{project}/")]
-        [Authorize("Bearer")]
-        public IActionResult Delete(string organizationSlug, string project)
-        {
-            _user = HttpContext.User.Identity;
-
-            if (_db.GetProject(organizationSlug, project, _user.Name) == null)
+            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteProject(project);
+            _db.DeleteProject(organizationSlug, projectSlug);
 
             return new HttpStatusCodeResult(204);
         }
 
         private readonly RavenDB _db;
-        private IIdentity _user;
+        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }
