@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Reflection;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -34,7 +35,8 @@ namespace Lisa.Breakpoint.WebApi
 
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
-            documentStore.DatabaseCommands.Patch(ravenId, ToRavenPatch(patches));
+            var patche = ToRavenPatch(patches, properties.Select(p => p.Name).ToArray());
+            documentStore.DatabaseCommands.Patch(ravenId, patche);
 
             return true;
         }
@@ -46,7 +48,7 @@ namespace Lisa.Breakpoint.WebApi
                 .ToLower();
         }
         
-        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
+        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches, string[] propertyNames)
         {
             var ravenPatches = new List<PatchRequest>();
 
@@ -54,8 +56,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 var p = new PatchRequest()
                 {
-                    Name = patch.Field,
-                    Value = patch.Value as string != null ? patch.Value as string : RavenJToken.Parse(JsonConvert.SerializeObject(patch.Value))
+                    Name = propertyNames.Single(n => n.ToLower() == patch.Field.ToLower()),
+                    Value = patch.Value is string ? patch.Value as string : RavenJToken.Parse(patch.Value.ToString())
                 };
 
                 switch (patch.Action)
