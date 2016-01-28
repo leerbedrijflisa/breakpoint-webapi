@@ -60,9 +60,19 @@ namespace Lisa.Breakpoint.WebApi
 
         private void OrganizationRetainsMembers(string value, dynamic parameters)
         {
-            if (Db.GetOrganization(ResourceParams.OrganizationSlug).Members.Count <= 1)
+            var memberCount = Db.GetOrganization(ResourceParams.OrganizationSlug).Members.Count;
+
+            if (memberCount <= 1)
             {
                 //TODO: Add error organization can't have less than 1 member
+                Errors.Add(new Error(1));
+            }
+
+            // Use a counter to keep track of the amount of managers that have been deleted along all patches. This to prevent one patch deleting all managers at once.
+            _membersDeleted++;
+            if (_membersDeleted >= memberCount)
+            {
+                //TODO: Add error project can't have less than 1 member.
                 Errors.Add(new Error(1));
             }
         }
@@ -99,5 +109,7 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
         #endregion
+
+        private int _membersDeleted = 0;
     }
 }

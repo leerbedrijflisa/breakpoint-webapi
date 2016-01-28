@@ -49,7 +49,6 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
             ProjectValidator validator = new ProjectValidator(Db);
-            List<Error> errors = new List<Error>();
 
             if (!Db.OrganizationExists(organizationSlug))
             {
@@ -58,12 +57,12 @@ namespace Lisa.Breakpoint.WebApi
 
             if (!ModelState.IsValid)
             {
-                if (ErrorHandler.FromModelState(ModelState))
+                if (ErrorList.FromModelState(ModelState))
                 {
-                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
+                    return new UnprocessableEntityObjectResult(ErrorList.FatalErrors);
                 }
 
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             var resource = new ResourceParameters
@@ -72,11 +71,11 @@ namespace Lisa.Breakpoint.WebApi
                 UserName = CurrentUser.Name
             };
 
-            errors.AddRange(validator.ValidatePost(resource, project));
+            ErrorList.FromValidator(validator.ValidatePost(resource, project));
 
-            if (errors.Any())
+            if (ErrorList.HasErrors)
             {
-                return new UnprocessableEntityObjectResult(errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             var postedProject = Db.PostProject(project, organizationSlug);
@@ -89,7 +88,6 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
             ProjectValidator validator = new ProjectValidator(Db);
-            List<Error> errors = new List<Error>();
 
             if (patches == null)
             {
@@ -110,13 +108,13 @@ namespace Lisa.Breakpoint.WebApi
                 UserName = CurrentUser.Name
             };
 
-            errors.AddRange(validator.ValidatePatches(resource, patches));
+            ErrorList.FromValidator(validator.ValidatePatches(resource, patches));
 
             int projectNumber = int.Parse(project.Number);
             
-            if (errors.Any())
+            if (ErrorList.HasErrors)
             {
-                return new UnprocessableEntityObjectResult(errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             Db.Patch<Project>(projectNumber, patches);

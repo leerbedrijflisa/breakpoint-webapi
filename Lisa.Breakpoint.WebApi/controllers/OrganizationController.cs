@@ -83,16 +83,15 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Post([FromBody] OrganizationPost organization)
         {
             OrganizationValidator validator = new OrganizationValidator(Db);
-            List<Error> errors = new List<Error>();
 
             if (!ModelState.IsValid)
             {
-                if (ErrorHandler.FromModelState(ModelState))
+                if (ErrorList.FromModelState(ModelState))
                 {
-                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
+                    return new UnprocessableEntityObjectResult(ErrorList.FatalErrors);
                 }
 
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             if (organization == null)
@@ -100,13 +99,13 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            errors.AddRange(validator.ValidatePost(new ResourceParameters(), organization));
+            ErrorList.FromValidator(validator.ValidatePost(new ResourceParameters(), organization));
 
             var postedOrganization = Db.PostOrganization(organization);
 
-            if (errors.Any())
+            if (ErrorList.HasErrors)
             {
-                return new UnprocessableEntityObjectResult(errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             string location = Url.RouteUrl("SingleOrganization", new { organizationSlug = postedOrganization.Slug }, Request.Scheme);
@@ -117,7 +116,6 @@ namespace Lisa.Breakpoint.WebApi
         public IActionResult Patch(string organizationSlug, [FromBody] IEnumerable<Patch> patches)
         {
             OrganizationValidator validator = new OrganizationValidator(Db);
-            List<Error> errors = new List<Error>();
 
             if (patches == null)
             {
@@ -136,14 +134,14 @@ namespace Lisa.Breakpoint.WebApi
                 OrganizationSlug = organizationSlug
             };
 
-            errors.AddRange(validator.ValidatePatches(resource, patches));
+            ErrorList.FromValidator(validator.ValidatePatches(resource, patches));
 
             var organizationNumber = int.Parse(organization.Number);
 
             // Patch Report to database
-            if (!errors.Any())
+            if (ErrorList.HasErrors)
             {
-                return new UnprocessableEntityObjectResult(errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             Db.Patch<Organization>(organizationNumber, patches);

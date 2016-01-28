@@ -33,6 +33,7 @@ namespace Lisa.Breakpoint.WebApi
         public override IEnumerable<Error> ValidatePost(ResourceParameters resource, ReportPost report)
         {
             Errors = new List<Error>();
+            ResourceParams = resource;
 
             Allow<string>("reporter", report.Reporter, new Action<string, object>[] { ReporterExists, ReporterIsInProject });
             Allow<string>("status", report.Status, new Action<string, object>[] { ValueIsStatus });
@@ -72,7 +73,7 @@ namespace Lisa.Breakpoint.WebApi
                 //TODO: Add error user not in project.
                 Errors.Add(new Error(1));
             }
-            else
+            else if (value.Type != "group" && value.Type != "person")
             {
                 //TODO: Add error type must be group / person.
                 Errors.Add(new Error(1));

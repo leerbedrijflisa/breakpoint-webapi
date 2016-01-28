@@ -8,7 +8,7 @@ namespace Lisa.Breakpoint.WebApi
         public BaseController(RavenDB db)
         {
             Db = db;
-            ErrorHandler.Clear();
+            ErrorList = new ErrorHandler();
         }
 
         // Dispose(bool disposing) executes in two distinct scenarios.
@@ -46,7 +46,7 @@ namespace Lisa.Breakpoint.WebApi
 
         protected RavenDB Db { get; private set; }
         protected IIdentity CurrentUser { get { return HttpContext.User.Identity; } }
-
+        protected ErrorHandler ErrorList { get; private set; }
         private bool _disposed = false;
     }
 }

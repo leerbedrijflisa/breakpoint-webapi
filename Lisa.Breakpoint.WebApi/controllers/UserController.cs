@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNet.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
@@ -48,6 +50,9 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
+            var errors = new List<Error>();
+            var validator = new UserValidator(Db);
+
             if (user == null)
             {
                 return new BadRequestResult();
@@ -55,23 +60,26 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
             if (!ModelState.IsValid)
             {
-                if (ErrorHandler.FromModelState(ModelState))
+                if (ErrorList.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
+                    return new BadRequestObjectResult(ErrorList.FatalErrors);
                 }
 
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
+            }
+
+            ErrorList.FromValidator(validator.ValidatePost(new ResourceParameters(), user));
+
+            if (ErrorList.HasErrors)
+            {
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
+                
             }
 
             var postedUser = Db.PostUser(user);
 
-            if (postedUser != null)
-            {
-                string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
-                return new CreatedResult(location, postedUser);
-            }
-            
-            return new UnprocessableEntityResult();
+            string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
+            return new CreatedResult(location, postedUser);
         }
     };
 }

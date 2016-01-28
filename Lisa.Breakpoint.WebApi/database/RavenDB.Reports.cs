@@ -25,11 +25,6 @@ namespace Lisa.Breakpoint.WebApi
                 rList = rList.ApplyFilters(filters.ToArray());
             }
 
-            if (ErrorHandler.HasErrors)
-            {
-                return null;
-            }
-
             // First, cast the ravenDB queryable to a regular list,
             // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
             reports = rList.ToList().AsQueryable()
@@ -48,31 +43,6 @@ namespace Lisa.Breakpoint.WebApi
 
         public Report PostReport(ReportPost report, string organization, string project)
         {
-            if (report.Platforms == null)
-            {
-                report.Platforms = new List<string>();
-            }
-
-            if (report.Platforms.Count == 0)
-            {
-                report.Platforms.Add("Not specified");
-            }
-
-            if (!Priorities.List.Contains(report.Priority))
-            {
-                ErrorHandler.Add(Priorities.InvalidValueError);
-            }
-
-            if (!Statuses.List.Contains(report.Status))
-            {
-                ErrorHandler.Add(Statuses.InvalidValueError);
-            }
-
-            if (ErrorHandler.HasErrors)
-            {
-                return null;
-            }
-
             var reportEntity = new Report()
             {
                 Title = report.Title,
@@ -86,7 +56,7 @@ namespace Lisa.Breakpoint.WebApi
                 Priority = report.Priority,
                 Version = report.Version,
                 AssignedTo = report.AssignedTo,
-                Platforms = report.Platforms,
+                Platforms = report.Platforms ?? new List<string>(),
                 Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
             

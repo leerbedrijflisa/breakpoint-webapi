@@ -31,8 +31,12 @@ namespace Lisa.Breakpoint.WebApi
 
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
-            var patche = ToRavenPatch(patches, properties.Select(p => p.Name).ToArray());
-            _documentStore.DatabaseCommands.Patch(ravenId, patche);
+            var ravenpatches = ToRavenPatch(patches, properties.Select(p => p.Name).ToArray());
+            _documentStore.DatabaseCommands.Patch(ravenId, ravenpatches);
+
+            // Renew session so it can access the modified data.
+            session.Dispose();
+            session = _documentStore.Initialize().OpenSession();
 
             return true;
         }
@@ -124,7 +128,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         private readonly IDocumentStore _documentStore;
-        private readonly IDocumentSession session;
+        private IDocumentSession session;
         private bool _disposed;
     }
 }

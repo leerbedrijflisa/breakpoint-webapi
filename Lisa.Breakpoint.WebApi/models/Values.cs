@@ -37,4 +37,22 @@ namespace Lisa.Breakpoint.WebApi
 
         public static readonly IEnumerable<string> List = new[] { Managers, Developers, Testers };
     }
+
+    public static class OrganizationRoles
+    {
+        public const string Manager = "manager";
+        public const string Member = "member";
+
+        public static Error InvalidValueError = new Error(1208, new { field = "role", value = string.Format("{0}, {1}", Manager, Member) });
+
+        public static readonly IEnumerable<string> List = new[] { Manager, Member };
+    }
+
+    public static class AssignmentTypes
+    {
+        public const string Group = "group";
+        public const string Person = "person";
+
+        public static readonly IEnumerable<string> List = new[] { Group, Person };
+    }
 }

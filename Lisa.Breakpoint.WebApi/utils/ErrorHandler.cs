@@ -6,10 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace Lisa.Breakpoint.WebApi
 {
-    // TODO: Make the class non-static once proper authorization / validation is implemented.
-    public static class ErrorHandler
+    public class ErrorHandler
     {
-        public static IEnumerable<Error> Errors
+        public ErrorHandler()
+        {
+            _errors = new List<Error>();
+        }
+
+
+        public IEnumerable<Error> Errors
         {
             get
             {
@@ -18,7 +23,7 @@ namespace Lisa.Breakpoint.WebApi
         }
 
         // REVIEW: What's the purpose of FatalError? When would you use it?
-        public static IEnumerable<string> FatalErrors
+        public IEnumerable<string> FatalErrors
         {
             get
             {
@@ -26,7 +31,7 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        public static bool HasErrors
+        public bool HasErrors
         {
             get
             {
@@ -34,16 +39,21 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        public static void Add(Error item)
+        public void Add(Error item)
         {
             _errors.Add(item);
+        }
+
+        public void FromValidator(IEnumerable<Error> errors)
+        {
+            _errors.AddRange(errors);
         }
 
         /// <summary>
         /// Gets and adds all modelstate errors to the error list. Fatal errors are saved in the FatalError property.
         /// </summary>
         /// <returns>True when a fatal error has occured, false otherwise.</returns>
-        public static bool FromModelState(ModelStateDictionary modelState)
+        public bool FromModelState(ModelStateDictionary modelState)
         {
             bool fatalError = false;
             _errors = new List<Error>();
@@ -73,18 +83,8 @@ namespace Lisa.Breakpoint.WebApi
             return (fatalError);
         }
 
-        /// <summary>
-        /// Clears the error list.
-        /// </summary>
-        // TODO: Remove this once the class can be made non-static
-        public static void Clear()
-        {
-            _errors = new List<Error>();
-            _fatalErrors = new List<string>();
-        }
+        private List<Error> _errors;
 
-        private static List<Error> _errors;
-
-        private static List<string> _fatalErrors = new List<string>();
+        private List<string> _fatalErrors = new List<string>();
     }
 }

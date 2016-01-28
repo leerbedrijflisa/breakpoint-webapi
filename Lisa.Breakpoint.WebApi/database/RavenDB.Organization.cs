@@ -1,5 +1,4 @@
 ﻿using Raven.Abstractions.Data;
-using Raven.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -64,24 +63,6 @@ namespace Lisa.Breakpoint.WebApi
                 Members = organization.Members,
                 Slug = ToUrlSlug(organization.Name)
             };
-            
-            foreach(var user in organization.Members)
-            {
-                if (!session.Query<User>().Any(u => u.UserName == user))
-                {
-                    ErrorHandler.Add(new Error(1305, new { value = user }));
-                }
-            }
-
-            if (session.Query<Organization>().Where(o => o.Slug == organizationEntity.Slug).Any())
-            {
-                ErrorHandler.Add(new Error(1102, new { type = "organization", value = "name" }));
-            }
-
-            if (ErrorHandler.HasErrors)
-            {
-                return null;
-            }
 
             session.Store(organizationEntity);
             string organizationId = session.Advanced.GetDocumentId(organizationEntity);
