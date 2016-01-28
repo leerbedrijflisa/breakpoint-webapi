@@ -10,13 +10,10 @@ namespace Lisa.Breakpoint.WebApi
 {
     public partial class RavenDB : IDisposable
     {
-        private readonly IDocumentStore documentStore;
-        private readonly IDocumentSession session;
-
         public RavenDB(IDocumentStore docStore)
         {
-            documentStore = docStore;
-            session = documentStore.Initialize().OpenSession();
+            _documentStore = docStore;
+            session = _documentStore.Initialize().OpenSession();
         }
 
         public bool Patch<T>(int id, IEnumerable<Patch> patches)
@@ -35,7 +32,7 @@ namespace Lisa.Breakpoint.WebApi
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
             var patche = ToRavenPatch(patches, properties.Select(p => p.Name).ToArray());
-            documentStore.DatabaseCommands.Patch(ravenId, patche);
+            _documentStore.DatabaseCommands.Patch(ravenId, patche);
 
             return true;
         }
@@ -126,6 +123,8 @@ namespace Lisa.Breakpoint.WebApi
             return ravenPatches.ToArray();
         }
 
+        private readonly IDocumentStore _documentStore;
+        private readonly IDocumentSession session;
         private bool _disposed;
     }
 }

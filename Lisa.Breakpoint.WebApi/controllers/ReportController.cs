@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
-using System;
 using System.Linq;
 using Microsoft.AspNet.Authorization;
 using System.Security.Principal;
@@ -10,12 +9,11 @@ namespace Lisa.Breakpoint.WebApi
 {
     [Route("reports")]
     [Authorize("Bearer")]
-    public class ReportController : Controller
+    public class ReportController : BaseController
     {
         public ReportController(RavenDB db)
+            :base (db)
         {
-            _db = db;
-            ErrorHandler.Clear();
         }
 
         [HttpGet("{organizationSlug}/{projectSlug}/")]
@@ -29,7 +27,7 @@ namespace Lisa.Breakpoint.WebApi
             [FromQuery] string assignedTo)
         {
 
-            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            if (Db.GetProject(organizationSlug, projectSlug, CurrentUser.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
@@ -67,7 +65,7 @@ namespace Lisa.Breakpoint.WebApi
                 filters.Add(new Filter(FilterTypes.AssignedTo, assignedTo));
             }
             
-            reports = _db.GetAllReports(organizationSlug, projectSlug, filters);
+            reports = Db.GetAllReports(organizationSlug, projectSlug, filters);
             
             if (ErrorHandler.HasErrors)
             {
@@ -81,7 +79,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet("{id}", Name = "SingleReport")]
         public IActionResult Get(int id)
         {
-            Report report = _db.GetReport(id);
+            Report report = Db.GetReport(id);
 
             if (report == null)
             {
@@ -109,12 +107,12 @@ namespace Lisa.Breakpoint.WebApi
                 return new BadRequestResult();
             }
 
-            if (!_db.ProjectExists(organizationSlug, projectSlug))
+            if (!Db.ProjectExists(organizationSlug, projectSlug))
             {
                 return new HttpNotFoundResult();
             }
 
-            var postedReport = _db.PostReport(report, organizationSlug, projectSlug);
+            var postedReport = Db.PostReport(report, organizationSlug, projectSlug);
 
             if (ErrorHandler.HasErrors)
             {
@@ -137,17 +135,17 @@ namespace Lisa.Breakpoint.WebApi
             var patchList = patches.Distinct().ToList();
             var patchFields = patchList.Select(p => p.Field);
             
-            Report report = _db.GetReport(id);
+            Report report = Db.GetReport(id);
 
             if (report == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            Project checkProject = _db.GetProjectByReport(id, _user.Name);
+            Project checkProject = Db.GetProjectByReport(id, CurrentUser.Name);
 
             // Check if user is in project
-            if (!checkProject.Members.Select(m => m.UserName).Contains(_user.Name))
+            if (!checkProject.Members.Select(m => m.UserName).Contains(CurrentUser.Name))
             {
                 // Not authenticated
                 return new HttpStatusCodeResult(401);
@@ -164,7 +162,7 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 // If the status is patching to Won't Fix (approved), require the user to be a project manager
-                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.UserName.Equals(_user.Name)).Role.Equals("manager"))
+                if (statusPatch.Value.ToString() == Statuses.WontFixApproved && !checkProject.Members.Single(m => m.UserName.Equals(CurrentUser.Name)).Role.Equals("manager"))
                 {
                     // 422 Unprocessable Entity : The request was well-formed but was unable to be followed due to semantic errors
                     return new HttpStatusCodeResult(422);
@@ -175,10 +173,10 @@ namespace Lisa.Breakpoint.WebApi
                 // It is already tested that the user is indeed part of the project, and if it's not a developer, it's implied he's either a manager or tester.
                 if (statusPatch.Value.ToString() == Statuses.Closed)
                 {
-                    var member = checkProject.Members.Single(m => m.UserName.Equals(_user.Name));
+                    var member = checkProject.Members.Single(m => m.UserName.Equals(CurrentUser.Name));
 
                     checkProject.Members
-                            .Single(m => m.UserName.Equals(_user.Name))
+                            .Single(m => m.UserName.Equals(CurrentUser.Name))
                             .Role.Equals("developer");
 
                     if (!report.Reporter.Equals(member.UserName))
@@ -197,9 +195,9 @@ namespace Lisa.Breakpoint.WebApi
             }
             
             // Patch Report to database
-            if (_db.Patch<Report>(id, patches))
+            if (Db.Patch<Report>(id, patches))
             {
-                return new HttpOkObjectResult(_db.GetReport(id));
+                return new HttpOkObjectResult(Db.GetReport(id));
             }
 
             // TODO: Add error message once Patch Authorization / Validation is finished.
@@ -209,17 +207,14 @@ namespace Lisa.Breakpoint.WebApi
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (_db.GetReport(id) == null)
+            if (Db.GetReport(id) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteReport(id);
+            Db.DeleteReport(id);
 
             return new HttpStatusCodeResult(204);
         }
-
-        private readonly RavenDB _db;
-        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

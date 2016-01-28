@@ -1,5 +1,4 @@
 ﻿using Raven.Abstractions.Data;
-using Raven.Client;
 using Raven.Client.Linq;
 using Raven.Json.Linq;
 using System;
@@ -18,39 +17,33 @@ namespace Lisa.Breakpoint.WebApi
                 return new List<Report>();
             }
 
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
+            IEnumerable<Report> reports;
+
+            if (filters.Any())
             {
-                IQueryable<Report> rList = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug );
-                IEnumerable<Report> reports;
-
-                if (filters.Any())
-                {
-                    rList = rList.ApplyFilters(filters.ToArray());
-                }
-
-                if (ErrorHandler.HasErrors)
-                {
-                    return null;
-                }
-
-                // First, cast the ravenDB queryable to a regular list,
-                // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
-                reports = rList.ToList().AsQueryable()
-                    .OrderBy(x => x, new ReportComparer())
-                    .ThenByDescending(r => r.Reported.Date)
-                    .ThenBy(r => r.Reported.TimeOfDay)
-                    .ToList();
-
-                return reports;
+                rList = rList.ApplyFilters(filters.ToArray());
             }
+
+            if (ErrorHandler.HasErrors)
+            {
+                return null;
+            }
+
+            // First, cast the ravenDB queryable to a regular list,
+            // so it can be reconverted into a queryable that supports custom comparers to order the dataset as desired
+            reports = rList.ToList().AsQueryable()
+                .OrderBy(x => x, new ReportComparer())
+                .ThenByDescending(r => r.Reported.Date)
+                .ThenBy(r => r.Reported.TimeOfDay)
+                .ToList();
+
+            return reports;
         }
 
         public Report GetReport(int id)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                return session.Load<Report>(id);
-            }
+            return session.Load<Report>(id);
         }
 
         public Report PostReport(ReportPost report, string organization, string project)
@@ -96,82 +89,73 @@ namespace Lisa.Breakpoint.WebApi
                 Platforms = report.Platforms,
                 Comments = new List<Comment>() // Add comments as new list so there's no null value in the database, even though comments aren't supported yet
             };
+            
+            session.Store(reportEntity);
 
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                session.Store(reportEntity);
+            string reportId = session.Advanced.GetDocumentId(reportEntity);
+            reportEntity.Number = reportId.Split('/').Last();
+            reportEntity.Reported = DateTime.Now;
 
-                string reportId = session.Advanced.GetDocumentId(reportEntity);
-                reportEntity.Number = reportId.Split('/').Last();
-                reportEntity.Reported = DateTime.Now;
+            AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
 
-                AddPlatforms(reportEntity.Organization, reportEntity.Platforms);
+            session.SaveChanges();
 
-                session.SaveChanges();
-
-                return reportEntity;
-            }
+            return reportEntity;
         }
 
         public Report PatchReport(int id, Report patchedReport)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            Report report = session.Load<Report>(id);
+
+            foreach (PropertyInfo propertyInfo in report.GetType().GetProperties())
             {
-                Report report = session.Load<Report>(id);
+                var newVal = patchedReport.GetType().GetProperty(propertyInfo.Name).GetValue(patchedReport, null);
 
-                foreach (PropertyInfo propertyInfo in report.GetType().GetProperties())
+                if (propertyInfo.Name != "Reported")
                 {
-                    var newVal = patchedReport.GetType().GetProperty(propertyInfo.Name).GetValue(patchedReport, null);
-
-                    if (propertyInfo.Name != "Reported")
+                    if (newVal != null)
                     {
-                        if (newVal != null)
+                        if (newVal is string)
                         {
-                            if (newVal is string)
+                            var patchRequest = new PatchRequest()
                             {
-                                var patchRequest = new PatchRequest()
-                                {
-                                    Name = propertyInfo.Name,
-                                    Type = PatchCommandType.Set,
-                                    Value = newVal.ToString()
-                                };
-                                documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
-                            }
-                            else if (newVal is Enum)
+                                Name = propertyInfo.Name,
+                                Type = PatchCommandType.Set,
+                                Value = newVal.ToString()
+                            };
+                            _documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
+                        }
+                        else if (newVal is Enum)
+                        {
+                            var patchRequest = new PatchRequest()
                             {
-                                var patchRequest = new PatchRequest()
-                                {
-                                    Name = propertyInfo.Name,
-                                    Type = PatchCommandType.Set,
-                                    Value = newVal.ToString()
-                                };
-                                documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
-                            }
-                            else
+                                Name = propertyInfo.Name,
+                                Type = PatchCommandType.Set,
+                                Value = newVal.ToString()
+                            };
+                            _documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
+                        }
+                        else
+                        {
+                            var patchRequest = new PatchRequest()
                             {
-                                var patchRequest = new PatchRequest()
-                                {
-                                    Name = propertyInfo.Name,
-                                    Type = PatchCommandType.Set,
-                                    Value = RavenJObject.FromObject((AssignedTo) newVal)
-                                };
-                                documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
-                            }
-                         }
-                    }
+                                Name = propertyInfo.Name,
+                                Type = PatchCommandType.Set,
+                                Value = RavenJObject.FromObject((AssignedTo) newVal)
+                            };
+                            _documentStore.DatabaseCommands.Patch("reports/" + id, new[] { patchRequest });
+                        }
+                        }
                 }
-                return session.Load<Report>(id);
             }
+            return session.Load<Report>(id);
         }
 
         public void DeleteReport(int id)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                Report report = session.Load<Report>(id);
-                session.Delete(report);
-                session.SaveChanges();
-            }
+            Report report = session.Load<Report>(id);
+            session.Delete(report);
+            session.SaveChanges();
         }
     }
 }

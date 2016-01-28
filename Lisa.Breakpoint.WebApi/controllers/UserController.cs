@@ -1,20 +1,20 @@
 ﻿using Microsoft.AspNet.Mvc;
-using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
     [Route("users")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         public UserController(RavenDB db)
+            : base (db)
         {
-            _db = db;
+
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var users = _db.GetAllUsers();
+            var users = Db.GetAllUsers();
 
             return new HttpOkObjectResult(users);
         }
@@ -22,7 +22,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("{userName}", Name = "SingleUser")]
         public IActionResult Get(string userName)
         {
-            var user = _db.GetUser(userName);
+            var user = Db.GetUser(userName);
 
             if (user == null)
             {
@@ -35,7 +35,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("{organizationslug}/{projectslug}/{userName}")]
         public IActionResult GetGroupFromUser(string organizationSlug, string projectSlug, string userName)
         {
-            var role = _db.GetGroupFromUser(organizationSlug, projectSlug, userName);
+            var role = Db.GetGroupFromUser(organizationSlug, projectSlug, userName);
 
             if (role == null)
             {
@@ -63,7 +63,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            var postedUser = _db.PostUser(user);
+            var postedUser = Db.PostUser(user);
 
             if (postedUser != null)
             {
@@ -73,8 +73,5 @@ namespace Lisa.Breakpoint.WebApi.controllers
             
             return new UnprocessableEntityResult();
         }
-
-        private readonly RavenDB _db;
-        private IIdentity _user { get { return HttpContext.User.Identity; } }
     };
 }
