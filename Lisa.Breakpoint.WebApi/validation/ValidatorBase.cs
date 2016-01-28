@@ -1,4 +1,5 @@
-﻿using Raven.Client;
+﻿using Newtonsoft.Json.Linq;
+using Raven.Client;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -16,7 +17,7 @@ namespace Lisa.Breakpoint.WebApi
 
         public abstract IEnumerable<Error> ValidatePatches(ResourceParameters resource, IEnumerable<Patch> patch);
 
-        public abstract IEnumerable<Error> ValidatePost(T post);
+        public abstract IEnumerable<Error> ValidatePost(ResourceParameters resource, T post);
 
         /// <summary>
         /// Validates a Patch object or add errors when the patch in not allowed to be processed.
@@ -66,7 +67,9 @@ namespace Lisa.Breakpoint.WebApi
                         {
                             try
                             {
-                                func((T)patch.Value, fieldParams);
+                                Type type = typeof(T);
+                                var value = JToken.FromObject(patch.Value);
+                                func((T)value.ToObject(type), fieldParams);
                             }
                             catch (Exception e)
                             {
@@ -93,7 +96,7 @@ namespace Lisa.Breakpoint.WebApi
                 return null;
             }
 
-            var fieldParams = new ExpandoObject() as IDictionary<string, object>;
+            var fieldParams = new Dictionary<string, object>();
             fieldParams.Add("Field", field);
             fieldParams.Add("Value", value.ToString());
 
@@ -140,9 +143,14 @@ namespace Lisa.Breakpoint.WebApi
 
     public class ResourceParameters
     {
-        public string OrganizationSlug { get; set; }
-        public string ProjectSlug { get; set; }
-        public string ReportId { get; set; }
-        public string UserName { get; set; }
+        public string OrganizationSlug { get { return _organizationSlug ?? ""; } set { _organizationSlug = value; } }
+        public string ProjectSlug { get { return _projectSlug ?? ""; } set { _projectSlug = value; } }
+        public string ReportId { get { return _reportId ?? ""; } set { _reportId = value; } }
+        public string UserName { get { return _userName ?? ""; } set { _userName = value; } }
+
+        private string _organizationSlug;
+        private string _projectSlug;
+        private string _reportId;
+        private string _userName;
     }
 }
