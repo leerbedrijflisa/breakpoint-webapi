@@ -29,15 +29,17 @@ namespace Lisa.Breakpoint.WebApi
             return Errors;
         }
 
-        public override IEnumerable<Error> ValidatePost(OrganizationPost organization)
+        public override IEnumerable<Error> ValidatePost(ResourceParameters resource, OrganizationPost organization)
         {
             Errors = new List<Error>();
 
-            Allow<string[]>("members", organization.Members.ToArray(), new Action<string[], object>[] { OrganizationHasMembers, MemberIsUser });
+            Allow<string>("name", organization.Name, new Action<string, object>[] { NameCanBeSlug });
+            Allow<string[]>("members", organization.Members.ToArray(), new Action<string[], object>[] { OrganizationHasMembers, MembersAreUser });
 
             return Errors;
         }
 
+        #region Patch validation
         private void MemberIsUser(string value, dynamic parameters)
         {
             if (!Db.UserExists(value))
@@ -64,7 +66,9 @@ namespace Lisa.Breakpoint.WebApi
                 Errors.Add(new Error(1));
             }
         }
+        #endregion
 
+        #region Post validation
         private void OrganizationHasMembers(string[] value, dynamic parameters)
         {
             if (value.Count() < 1)
@@ -74,7 +78,7 @@ namespace Lisa.Breakpoint.WebApi
             }
         }
 
-        private void MemberIsUser(string[] value, dynamic parameters)
+        private void MembersAreUser(string[] value, dynamic parameters)
         {
             foreach (var member in value)
             {
@@ -85,5 +89,15 @@ namespace Lisa.Breakpoint.WebApi
                 }
             }
         }
+
+        private void NameCanBeSlug(string value, dynamic parameters)
+        {
+            if (string.IsNullOrWhiteSpace(Db.ToUrlSlug(value)))
+            {
+                //TODO: Add error project name not valid
+                Errors.Add(new Error(1));
+            }
+        }
+        #endregion
     }
 }

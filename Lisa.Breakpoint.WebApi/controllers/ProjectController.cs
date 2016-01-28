@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Principal;
 
 namespace Lisa.Breakpoint.WebApi
@@ -49,6 +50,9 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost("{organizationSlug}")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
+            ProjectValidator validator = new ProjectValidator(_db);
+            List<Error> errors = new List<Error>();
+
             if (!_db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
@@ -64,12 +68,20 @@ namespace Lisa.Breakpoint.WebApi
                 return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
             }
 
-            var postedProject = _db.PostProject(project, organizationSlug);
-
-            if (ErrorHandler.HasErrors)
+            var resource = new ResourceParameters
             {
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                OrganizationSlug = organizationSlug,
+                UserName = _user.Name
+            };
+
+            errors.AddRange(validator.ValidatePost(resource, project));
+
+            if (errors.Any())
+            {
+                return new UnprocessableEntityObjectResult(errors);
             }
+
+            var postedProject = _db.PostProject(project, organizationSlug);
 
             string location = Url.RouteUrl("SingleProject", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
             return new CreatedResult(location, postedProject);
@@ -78,6 +90,9 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPatch("{organizationSlug}/{projectSlug}")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
+            ProjectValidator validator = new ProjectValidator(_db);
+            List<Error> errors = new List<Error>();
+
             if (patches == null)
             {
                 return new BadRequestResult();
@@ -90,14 +105,25 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
+            var resource = new ResourceParameters
+            {
+                OrganizationSlug = organizationSlug,
+                ProjectSlug = projectSlug,
+                UserName = _user.Name
+            };
+
+            errors.AddRange(validator.ValidatePatches(resource, patches));
+
             int projectNumber = int.Parse(project.Number);
             
-            if (_db.Patch<Project>(projectNumber, patches))
+            if (errors.Any())
             {
-                return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
+                return new UnprocessableEntityObjectResult(errors);
             }
-            // TODO: Add error message once Patch Authorization / Validation is finished.
-            return new HttpStatusCodeResult(422);
+
+            _db.Patch<Project>(projectNumber, patches);
+            return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
+
         }
 
         [HttpDelete("{organizationSlug}/{projectSlug}")]

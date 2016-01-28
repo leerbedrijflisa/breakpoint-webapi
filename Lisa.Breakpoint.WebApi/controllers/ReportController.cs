@@ -158,7 +158,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 var statusPatch = patchList.Single(p => p.Field == "status");
 
-                if (!Statuses.List.Contains(statusPatch.Value))
+                if (!Statuses.List.Contains(statusPatch.Value.ToString()))
                 {
                     return new BadRequestResult();
                 }
