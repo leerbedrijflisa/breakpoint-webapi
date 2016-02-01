@@ -112,7 +112,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (Db.ProjectExists(ResourceParams.OrganizationSlug, Db.ToUrlSlug(value)))
             {
-                Errors.Add(new Error(1104, new { type = "project", value = "name" }));
+                Errors.Add(new Error(1104, new { Type = "project", Value = "name" }));
             }
         }
         
