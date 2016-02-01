@@ -70,7 +70,7 @@ namespace Lisa.Breakpoint.WebApi
             // If assigned to a person, check if the person is in the project.
             else if (value.Type == "person" && !Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value.Value))
             {
-                Errors.Add(new Error(1403));
+                Errors.Add(new Error(1403, new { UserName = value }));
             }
             else if (value.Type != "group" && value.Type != "person")
             {
@@ -84,7 +84,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.UserExists(value))
             {
-                Errors.Add(new Error(1401));
+                Errors.Add(new Error(1401, new { UserName = value }));
             }
         }
 
@@ -92,7 +92,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value))
             {
-                Errors.Add(new Error(1403));
+                Errors.Add(new Error(1403, new { UserName = value }));
             }
         }
         #endregion
