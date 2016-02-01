@@ -16,7 +16,7 @@ namespace Lisa.Breakpoint.WebApi
         [HttpGet]
         public IActionResult GetAll()
         {
-            if (Db.UserExists(CurrentUser.Name))
+            if (!Db.UserExists(CurrentUser.Name))
             {
                 return new HttpNotFoundResult();
             }
