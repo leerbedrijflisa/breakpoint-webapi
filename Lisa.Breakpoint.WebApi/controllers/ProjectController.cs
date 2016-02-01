@@ -1,29 +1,28 @@
 ﻿using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
-using System.Security.Principal;
+using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi
 {
     [Route("projects")]
     [Authorize("Bearer")]
-    public class ProjectController : Controller
+    public class ProjectController : BaseController
     {
-        public ProjectController(RavenDB db)
+        public ProjectController(RavenDB db) 
+            : base(db)
         {
-            _db = db;
-            ErrorHandler.Clear();
         }
 
         [HttpGet("{organizationSlug}")]
         public IActionResult GetAll(string organizationSlug)
         {
-            if (_db.GetOrganization(organizationSlug) == null)
+            if (Db.GetOrganization(organizationSlug) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            var projects = _db.GetAllProjects(organizationSlug);
+            var projects = Db.GetAllProjects(organizationSlug);
 
             return new HttpOkObjectResult(projects);
         }
@@ -36,7 +35,7 @@ namespace Lisa.Breakpoint.WebApi
                 return new HttpNotFoundResult();
             }
 
-            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
+            var project = Db.GetProject(organizationSlug, projectSlug, CurrentUser.Name);
 
             if (project == null)
             {
@@ -49,27 +48,37 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPost("{organizationSlug}")]
         public IActionResult Post(string organizationSlug, [FromBody] ProjectPost project)
         {
-            if (!_db.OrganizationExists(organizationSlug))
+            ProjectValidator validator = new ProjectValidator(Db);
+
+            if (!Db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();
             }
 
             if (!ModelState.IsValid)
             {
-                if (ErrorHandler.FromModelState(ModelState))
+                if (ErrorList.FromModelState(ModelState))
                 {
-                    return new UnprocessableEntityObjectResult(ErrorHandler.FatalErrors);
+                    return new UnprocessableEntityObjectResult(ErrorList.FatalErrors);
                 }
 
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
-            var postedProject = _db.PostProject(project, organizationSlug);
-
-            if (ErrorHandler.HasErrors)
+            var resource = new ResourceParameters
             {
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                OrganizationSlug = organizationSlug,
+                UserName = CurrentUser.Name
+            };
+
+            ErrorList.FromValidator(validator.ValidatePost(resource, project));
+
+            if (ErrorList.HasErrors)
+            {
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
+
+            var postedProject = Db.PostProject(project, organizationSlug);
 
             string location = Url.RouteUrl("SingleProject", new { organizationSlug = postedProject.Organization, projectSlug = postedProject.Slug }, Request.Scheme);
             return new CreatedResult(location, postedProject);
@@ -78,42 +87,52 @@ namespace Lisa.Breakpoint.WebApi
         [HttpPatch("{organizationSlug}/{projectSlug}")]
         public IActionResult Patch(string organizationSlug, string projectSlug, [FromBody] IEnumerable<Patch> patches)
         {
+            ProjectValidator validator = new ProjectValidator(Db);
+
             if (patches == null)
             {
                 return new BadRequestResult();
             }
 
-            var project = _db.GetProject(organizationSlug, projectSlug, _user.Name);
+            var project = Db.GetProject(organizationSlug, projectSlug, CurrentUser.Name);
 
             if (project == null)
             {
                 return new HttpNotFoundResult();
             }
 
+            var resource = new ResourceParameters
+            {
+                OrganizationSlug = organizationSlug,
+                ProjectSlug = projectSlug,
+                UserName = CurrentUser.Name
+            };
+
+            ErrorList.FromValidator(validator.ValidatePatches(resource, patches));
+
             int projectNumber = int.Parse(project.Number);
             
-            if (_db.Patch<Project>(projectNumber, patches))
+            if (ErrorList.HasErrors)
             {
-                return new HttpOkObjectResult(_db.GetProject(organizationSlug, projectSlug, _user.Name));
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
-            // TODO: Add error message once Patch Authorization / Validation is finished.
-            return new HttpStatusCodeResult(422);
+
+            Db.Patch<Project>(projectNumber, patches);
+            return new HttpOkObjectResult(Db.GetProject(organizationSlug, projectSlug, CurrentUser.Name));
+
         }
 
         [HttpDelete("{organizationSlug}/{projectSlug}")]
         public IActionResult Delete(string organizationSlug, string projectSlug)
         {
-            if (_db.GetProject(organizationSlug, projectSlug, _user.Name) == null)
+            if (Db.GetProject(organizationSlug, projectSlug, CurrentUser.Name) == null)
             {
                 return new HttpNotFoundResult();
             }
 
-            _db.DeleteProject(organizationSlug, projectSlug);
+            Db.DeleteProject(organizationSlug, projectSlug);
 
             return new HttpStatusCodeResult(204);
         }
-
-        private readonly RavenDB _db;
-        private IIdentity _user { get { return HttpContext.User.Identity; } }
     }
 }

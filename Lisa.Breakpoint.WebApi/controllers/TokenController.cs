@@ -10,16 +10,16 @@ namespace Lisa.Breakpoint.WebApi.controllers
 {
     // https://github.com/mrsheepuk/ASPNETSelfCreatedTokenAuthExample
     [Route("token")]
-    public class TokenController : Controller
+    public class TokenController : BaseController
     {
         private readonly TokenAuthOptions tokenOptions;
 
         public TokenController(TokenAuthOptions tokenOptions, RavenDB db)
+            : base (db)
         {
             this.tokenOptions = tokenOptions;
             //this.bearerOptions = options.Value;
             //this.signingCredentials = signingCredentials;
-            _db = db;
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 return new HttpStatusCodeResult(422);
             }
 
-            if (!_db.UserExists(req.username))
+            if (!Db.UserExists(req.username))
             {
                 return new HttpUnauthorizedResult();
             }
@@ -101,7 +101,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         {
             var handler = new JwtSecurityTokenHandler();
 
-            var user = _db.GetUser(username);
+            var user = Db.GetUser(username);
 
             var claims = new List<Claim>();
             claims.Add(new Claim(ClaimTypes.Name, user.FullName, ClaimValueTypes.String));
@@ -117,7 +117,5 @@ namespace Lisa.Breakpoint.WebApi.controllers
                 );
             return handler.WriteToken(securityToken);
         }
-
-        private RavenDB _db;
     }
 }

@@ -5,18 +5,15 @@ using Raven.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Lisa.Breakpoint.WebApi
 {
-    public partial class RavenDB 
+    public partial class RavenDB : IDisposable
     {
-        private readonly IDocumentStore documentStore;
-
-        public RavenDB(IDocumentStore documentStore)
+        public RavenDB(IDocumentStore docStore)
         {
-            this.documentStore = documentStore;
+            _documentStore = docStore;
+            session = _documentStore.Initialize().OpenSession();
         }
 
         public bool Patch<T>(int id, IEnumerable<Patch> patches)
@@ -26,15 +23,20 @@ namespace Lisa.Breakpoint.WebApi
             // Fail if patch contains fields not in object that's getting patched
             var properties = typeof(T).GetProperties();
             if (patchFields.Where(f => !properties
-                    .Select(p => p.Name)
-                    .Contains(f)).Count() > 0)
+                    .Select(p => p.Name.ToLower())
+                    .Contains(f.ToLower())).Count() > 0)
             {
-                return false;
+                throw new ArgumentException();
             }
 
             // Patch to RavenDB, use type name + id as RavenDB id
             var ravenId = string.Format("{0}s/{1}", typeof(T).Name.ToLower(), id.ToString());
-            documentStore.DatabaseCommands.Patch(ravenId, ToRavenPatch(patches));
+            var ravenpatches = ToRavenPatch(patches, properties.Select(p => p.Name).ToArray());
+            _documentStore.DatabaseCommands.Patch(ravenId, ravenpatches);
+
+            // Renew session so it can access the modified data.
+            session.Dispose();
+            session = _documentStore.Initialize().OpenSession();
 
             return true;
         }
@@ -45,8 +47,54 @@ namespace Lisa.Breakpoint.WebApi
                 .Trim(new char[] { '-' })
                 .ToLower();
         }
-        
-        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches)
+
+        // Implement IDisposable.
+        // Do not make this method virtual.
+        // A derived class should not be able to override this method.
+        public void Dispose()
+        {
+            Dispose(true);
+            // This object will be cleaned up by the Dispose method.
+            // Therefore, you should call GC.SupressFinalize to
+            // take this object off the finalization queue
+            // and prevent finalization code for this object
+            // from executing a second time.
+            GC.SuppressFinalize(this);
+        }
+
+        // Dispose(bool disposing) executes in two distinct scenarios.
+        // If disposing equals true, the method has been called directly
+        // or indirectly by a user's code. Managed and unmanaged resources
+        // can be disposed.
+        // If disposing equals false, the method has been called by the
+        // runtime from inside the finalizer and you should not reference
+        // other objects. Only unmanaged resources can be disposed.
+        protected virtual void Dispose(bool disposing)
+        {
+            // Check to see if Dispose has already been called.
+            if (!_disposed)
+            {
+                // If disposing equals true, dispose all managed
+                // and unmanaged resources.
+                if (disposing)
+                {
+                    // Dispose managed resources.
+                    session.Dispose();
+                }
+
+                // Call the appropriate methods to clean up
+                // unmanaged resources here.
+                // If disposing is false,
+                // only the following code is executed.
+                
+
+                // Note disposing has been done.
+                _disposed = true;
+
+            }
+        }
+
+        private PatchRequest[] ToRavenPatch(IEnumerable<Patch> patches, string[] propertyNames)
         {
             var ravenPatches = new List<PatchRequest>();
 
@@ -54,8 +102,8 @@ namespace Lisa.Breakpoint.WebApi
             {
                 var p = new PatchRequest()
                 {
-                    Name = patch.Field,
-                    Value = patch.Value as string != null ? patch.Value as string : RavenJToken.Parse(JsonConvert.SerializeObject(patch.Value))
+                    Name = propertyNames.Single(n => n.ToLower() == patch.Field.ToLower()),
+                    Value = patch.Value is string ? patch.Value as string : RavenJToken.Parse(patch.Value.ToString())
                 };
 
                 switch (patch.Action)
@@ -78,5 +126,9 @@ namespace Lisa.Breakpoint.WebApi
 
             return ravenPatches.ToArray();
         }
+
+        private readonly IDocumentStore _documentStore;
+        private IDocumentSession session;
+        private bool _disposed;
     }
 }

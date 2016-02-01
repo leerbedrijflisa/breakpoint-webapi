@@ -9,7 +9,7 @@ namespace Lisa.Breakpoint.WebApi
         public const string FixForNextRelease = "nextrelease";
         public const string FixWhenever = "whenever";
 
-        public static Error InvalidValueError = new Error(1208, new { field = "priority", value = string.Format("{0}, {1}, {2}, {3}", FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever) });
+        public static Error InvalidValueError = new Error(1210, new { Field = "priority", Value = string.Format("{0}, {1}, {2}, {3}", FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever) });
 
         public static readonly IEnumerable<string> List = new string[] { FixImmediately, FixBeforeRelease, FixForNextRelease, FixWhenever };
     }
@@ -22,17 +22,37 @@ namespace Lisa.Breakpoint.WebApi
         public const string WontFixApproved = "wontFixApproved";
         public const string Closed = "closed";
 
-        public static Error InvalidValueError = new Error(1208, new { field = "status", value = string.Format("{0}, {1}, {2}, {3}, {4}", Open, Fixed, WontFix, WontFixApproved, Closed) });
+        public static Error InvalidValueError = new Error(1210, new { Field = "status", Value = string.Format("{0}, {1}, {2}, {3}, {4}", Open, Fixed, WontFix, WontFixApproved, Closed) });
 
         public static readonly IEnumerable<string> List = new string[] { Open, Fixed, WontFix, WontFixApproved, Closed };
     }
 
-    public static class ProjectGroups
+    public static class ProjectRoles
     {
         public const string Developers = "developer";
         public const string Testers = "tester";
         public const string Managers = "manager";
 
+        public static Error InvalidValueError = new Error(1210, new { Field = "role", Value = string.Format("{0}, {1}, {2}", Managers, Developers, Testers) });
+
         public static readonly IEnumerable<string> List = new[] { Managers, Developers, Testers };
+    }
+
+    public static class OrganizationRoles
+    {
+        public const string Manager = "manager";
+        public const string Member = "member";
+
+        public static Error InvalidValueError = new Error(1210, new { Field = "role", Value = string.Format("{0}, {1}", Manager, Member) });
+
+        public static readonly IEnumerable<string> List = new[] { Manager, Member };
+    }
+
+    public static class AssignmentTypes
+    {
+        public const string Group = "group";
+        public const string Person = "person";
+
+        public static readonly IEnumerable<string> List = new[] { Group, Person };
     }
 }

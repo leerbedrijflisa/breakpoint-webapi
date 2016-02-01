@@ -1,20 +1,22 @@
 ﻿using Microsoft.AspNet.Mvc;
-using System.Security.Principal;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
     [Route("users")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         public UserController(RavenDB db)
+            : base (db)
         {
-            _db = db;
+
         }
 
         [HttpGet]
         public IActionResult GetAll()
         {
-            var users = _db.GetAllUsers();
+            var users = Db.GetAllUsers();
 
             return new HttpOkObjectResult(users);
         }
@@ -22,7 +24,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("{userName}", Name = "SingleUser")]
         public IActionResult Get(string userName)
         {
-            var user = _db.GetUser(userName);
+            var user = Db.GetUser(userName);
 
             if (user == null)
             {
@@ -35,7 +37,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpGet("{organizationslug}/{projectslug}/{userName}")]
         public IActionResult GetGroupFromUser(string organizationSlug, string projectSlug, string userName)
         {
-            var role = _db.GetGroupFromUser(organizationSlug, projectSlug, userName);
+            var role = Db.GetGroupFromUser(organizationSlug, projectSlug, userName);
 
             if (role == null)
             {
@@ -48,6 +50,9 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] UserPost user)
         {
+            var errors = new List<Error>();
+            var validator = new UserValidator(Db);
+
             if (user == null)
             {
                 return new BadRequestResult();
@@ -55,26 +60,25 @@ namespace Lisa.Breakpoint.WebApi.controllers
 
             if (!ModelState.IsValid)
             {
-                if (ErrorHandler.FromModelState(ModelState))
+                if (ErrorList.FromModelState(ModelState))
                 {
-                    return new BadRequestObjectResult(ErrorHandler.FatalErrors);
+                    return new BadRequestObjectResult(ErrorList.FatalErrors);
                 }
 
-                return new UnprocessableEntityObjectResult(ErrorHandler.Errors);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
-            var postedUser = _db.PostUser(user);
+            ErrorList.FromValidator(validator.ValidatePost(new ResourceParameters(), user));
 
-            if (postedUser != null)
+            if (ErrorList.HasErrors)
             {
-                string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
-                return new CreatedResult(location, postedUser);
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
-            
-            return new UnprocessableEntityResult();
-        }
 
-        private readonly RavenDB _db;
-        private IIdentity _user { get { return HttpContext.User.Identity; } }
+            var postedUser = Db.PostUser(user);
+
+            string location = Url.RouteUrl("SingleUser", new { userName = postedUser.UserName }, Request.Scheme);
+            return new CreatedResult(location, postedUser);
+        }
     };
 }

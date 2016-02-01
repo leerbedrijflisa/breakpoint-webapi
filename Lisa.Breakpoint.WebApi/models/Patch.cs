@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel.DataAnnotations;
 
 namespace Lisa.Breakpoint.WebApi
 {
@@ -12,6 +13,9 @@ namespace Lisa.Breakpoint.WebApi
 
         [Required]
         public object Value { get; set; }
+
+        internal bool IsValidated { get; set; }
+        internal bool IsValidField { get; set; }
     }
 
     // temporary for patching the members in a project

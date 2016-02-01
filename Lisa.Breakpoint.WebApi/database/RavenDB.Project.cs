@@ -15,12 +15,9 @@ namespace Lisa.Breakpoint.WebApi
                 return new List<Project>();
             }
 
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                return session.Query<Project>()
-                    .Where(p => p.Organization == organizationName)
-                    .ToList();
-            }
+            return session.Query<Project>()
+                .Where(p => p.Organization == organizationName)
+                .ToList();
         }
 
         public Project GetProject(string organizationSlug, string projectSlug, string userName)
@@ -29,20 +26,17 @@ namespace Lisa.Breakpoint.WebApi
             {
                 return null;
             }
+            
+            var project = session.Query<Project>()
+                .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
+                .SingleOrDefault();
 
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            if (project == null)
             {
-                var project = session.Query<Project>()
-                    .Where(p => p.Organization == organizationSlug && p.Slug == projectSlug)
-                    .SingleOrDefault();
-
-                if (project == null)
-                {
-                    return null;
-                }
-
-                return project;
+                return null;
             }
+
+            return project;
         }
 
         public Project PostProject(ProjectPost project, string organizationSlug)
@@ -56,64 +50,36 @@ namespace Lisa.Breakpoint.WebApi
                 Slug = ToUrlSlug(project.Name)
             };
 
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                // If there is already a duplicate project in the organization
-                if (session.Query<Project>().Where(p => p.Organization == projectEntity.Organization && p.Slug == projectEntity.Slug).Any())
-                {
-                    ErrorHandler.Add(new Error(1102, new { type = "project", value = "name" }));
-                }
+            session.Store(projectEntity);
+            string projectId = session.Advanced.GetDocumentId(projectEntity);
+            projectEntity.Number = projectId.Split('/').Last();
 
-                var organizationMembers = session.Query<Organization>().SingleOrDefault(o => o.Slug == projectEntity.Organization).Members;
+            session.SaveChanges();
 
-                // Check if all project members are part of the organization
-                foreach (var user in projectEntity.Members)
-                {
-                    if (!organizationMembers.Any(m => m == user.UserName))
-                    {
-                        ErrorHandler.Add(new Error(1305, new { value = user.UserName }));
-                    }
-                }
-
-                if (ErrorHandler.HasErrors)
-                {
-                    return null;
-                }
-
-                session.Store(projectEntity);
-                string projectId = session.Advanced.GetDocumentId(projectEntity);
-                projectEntity.Number = projectId.Split('/').Last();
-
-                session.SaveChanges();
-
-                return projectEntity;
-            }
+            return projectEntity;
         }
 
         public Project PatchProject(int id, Project patchedProject)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            Project project = session.Load<Project>(id);
+
+            foreach (PropertyInfo propertyInfo in project.GetType().GetProperties())
             {
-                Project project = session.Load<Project>(id);
+                var newVal = patchedProject.GetType().GetProperty(propertyInfo.Name).GetValue(patchedProject, null);
 
-                foreach (PropertyInfo propertyInfo in project.GetType().GetProperties())
+                if (newVal != null)
                 {
-                    var newVal = patchedProject.GetType().GetProperty(propertyInfo.Name).GetValue(patchedProject, null);
-
-                    if (newVal != null)
+                    var patchRequest = new PatchRequest()
                     {
-                        var patchRequest = new PatchRequest()
-                        {
-                            Name = propertyInfo.Name,
-                            Type = PatchCommandType.Add,
-                            Value = newVal.ToString()
-                        };
-                        documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
-                    }
+                        Name = propertyInfo.Name,
+                        Type = PatchCommandType.Add,
+                        Value = newVal.ToString()
+                    };
+                    _documentStore.DatabaseCommands.Patch("projects/" + id, new[] { patchRequest });
                 }
-
-                return project;
             }
+
+            return project;
         }
 
         //public Project PatchProjectMembers(string organizationSlug, string projectSlug, TempMemberPatch patch)
@@ -218,40 +184,31 @@ namespace Lisa.Breakpoint.WebApi
 
         public void DeleteProject(string organizationSlug, string projectSlug)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
+            Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
+
+            List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
+
+            foreach (var report in reports)
             {
-                Project project = session.Query<Project>().Where(p => p.Slug == projectSlug && p.Organization == organizationSlug).SingleOrDefault();
-
-                List<Report> reports = session.Query<Report>().Where(r => r.Organization == organizationSlug && r.Project == projectSlug).ToList();
-
-                foreach (var report in reports)
-                {
-                    session.Delete(report);
-                }
-                session.Delete(project);
-                session.SaveChanges();
+                session.Delete(report);
             }
+            session.Delete(project);
+            session.SaveChanges();
         }
 
         public Project GetProjectByReport(int id, string username)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                var report = session.Load<Report>(id);
+            var report = session.Load<Report>(id);
 
-                return session.Query<Project>()
-                    .Where(p => p.Organization == report.Organization && p.Slug == report.Project)
-                    .SingleOrDefault();
-            }
+            return session.Query<Project>()
+                .Where(p => p.Organization == report.Organization && p.Slug == report.Project)
+                .SingleOrDefault();
         }
 
         public bool ProjectExists(string organizationSlug, string projectSlug)
         {
-            using (IDocumentSession session = documentStore.Initialize().OpenSession())
-            {
-                return session.Query<Organization>().Any(o => o.Slug == organizationSlug)
-                    && session.Query<Project>().Any(p => p.Slug == projectSlug && p.Organization == organizationSlug);
-            }
+            return session.Query<Organization>().Any(o => o.Slug == organizationSlug)
+                && session.Query<Project>().Any(p => p.Slug == projectSlug && p.Organization == organizationSlug);
         }
     }
 }
