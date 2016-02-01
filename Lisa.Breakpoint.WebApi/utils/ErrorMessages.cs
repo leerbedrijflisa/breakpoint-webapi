@@ -64,7 +64,7 @@ namespace Lisa.Breakpoint.WebApi
                     message = string.Format("The field '{0}' is not correct therefore it cannot be patched.", obj.Field);
                     break;
                 case 1210:
-                    message = string.Format("The field '{0}' can only contain {2}.", obj.Field, obj.Values);
+                    message = string.Format("The field '{0}' can only contain {1}.", obj.Field, obj.Values);
                     break;
                 case 1211:
                     message = string.Format("The field '{0}' must be a valid datetime format.", obj.Field, obj.Value, obj.Example);
