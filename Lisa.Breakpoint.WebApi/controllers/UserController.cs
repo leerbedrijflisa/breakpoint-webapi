@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using Microsoft.AspNet.Authorization;
+using Microsoft.AspNet.Mvc;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Lisa.Breakpoint.WebApi.controllers
 {
     [Route("users")]
+    [Authorize("Bearer")]
     public class UserController : BaseController
     {
         public UserController(RavenDB db)
@@ -48,6 +49,7 @@ namespace Lisa.Breakpoint.WebApi.controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public IActionResult Post([FromBody] UserPost user)
         {
             var errors = new List<Error>();

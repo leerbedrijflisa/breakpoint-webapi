@@ -74,7 +74,7 @@ namespace Lisa.Breakpoint.WebApi
             }
             else if (value.Type != "group" && value.Type != "person")
             {
-                Errors.Add(new Error(1210, new { Field = "assignedTo.Type", values = "'group' or 'person'" }));
+                Errors.Add(new Error(1210, new { Field = "assignedTo.Type", Values = "'group' or 'person'" }));
             }
         }
         #endregion

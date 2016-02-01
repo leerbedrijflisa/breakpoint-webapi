@@ -44,7 +44,6 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (Db.UserExists(value))
             {
-                // TODO: Add error user already exists
                 Errors.Add(new Error(1104, new { Type = "user", Value = "username" }));
             }
         }
@@ -53,7 +52,6 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (ProjectRoles.List.Contains(value) || OrganizationRoles.List.Contains(value) || AssignmentTypes.List.Contains(value))
             {
-                // TODO: Add error username reserved
                 Errors.Add(new Error(1104, new { Type = "user", Value = "username" }));
             }
         }
