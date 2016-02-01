@@ -33,7 +33,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             Errors = new List<Error>();
 
-            Allow<string>("name", organization.Name, new Action<string, object>[] { NameCanBeSlug });
+            Allow<string>("name", organization.Name, new Action<string, object>[] { OrganizationNameIsUnique, NameCanBeSlug });
             Allow<string[]>("members", organization.Members.ToArray(), new Action<string[], object>[] { OrganizationHasMembers, MembersAreUser });
 
             return Errors;
@@ -44,8 +44,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.UserExists(value))
             {
-                //TODO: Add error user doesn't exist.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1401, new { UserName = value}));
             }
         }
 
@@ -53,38 +52,45 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.GetOrganization(ResourceParams.OrganizationSlug).Members.Any(m => m == value))
             {
-                //TODO: Add error member trying to remove not found
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1402, new { UserName = value }));
+            }
+        }
+
+        private void MemberIsNotInOrganization(string value, dynamic parameters)
+        {
+            if (Db.GetOrganization(ResourceParams.OrganizationSlug).Members.Contains(value))
+            {
+                Errors.Add(new Error(1311, new { UserName = value }));
             }
         }
 
         private void OrganizationRetainsMembers(string value, dynamic parameters)
         {
             var memberCount = Db.GetOrganization(ResourceParams.OrganizationSlug).Members.Count;
-
-            if (memberCount <= 1)
-            {
-                //TODO: Add error organization can't have less than 1 member
-                Errors.Add(new Error(1));
-            }
-
+            
             // Use a counter to keep track of the amount of managers that have been deleted along all patches. This to prevent one patch deleting all managers at once.
             _membersDeleted++;
-            if (_membersDeleted >= memberCount)
+            if (memberCount <= 1 || _membersDeleted >= memberCount)
             {
-                //TODO: Add error project can't have less than 1 member.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1307));
             }
         }
         #endregion
 
         #region Post validation
+        private void OrganizationNameIsUnique(string value, dynamic parameters)
+        {
+            if (Db.OrganizationExists(Db.ToUrlSlug(value)))
+            {
+                Errors.Add(new Error(1104, new { type = "organization", value = "name" }));
+            }
+        }
+
         private void OrganizationHasMembers(string[] value, dynamic parameters)
         {
             if (value.Count() < 1)
             {
-                //TODO: Add error organization must have members
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1308));
             }
         }
 
@@ -94,8 +100,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (!Db.UserExists(member))
                 {
-                    //TODO: Add error user doesn't exist.
-                    Errors.Add(new Error(1));
+                    Errors.Add(new Error(1401, new { UserName = member }));
                 }
             }
         }
@@ -104,8 +109,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (string.IsNullOrWhiteSpace(Db.ToUrlSlug(value)))
             {
-                //TODO: Add error project name not valid
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1213));
             }
         }
         #endregion

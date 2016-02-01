@@ -73,7 +73,6 @@ namespace Lisa.Breakpoint.WebApi.controllers
             if (ErrorList.HasErrors)
             {
                 return new UnprocessableEntityObjectResult(ErrorList.Errors);
-                
             }
 
             var postedUser = Db.PostUser(user);

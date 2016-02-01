@@ -64,13 +64,13 @@ namespace Lisa.Breakpoint.WebApi
                 {
                     if (error.Exception == null)
                     {
-                        _errors.Add(new Error(1101, new { field = property.Key }));
+                        _errors.Add(new Error(1101, new { Field = property.Key }));
                     }
                     else
                     {
                         if (Regex.IsMatch(error.Exception.Message, @"^Could not find member"))
                         {
-                            _errors.Add(new Error(1103, new { field = property.Key }));
+                            _errors.Add(new Error(1103, new { Field = property.Key }));
                         }
                         else
                         {

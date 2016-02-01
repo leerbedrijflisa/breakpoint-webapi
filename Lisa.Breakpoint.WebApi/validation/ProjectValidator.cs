@@ -56,8 +56,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.UserExists(value.UserName))
             {
-                //TODO: Add error user doesn't exist.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1401, new { UserName = value.UserName }));
             }
         }
 
@@ -67,8 +66,7 @@ namespace Lisa.Breakpoint.WebApi
 
             if (!members.Contains(value.UserName))
             {
-                //TODO: Add error user is no organization member.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1402, new { UserName = value.UserName }));
             }
         }
 
@@ -76,8 +74,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value.UserName))
             {
-                //TODO: Add error member already in project
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1312, new { UserName = value.UserName }));
             }
         }
 
@@ -85,8 +82,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value.UserName))
             {
-                //TODO: Add error member trying to remove not found.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1403, new { UserName = value.UserName }));
             }
         }
 
@@ -101,19 +97,12 @@ namespace Lisa.Breakpoint.WebApi
         private void ProjectRetainsManagers(Member value, dynamic parameters)
         {
             var managerCount = Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Where(m => m.Role == ProjectRoles.Managers).Count();
-
-            if (managerCount <= 1)
-            {
-                //TODO: Add error project can't have less than 1 member.
-                Errors.Add(new Error(1));
-            }
-
-            // Use a counter to keep track of the amount of managers that have been deleted along all patches. This to prevent one patch deleting all managers at once.
+            
             _managersDeleted++;
-            if (_managersDeleted >= managerCount)
+
+            if (managerCount <= 1 || _managersDeleted >= managerCount)
             {
-                //TODO: Add error project can't have less than 1 member.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1309));
             }
         }
         #endregion
@@ -123,7 +112,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (Db.ProjectExists(ResourceParams.OrganizationSlug, Db.ToUrlSlug(value)))
             {
-                Errors.Add(new Error(1102, new { type = "project", value = "name" }));
+                Errors.Add(new Error(1104, new { type = "project", value = "name" }));
             }
         }
         
@@ -131,8 +120,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (value.Count() < 1)
             {
-                //TODO: Add error project must have members.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1310));
             }
         }
 
@@ -142,8 +130,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (!Db.UserExists(member.UserName))
                 {
-                    //TODO: Add error user doesn't exist.
-                    Errors.Add(new Error(1));
+                    Errors.Add(new Error(1401, new { UserName = member.UserName }));
                 }
             }
         }
@@ -156,8 +143,7 @@ namespace Lisa.Breakpoint.WebApi
             {
                 if (!members.Contains(member.UserName))
                 {
-                    //TODO: Add error user is not in organization.
-                    Errors.Add(new Error(1));
+                    Errors.Add(new Error(1402, new { UserName = member.UserName }));
                 }
             }
         }
@@ -166,8 +152,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (string.IsNullOrWhiteSpace(Db.ToUrlSlug(value)))
             {
-                //TODO: Add error project name not valid
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1214));
             }
         }
 

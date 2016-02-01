@@ -41,7 +41,7 @@ namespace Lisa.Breakpoint.WebApi
                 {
                     if (FilterHandler.CheckReported(filter.Value) == null)
                     {
-                        errors.Add(new Error(1207, new { field = "reported", value = filter.Value }));
+                        errors.Add(new Error(1207, new { Field = "reported", Value = filter.Value }));
                     }
                 }
             }

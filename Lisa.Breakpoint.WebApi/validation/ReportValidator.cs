@@ -70,13 +70,11 @@ namespace Lisa.Breakpoint.WebApi
             // If assigned to a person, check if the person is in the project.
             else if (value.Type == "person" && !Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value.Value))
             {
-                //TODO: Add error user not in project.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1403));
             }
             else if (value.Type != "group" && value.Type != "person")
             {
-                //TODO: Add error type must be group / person.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1210, new { Field = "assignedTo.Type", values = "'group' or 'person'" }));
             }
         }
         #endregion
@@ -86,8 +84,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.UserExists(value))
             {
-                //TODO: Add error user doesn't exist.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1401));
             }
         }
 
@@ -95,8 +92,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (!Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value))
             {
-                //TODO: Add error member trying to remove not found.
-                Errors.Add(new Error(1));
+                Errors.Add(new Error(1403));
             }
         }
         #endregion
