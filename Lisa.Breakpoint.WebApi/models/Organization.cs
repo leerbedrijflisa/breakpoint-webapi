@@ -6,10 +6,10 @@ namespace Lisa.Breakpoint.WebApi
     public class Organization
     {
         public string Name { get; set; }
-        public string Number { get; set; }
         public string Slug { get; set; }
         public IList<string> Members { get; set; }
         public IList<string> Platforms { get; set; }
+        internal string Number { get; set; }
     }
 
     public class OrganizationPost

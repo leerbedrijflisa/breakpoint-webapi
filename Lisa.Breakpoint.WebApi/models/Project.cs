@@ -5,12 +5,12 @@ namespace Lisa.Breakpoint.WebApi
 {
     public class Project
     {
-        public string Number { get; set; }
         public string Slug { get; set; }
         public string Name { get; set; }
         public string Organization  { get; set; }
         public string CurrentVersion { get; set; }
         public IList<Member> Members  { get; set; }
+        internal string Number { get; set; }
     }
 
     public class ProjectPost
