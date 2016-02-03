@@ -83,6 +83,11 @@ namespace Lisa.Breakpoint.WebApi
         {
             OrganizationValidator validator = new OrganizationValidator(Db);
 
+            if (organization == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!ModelState.IsValid)
             {
                 if (ErrorList.FromModelState(ModelState))
@@ -91,11 +96,6 @@ namespace Lisa.Breakpoint.WebApi
                 }
 
                 return new UnprocessableEntityObjectResult(ErrorList.Errors);
-            }
-
-            if (organization == null)
-            {
-                return new HttpNotFoundResult();
             }
 
             ErrorList.FromValidator(validator.ValidatePost(new ResourceParameters(), organization));

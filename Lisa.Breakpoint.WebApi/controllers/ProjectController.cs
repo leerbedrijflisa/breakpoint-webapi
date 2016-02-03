@@ -50,6 +50,11 @@ namespace Lisa.Breakpoint.WebApi
         {
             ProjectValidator validator = new ProjectValidator(Db);
 
+            if (project == null)
+            {
+                return new BadRequestResult();
+            }
+
             if (!Db.OrganizationExists(organizationSlug))
             {
                 return new HttpNotFoundResult();

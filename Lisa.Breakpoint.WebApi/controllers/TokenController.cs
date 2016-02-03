@@ -68,9 +68,19 @@ namespace Lisa.Breakpoint.WebApi.controllers
         [HttpPost]
         public IActionResult Post([FromBody] AuthRequest req)
         {
-            if (!ModelState.IsValid || req == null)
+            if (req == null)
             {
-                return new HttpStatusCodeResult(422);
+                return new BadRequestResult();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                if (ErrorList.FromModelState(ModelState))
+                {
+                    return new UnprocessableEntityObjectResult(ErrorList.FatalErrors);
+                }
+
+                return new UnprocessableEntityObjectResult(ErrorList.Errors);
             }
 
             if (!Db.UserExists(req.username))
