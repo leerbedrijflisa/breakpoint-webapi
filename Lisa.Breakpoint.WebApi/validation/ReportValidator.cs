@@ -65,7 +65,7 @@ namespace Lisa.Breakpoint.WebApi
             if (value.Type == "group" && !ProjectRoles.List.Contains(value.Value))
             {
                 // TODO: Make error not use default role error.
-                Errors.Add(ProjectRoles.InvalidValueError);
+                Errors.Add(new Error(1210, new { Field = "assignedTo.value", Values = string.Format("{0}, {1}, {2}", ProjectRoles.Managers, ProjectRoles.Developers, ProjectRoles.Testers) }));
             }
             // If assigned to a person, check if the person is in the project.
             else if (value.Type == "person" && !Db.GetProject(ResourceParams.OrganizationSlug, ResourceParams.ProjectSlug, ResourceParams.UserName).Members.Any(m => m.UserName == value.Value))
