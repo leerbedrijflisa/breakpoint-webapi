@@ -82,7 +82,7 @@ namespace Lisa.Breakpoint.WebApi
         {
             if (Db.OrganizationExists(Db.ToUrlSlug(value)))
             {
-                Errors.Add(new Error(1104, new { type = "organization", value = "name" }));
+                Errors.Add(new Error(1104, new { Type = "organization", Value = "name" }));
             }
         }
 
