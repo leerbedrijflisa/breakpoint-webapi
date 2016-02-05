@@ -54,24 +54,12 @@ namespace Lisa.Breakpoint.WebApi
                         
                         foreach (var value in values)
                         {
-                            if (!Priorities.List.Contains(value))
-                            {
-                                ErrorHandler.Add(Priorities.InvalidValueError);
-                                return reports;
-                            }
-
                             Expression<Func<Report, bool>> e = r => r.Priority == value;
                             expression = expression != null ? expression.Or(e) : e;
                         }
                     }
                     else
                     {
-                        if (!Priorities.List.Contains(filter.Value))
-                        {
-                            ErrorHandler.Add(Priorities.InvalidValueError);
-                            return reports;
-                        }
-
                         expression = r => r.Priority == filter.Value;
                     }
 
@@ -87,24 +75,12 @@ namespace Lisa.Breakpoint.WebApi
 
                         foreach (var value in values)
                         {
-                            if (!Statuses.List.Contains(filter.Value))
-                            {
-                                ErrorHandler.Add(Statuses.InvalidValueError);
-                                return reports;
-                            }
-
                             Expression<Func<Report, bool>> e = r => r.Status == value;
                             expression = expression != null ? expression.Or(e) : e;
                         }
                     }
                     else
                     {
-                        if (!Statuses.List.Contains(filter.Value))
-                        {
-                            ErrorHandler.Add(Statuses.InvalidValueError);
-                            return reports;
-                        }
-
                         expression = r => r.Status == filter.Value;
                     }
 
@@ -166,24 +142,13 @@ namespace Lisa.Breakpoint.WebApi
                 else if (filter.Type == FilterTypes.Reported)
                 {
                     // Translate filter string to first and last datetime
-                    var dateTimes = _CheckReported(filter.Value);
-
-                    // Check datetime range validity
-                    if (dateTimes == null)
-                    {
-                        ErrorHandler.Add(new Error(1207, new { field = "reported", value = filter.Value }));
-                    }
-                    else
-                    {
-                        Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
-                        filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
-                    }
+                    var dateTimes = CheckReported(filter.Value);
+                    
+                    Expression<Func<Report, bool>> expression = r => r.Reported.Date >= dateTimes[0] && r.Reported.Date < dateTimes[1];
+                    filterExpression = filterExpression != null ? filterExpression.And(expression) : expression;
                 }
             }
-            if (ErrorHandler.HasErrors)
-            {
-                return null;
-            }
+
             // Apply filters
             reports = reports.Where(filterExpression);
 
@@ -199,7 +164,7 @@ namespace Lisa.Breakpoint.WebApi
         /// and the second is the last day to filter between.
         /// Returns null if an error occurred.
         /// </returns>
-        private static IList<DateTime> _CheckReported(string reported)
+        public static IList<DateTime> CheckReported(string reported)
         {
             reported = reported.ToLower();
 

@@ -17,7 +17,7 @@ namespace Lisa.Breakpoint.WebApi
             var docStore = new DocumentStore() { Url = "http://localhost:8080", DefaultDatabase = "breakpoint" };
             docStore.Conventions.SaveEnumsAsIntegers = true;
             services.AddInstance<IDocumentStore>(docStore);
-            services.AddSingleton<RavenDB>();
+            services.AddTransient<RavenDB>();
             return services;
         }
 

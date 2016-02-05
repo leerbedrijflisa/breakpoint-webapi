@@ -19,7 +19,8 @@ namespace Lisa.Breakpoint.WebApi
         public string Priority { get; set; }
         public string Version { get; set; }
         public AssignedTo AssignedTo { get; set; }
-        public IList<Comment> Comments { get; set; }
+        // Comments not yet implemented so they're not sent in the response, set this to public when implementing.
+        internal IList<Comment> Comments { get; set; }
         public IList<string> Platforms { get; set; }
     }
 
